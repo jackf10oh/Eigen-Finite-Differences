@@ -41,7 +41,7 @@ class origin_bump : public OSteps::OStepBaseXD<origin_bump>
     void SolBeforeStep(double t, const LinOps::MeshXD_SPtr_t& mesh, OSteps::StridedRef_t Sol) const 
     {
       auto forcing = [&](double x, double y){ return bump_1d(x)*bump_1d(y)*std::sin(t); }; 
-      Eigen::VectorXd disc_vals = LinOps::DiscretizationXD().set_init(mesh, forcing).values(); 
+      Eigen::VectorXd disc_vals = LinOps::make_Discretization(mesh, forcing).values(); 
       disc_vals *=  (*m_inv_coeff_ptr); 
       Sol += disc_vals; 
     }

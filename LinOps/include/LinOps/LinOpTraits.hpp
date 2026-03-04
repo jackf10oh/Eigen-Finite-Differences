@@ -266,7 +266,7 @@ class callable_traits
   public:
   constexpr static std::size_t num_args = arg_traits<F>::num_args(); 
   using result_type = typename result_traits<F, num_args>::result_type; 
-  using BindFirst_t = std::enable_if_t<num_args, BindFirst_impl<num_args-1, F>>;
+  using BindFirst_t = std::conditional_t<num_args, BindFirst_impl<num_args-1, F>, void>;
 }; // end callable_traits<F> 
 
 } // end namespace traits 
