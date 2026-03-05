@@ -19,6 +19,8 @@
 #include "SolverArgs.hpp"
 #include "WritePolicies.hpp"
 
+namespace Solvers{ 
+
 template<typename LHS_EXPR, typename RHS_EXPR, typename OSTEP_TUP>
 class ExplicitSolver
 {
@@ -123,5 +125,7 @@ class ExplicitSolver
     } // end .Calculate(args, write_policy) 
 
 }; 
+
+} // end namespace Solvers 
 
 #endif // ExplicitSolver.hpp 

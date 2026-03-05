@@ -10,6 +10,8 @@
 
 #include<LinOps/Mesh.hpp> 
 
+namespace Solvers{ 
+
 template<typename ANYMESH_SHAREDPTR_T = LinOps::Mesh1D_SPtr_t>
 struct SolverArgs
 {
@@ -27,5 +29,7 @@ struct SolverArgs
 template<typename M>
 SolverArgs(M,LinOps::Mesh1D_SPtr_t, std::vector<Eigen::VectorXd>)
   ->SolverArgs<M>; 
+
+} // end namespace Solvers 
 
 #endif /// SolverArgs.hpp 

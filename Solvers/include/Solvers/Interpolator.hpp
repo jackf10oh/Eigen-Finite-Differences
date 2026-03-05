@@ -14,6 +14,8 @@
 
 #include "ImplicitSolver.hpp"
 
+namespace Solvers{ 
+
 template<typename LHS_EXPR, typename RHS_EXPR, typename OSTEP_TUP, typename M = LinOps::Mesh1D_SPtr_t>
 class Interpolator
 {
@@ -57,6 +59,7 @@ class Interpolator
     ~Interpolator()=default; 
 
     // Member Funcs ====================================================
+    
     // get value of Solution at any point t,x1,x2,...xn in time/space 
     template<typename... Scalars>
     double SolAt(double t, Scalars... coords)
@@ -64,12 +67,14 @@ class Interpolator
       std::array<double, sizeof...(coords)> c{coords...};
       return SolAt(t, c); 
     }
+    
     // specialization for 1D case 
     double SolAt(double t, double x)
     {
       std::array<double,1> c{x}; 
       return SolAt(t,c); 
     }
+    
     // ... with container of spatial coords
     template<typename Cont_C>
     double SolAt(double t, const Cont_C& coords){
@@ -188,6 +193,8 @@ class Interpolator
     }; 
 
 }; 
+
+} // end namespace Solvers 
 
 #endif // Interpolator.hpp
 
