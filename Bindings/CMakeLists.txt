@@ -11,9 +11,7 @@ pybind11_add_module(PyFds
 
 # Link the Python module with your shared library
 target_link_libraries(PyFds 
-  PRIVATE LinOps 
-  PRIVATE OutsideSteps 
-  PRIVATE TExprs 
+  PRIVATE FdmStencilExprs
 )
 
 # Apply static linking flags as compile options

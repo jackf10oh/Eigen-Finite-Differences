@@ -12,6 +12,8 @@
 #ifndef WRITEPOLICY_H
 #define WRITEPOLICY_H 
 
+namespace Solvers{ 
+
 // Write Policies. i.e. write previous solution to cout, write to std::vector, write to CSV 
 struct EmptyWrite
 {
@@ -59,5 +61,6 @@ struct PrintWrite
   }; 
 };
 
+} // end namespace Solvers 
 
-#endif 
+#endif // WritePolicies.hpp 

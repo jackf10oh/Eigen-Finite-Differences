@@ -16,6 +16,8 @@
 #include "SolverArgs.hpp"
 #include "WritePolicies.hpp"
 
+namespace Solvers{ 
+
 template<typename LHS_EXPR, typename RHS_EXPR, typename OSTEP_TUP>
 class ImplicitSolver
 {
@@ -35,10 +37,11 @@ class ImplicitSolver
     ~ImplicitSolver()=default; 
 
     // Member Functions 
-    void setMaxIterations(std::size_t i){ m_max_iters = i; } 
+    void SetMaxIterations(std::size_t i){ m_max_iters = i; } 
+    void MaxIterations(std::size_t i){ m_max_iters = i; } 
 
     template<typename M, typename WRITE_POLICY_T = FinalWrite, template<typename MAT_T> class EIGENSOLVER_T=Eigen::BiCGSTAB>
-    auto Calculate(SolverArgs<M> args, WRITE_POLICY_T write_policy = {})
+    auto Calculate(SolverArgs<M> args, WRITE_POLICY_T write_policy = {}) const 
     {
       TExprs::TExprExecutor exec(m_lhs); 
       EIGENSOLVER_T<TExprs::MatrixStorage_t> iterative_solver; // Eigen sparse iterative solver
@@ -127,5 +130,7 @@ class ImplicitSolver
     } // end .CalculateImp(args, write_policy) 
 
 }; 
+
+} // end namespace Solvers 
 
 #endif // ExplicitSolver.hpp 

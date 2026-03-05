@@ -19,6 +19,8 @@
 #include "SolverArgs.hpp"
 #include "WritePolicies.hpp"
 
+namespace Solvers{ 
+
 template<typename LHS_EXPR, typename RHS_EXPR, typename OSTEP_TUP>
 class ExplicitSolver
 {
@@ -39,7 +41,7 @@ class ExplicitSolver
 
     // Member Functions 
     template<typename M, typename WRITE_POLICY_T = FinalWrite>
-    auto Calculate(SolverArgs<M> args, WRITE_POLICY_T write_policy = {})
+    auto Calculate(SolverArgs<M> args, WRITE_POLICY_T write_policy = {}) const 
     {
 
       TExprs::TExprExecutor exec(m_lhs); 
@@ -123,5 +125,7 @@ class ExplicitSolver
     } // end .Calculate(args, write_policy) 
 
 }; 
+
+} // end namespace Solvers 
 
 #endif // ExplicitSolver.hpp 

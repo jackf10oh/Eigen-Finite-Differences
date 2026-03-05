@@ -15,13 +15,10 @@
 #include<OutsideSteps/All.hpp> 
 #include<OutsideSteps/BoundaryCondsXD/BCList.hpp> 
 #include<TExprs/All.hpp> 
+#include<Solvers/All.hpp> 
 
 #include<Utilities/PrintVec.hpp>
 #include<Utilities/BumpFunc.hpp>
-
-#include<Solvers/ExplicitSolver.hpp> 
-#include<Solvers/ImplicitSolver.hpp> 
-#include<Solvers/Interpolator.hpp>
 
 using std::cout, std::endl;
 
@@ -30,25 +27,16 @@ int main()
   // iomanip 
   std::cout << std::setprecision(3); 
 
-  // defining Domain Mesh --------------------------------------
-  auto r = 10.0;
-  int n_gridpoints = 31;
-
-  // mesh in space [0, 10] 
-  auto my_mesh = LinOps::make_mesh(0.0,r,n_gridpoints); 
-  // mesh in time [0, 2]
-  auto time_mesh = LinOps::make_mesh(0.0, 2.0, 17); 
-
-  // Initializing IC discretizations -------------------------------------------------------
+  // Defining Meshes + ICs 
+  Solvers::SolverArgs args{
+    .domain_mesh_ptr = LinOps::make_mesh(0.0, 10.0, 31), // start, end, nsteps 
+    .time_mesh_ptr = LinOps::make_mesh(0.0,4.0, 21), 
+    .ICs = {} 
+  }; 
   // bump on [3,5] with maximum at (4, 3)
-  BumpFunc f{.L = 3.0, .R = 5.0, .c=4.0, .h=10};  
-
-  // solution U( t=0 ) 
-  auto U0 = LinOps::make_Discretization(my_mesh, f).values();
+  BumpFunc f{.L = 3.0, .R = 5.0, .c=4.0, .h=10};
+  args.ICs = { make_Discretization(args.domain_mesh_ptr, f).values() }; 
   
-  // Solver Args expect std::vec of ICs for first N time steps 
-  std::vector<Eigen::VectorXd> ics = {std::move(U0)};  
-
   // LHS time derivs ----------------------------------------------------------------
   auto time_expr = TExprs::NthTimeDeriv(1); 
 
@@ -62,17 +50,11 @@ int main()
   auto bcs = OSteps::BCPair(left,right); 
 
   // Solving --------------------------------------------------------------------- 
-  SolverArgs args{
-    .domain_mesh_ptr = my_mesh,
-    .time_mesh_ptr = time_mesh,
-    .ICs = ics, 
-  }; 
-
-  ImplicitSolver my_solver(time_expr, space_expr, std::tie(bcs));
-  my_solver.Calculate(args, PrintWrite{} ); 
+  Solvers::ImplicitSolver my_solver(time_expr, space_expr, std::tie(bcs));
+  my_solver.Calculate(args, Solvers::PrintWrite{} ); 
 
   // Interpolating ---------------------------------------------------------
-  Interpolator my_interp(time_expr, space_expr, std::tie(bcs), args); 
+  Solvers::Interpolator my_interp(time_expr, space_expr, std::tie(bcs), args); 
   my_interp.FillVals(); 
   print_mat(my_interp.StoredData(), "Solutions through time");
   // std::cout << "solution at (t,x) :" << interp.SolAt(t,x) << std::endl; 
