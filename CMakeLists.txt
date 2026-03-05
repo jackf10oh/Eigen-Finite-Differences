@@ -66,12 +66,25 @@ target_link_libraries(TExprs
   INTERFACE Utilities
 )
 
+# Solvers ------------------------------------- 
+add_library(Solvers INTERFACE)
+target_include_directories(Solvers
+  INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/Solvers/include
+)
+target_link_libraries(Solvers
+  INTERFACE LinOps 
+  INTERFACE OutsideSteps
+  INTERFACE Utilities
+  INTERFACE TExprs
+)
+
 # Tie all sub directories into main library ============================================== 
 target_link_libraries(FdmStencilExprs
   INTERFACE LinOps 
   INTERFACE OutsideSteps
   INTERFACE TExprs 
   INTERFACE Utilities
+  INTERFACE Solvers
 )
 
 # adding google test

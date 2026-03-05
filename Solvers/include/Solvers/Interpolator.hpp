@@ -1,25 +1,23 @@
-// GenInterp.hpp
+// Interpolator.hpp
 //
-//
+// 
 //
 // JAF 1/19/2026 
 
-#ifndef GENINTERP_H
-#define GENINTERP_H 
+#ifndef INTERPOLATOR_H
+#define INTERPOLATOR_H 
 
 #include<memory>
 #include<vector>
 #include<utility> // std::pair
 #include<Eigen/Core>
 
-#include "GenSolver.hpp"
-
-namespace TExprs{
+#include "ImplicitSolver.hpp"
 
 template<typename LHS_EXPR, typename RHS_EXPR, typename OSTEP_TUP, typename M = LinOps::Mesh1D_SPtr_t>
-class GenInterp
+class Interpolator
 {
-  public:
+  private:
     // Type Defs ----------------------------- 
     struct VecSaveWrite
     {
@@ -33,29 +31,30 @@ class GenInterp
 
     // Member Data ------------------------------
     std::vector<Eigen::VectorXd> m_data; 
-    VecSaveWrite m_sol_writer; 
-    GenSolver<LHS_EXPR, RHS_EXPR, OSTEP_TUP, VecSaveWrite> m_solver; 
-    GenSolverArgs<M> m_args; 
+    ImplicitSolver<LHS_EXPR, RHS_EXPR, OSTEP_TUP> m_solver; 
+    SolverArgs<M> m_args; 
     std::shared_ptr<const LinOps::MeshXD> m_high_dim_mesh; 
     bool m_calculated; 
 
   public: 
     // Constructors + Destructor ===================================
     // default 
-    GenInterp()=delete; 
+    Interpolator()=delete; 
+
     // from args 
-    GenInterp(LHS_EXPR& lhs, RHS_EXPR& rhs, OSTEP_TUP ostep_init, GenSolverArgs<M> args_init = GenSolverArgs<M>{})
+    Interpolator(LHS_EXPR& lhs, RHS_EXPR& rhs, OSTEP_TUP ostep_init, SolverArgs<M> args_init = {})
       : m_data(0), 
-      m_sol_writer(m_data), 
       m_args(std::move(args_init)), 
       m_high_dim_mesh(LinOps::make_meshXD(m_args.domain_mesh_ptr)), 
-      m_solver(lhs,rhs,ostep_init, m_sol_writer), 
+      m_solver(lhs,rhs,ostep_init), 
       m_calculated(false) 
     {}
+
     // copy 
-    GenInterp(const GenInterp& other)=delete; 
+    Interpolator(const Interpolator& other)=delete; 
+
     // destructor 
-    ~GenInterp()=default; 
+    ~Interpolator()=default; 
 
     // Member Funcs ====================================================
     // get value of Solution at any point t,x1,x2,...xn in time/space 
@@ -101,7 +100,7 @@ class GenInterp
     const auto& Args() const { return m_args; }; 
     
     // set m_args to a new input
-    void SetArgs(GenSolverArgs<M> args_switch)
+    void SetArgs(SolverArgs<M> args_switch)
     {
       m_args = std::move(args_switch); 
       Reset(); 
@@ -120,7 +119,8 @@ class GenInterp
         m_data.reserve(m_args.time_mesh_ptr->size());
 
         // WritePolicy moves all solutions at each time step to m_data
-        m_solver.CalculateImp(m_args, num_iters); 
+        m_solver.setMaxIterations(num_iters); 
+        m_solver.Calculate(m_args, VecSaveWrite(m_data)); 
 
         // update status of interp 
         m_calculated = true; 
@@ -189,9 +189,7 @@ class GenInterp
 
 }; 
 
-} // end namespace TExprs 
-
-#endif // GenInterp.hpp
+#endif // Interpolator.hpp
 
 
 // Linear interpolation scratch work 

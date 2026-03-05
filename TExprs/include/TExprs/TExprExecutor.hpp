@@ -33,7 +33,6 @@ struct coeffat_returns_other : public std::negation<coeffat_returns_double<TIMED
 
 } // end namespace traits 
 
-namespace internal{
 // ===========================================================================
 template<template<typename...> class PRED, typename TUP_T>
 auto filter_tup(TUP_T tup)
@@ -325,8 +324,6 @@ class TExprExecutor
     } // end inv_coeff_util() 
 
 }; 
-
-} // end namespace internal
 
 } // end namespace TExprs  
 
