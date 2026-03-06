@@ -26,8 +26,13 @@ PYBIND11_MODULE(PyFds, m)
     .def(py::init<std::vector<double>>(), 
            py::arg("vals")
     )
-    .def("at",[](const LinOps::Mesh1D& self, std::size_t i){return self.at(i);}, py::arg("idx"), "values of mesh at an index")    
-    .def("size",&LinOps::Mesh1D::size, "size of current mesh");    
+    .def("at",[](const LinOps::Mesh1D& self, std::size_t i){return self.at(i);}, py::arg("idx"), "values of mesh at an index") 
+    .def("size", &LinOps::Mesh1D::size, "number of entries in a Mesh1D")   
+    .def("__len__", &LinOps::Mesh1D::size) // combines with __getitem__ to make mesh1d iterable in python... 
+    .def("__getitem__", [](const LinOps::Mesh1D& mesh, size_t i) {
+        if (i >= mesh.size()) throw py::index_error();
+        return mesh[i];  // return the coordinate at index i
+    });
 
   // MeshXD ================================================================================ 
   py::class_<LinOps::MeshXD, std::shared_ptr<LinOps::MeshXD>>(m,"MeshXD")
@@ -62,8 +67,8 @@ PYBIND11_MODULE(PyFds, m)
            py::arg("start"),
            py::arg("stop"));
   
-  // Discretization1D ================================================================================ 
-  py::class_<LinOps::Discretization1D, std::unique_ptr<LinOps::Discretization1D>>(m,"Discretization1D")
+  // LinOps::Vector1D ================================================================================ 
+  py::class_<LinOps::Vector1D, std::unique_ptr<LinOps::Vector1D>>(m,"Vector1D")
     .def(py::init<std::size_t>(), 
            py::arg("size")=0
     )
@@ -77,38 +82,20 @@ PYBIND11_MODULE(PyFds, m)
            py::arg("arr")
     )
     .def("values",
-            [](const LinOps::Discretization1D& self){return self.values();}, 
+            [](const LinOps::Vector1D& self){return self.values();}, 
             py::return_value_policy::reference_internal
     )
     .def("size", 
-            &LinOps::Discretization1D::size, 
-            "size of current discretization"
+            &LinOps::Vector1D::size, 
+            "size of current Vector1D"
     )
     .def("resize",
-            &LinOps::Discretization1D::resize, 
-            py::arg("mesh"),"resize Discretization1D to fit on a Mesh1D"
-    )
-    .def("set_init",
-            [](LinOps::Discretization1D& self, double c){self.set_init(c);}, 
-            py::arg("constant")
-    )
-    .def("set_init",
-            [](LinOps::Discretization1D& self, const LinOps::Mesh1D_SPtr_t& m, double c){self.set_init(m,c);}, 
-            py::arg("mesh"),
-            py::arg("constant")
-    )
-    .def("set_init",
-      [](LinOps::Discretization1D& self, std::function<double(double)> f){self.set_init(f); },
-      py::arg("func")
-    )
-    .def("set_init",
-      [](LinOps::Discretization1D& self, const LinOps::Mesh1D_SPtr_t& m, std::function<double(double)> f){self.set_init(m,f); },
-      py::arg("mesh"),
-      py::arg("func")
+            &LinOps::Vector1D::resize, 
+            py::arg("mesh"),"resize Vector1D to fit on a Mesh1D"
     ); 
 
-  // DiscretizationXD ================================================================================ 
-  py::class_<LinOps::DiscretizationXD, std::unique_ptr<LinOps::DiscretizationXD>>(m,"DiscretizationXD")
+  // LinOps::VectorXD ================================================================================ 
+  py::class_<LinOps::VectorXD, std::unique_ptr<LinOps::VectorXD>>(m,"VectorXD")
     .def(py::init<std::size_t>(), 
            py::arg("size")=0
     )
@@ -122,78 +109,34 @@ PYBIND11_MODULE(PyFds, m)
            py::arg("arr")
     )
     .def("values",
-            [](const LinOps::DiscretizationXD& self){return self.values();}, 
+            [](const LinOps::VectorXD& self){return self.values();}, 
             py::return_value_policy::reference_internal
     )
     .def("sizes_product", 
-            &LinOps::DiscretizationXD::sizes_product, 
+            &LinOps::VectorXD::sizes_product, 
             "product of each dimensions size"
     )
     .def("dims", 
-            &LinOps::DiscretizationXD::dims, 
-            "number of dimensions in DiscretizationXD"
+            &LinOps::VectorXD::dims, 
+            "number of dimensions in VectorXD"
     )
     .def("dim_size", 
-            &LinOps::DiscretizationXD::dim_size,
+            &LinOps::VectorXD::dim_size,
             py::arg("dim")=0, 
-            "size of specific dimension in DiscretizationXD"
+            "size of specific dimension in VectorXD"
     )
     .def("sizes_middle_product", 
-            &LinOps::DiscretizationXD::sizes_middle_product,
+            &LinOps::VectorXD::sizes_middle_product,
             py::arg("start"), 
             py::arg("stop"), 
             "product of sizes of dimensions in [start,stop)" 
     )
     .def("resize",
-            &LinOps::DiscretizationXD::resize, 
-            py::arg("mesh"),"resize DiscretizationXD to fit on a MeshXD"
-    )
-    .def("set_init",
-            [](LinOps::DiscretizationXD& self, double c){self.set_init(c);}, 
-            py::arg("constant")
-    )
-    .def("set_init",
-            [](LinOps::DiscretizationXD& self, const LinOps::MeshXD_SPtr_t& m, double c){self.set_init(m,c);}, 
-            py::arg("mesh"),
-            py::arg("constant")
-    )
-    .def("set_init",
-      [](LinOps::DiscretizationXD& self, std::function<double(double)> f){self.set_init(f); },
-      py::arg("func")
-    )
-    .def("set_init",
-      [](LinOps::DiscretizationXD& self, const LinOps::MeshXD_SPtr_t& m, std::function<double(double)> f){self.set_init(m,f); },
-      py::arg("mesh"),
-      py::arg("func")
-    )
-    .def("set_init",
-      [](LinOps::DiscretizationXD& self, std::function<double(double,double)> f){self.set_init(f); },
-      py::arg("func")
-    )
-    .def("set_init",
-      [](LinOps::DiscretizationXD& self, const LinOps::MeshXD_SPtr_t& m, std::function<double(double,double)> f){self.set_init(m,f); },
-      py::arg("mesh"),
-      py::arg("func")
-    )
-    .def("set_init",
-      [](LinOps::DiscretizationXD& self, std::function<double(double,double,double)> f){self.set_init(f); },
-      py::arg("func")
-    )
-    .def("set_init",
-      [](LinOps::DiscretizationXD& self, const LinOps::MeshXD_SPtr_t& m, std::function<double(double,double,double)> f){self.set_init(m,f); },
-      py::arg("mesh"),
-      py::arg("func")
-    )
-    .def("set_init",
-      [](LinOps::DiscretizationXD& self, std::function<double(double,double,double,double)> f){self.set_init(f); },
-      py::arg("func")
-    )
-    .def("set_init",
-      [](LinOps::DiscretizationXD& self, const LinOps::MeshXD_SPtr_t& m, std::function<double(double,double,double,double)> f){self.set_init(m,f); },
-      py::arg("mesh"),
-      py::arg("func")
+            &LinOps::VectorXD::resize, 
+            py::arg("mesh"),"resize VectorXD to fit on a MeshXD"
     ); 
-  // Mesh1D ================================================================================ 
+
+  // Wave2D ================================================================================ 
   py::class_<Wave2D>(m, "Wave2D")
     .def(py::init<>())
     .def("SetDomain", [](Wave2D& self, LinOps::MeshXD_SPtr_t m) -> Wave2D& 

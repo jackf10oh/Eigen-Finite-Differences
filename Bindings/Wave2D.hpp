@@ -12,6 +12,7 @@
 #include<LinOps/All.hpp>
 #include<OutsideSteps/All.hpp> 
 #include<TExprs/All.hpp>
+#include<Solvers/Interpolator.hpp> 
 
 #include<Utilities/BumpFunc.hpp> // forcing term at origin 
 
@@ -41,7 +42,7 @@ class origin_bump : public OSteps::OStepBaseXD<origin_bump>
     void SolBeforeStep(double t, const LinOps::MeshXD_SPtr_t& mesh, OSteps::StridedRef_t Sol) const 
     {
       auto forcing = [&](double x, double y){ return bump_1d(x)*bump_1d(y)*std::sin(t); }; 
-      Eigen::VectorXd disc_vals = LinOps::DiscretizationXD().set_init(mesh, forcing).values(); 
+      Eigen::VectorXd disc_vals = LinOps::make_Discretization(mesh, forcing).values(); 
       disc_vals *=  (*m_inv_coeff_ptr); 
       Sol += disc_vals; 
     }
@@ -85,15 +86,13 @@ struct Wave2D_impl
 
 }; 
 
-struct Wave2D : public Wave2D_impl, public TExprs::GenInterp<Wave2D_impl::Lhs_t, Wave2D_impl::Rhs_t, Wave2D_impl::OStep_t, LinOps::MeshXD_SPtr_t>
+struct Wave2D : public Wave2D_impl, public Solvers::Interpolator<Wave2D_impl::Lhs_t, Wave2D_impl::Rhs_t, Wave2D_impl::OStep_t, LinOps::MeshXD_SPtr_t>
 {
-  using Interp_t = TExprs::GenInterp<Wave2D_impl::Lhs_t, Wave2D_impl::Rhs_t, Wave2D_impl::OStep_t, LinOps::MeshXD_SPtr_t>; 
+  using Interp_t = Solvers::Interpolator<Wave2D_impl::Lhs_t, Wave2D_impl::Rhs_t, Wave2D_impl::OStep_t, LinOps::MeshXD_SPtr_t>; 
   Wave2D()
     :Wave2D_impl(), 
     Interp_t(this->Lhs, this->Rhs, this->osteps)
-  {
-    // std::get<0>(this->osteps).m_inv_coeff_ptr = &this->Lhs.inv_coeff();
-  };  
+  {};  
 
   void set_damping(double damping)
   {
