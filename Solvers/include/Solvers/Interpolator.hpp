@@ -16,10 +16,15 @@
 
 namespace Solvers{ 
 
-template<typename LHS_EXPR, typename RHS_EXPR, typename OSTEP_TUP, typename M = LinOps::Mesh1D_SPtr_t>
+template<typename LHS_EXPR, 
+          typename RHS_EXPR, 
+          typename OSTEP_TUP, 
+          template<typename L,typename R, typename O> SOLVER_T = Solvers::ImplicitSolver, 
+          typename M = LinOps::Mesh1D_SPtr_t
+>
 class Interpolator
 {
-  private:
+  protected:
     // Type Defs ----------------------------- 
     struct VecSaveWrite
     {
@@ -33,7 +38,7 @@ class Interpolator
 
     // Member Data ------------------------------
     std::vector<Eigen::VectorXd> m_data; 
-    ImplicitSolver<LHS_EXPR, RHS_EXPR, OSTEP_TUP> m_solver; 
+    SOLVER_T<LHS_EXPR, RHS_EXPR, OSTEP_TUP> m_solver; 
     SolverArgs<M> m_args; 
     std::shared_ptr<const LinOps::MeshXD> m_high_dim_mesh; 
     bool m_calculated; 
@@ -103,6 +108,10 @@ class Interpolator
     
     // getters to m_args
     const auto& Args() const { return m_args; }; 
+
+    // getters to m_solver 
+    auto& Solver(){return m_solver;} // non const allows access to solvers internals. i.e. SetMaxIterations 
+    const auto& Solver() const {return m_solver;}
     
     // set m_args to a new input
     void SetArgs(SolverArgs<M> args_switch)
@@ -115,7 +124,7 @@ class Interpolator
     const auto& StoredData() const { return m_data; }; 
 
     // Populate m_data with solutions at each step in time 
-    void FillVals(std::size_t num_iters=20)
+    void FillVals()
     {
       if(!m_calculated)
       {
@@ -124,7 +133,6 @@ class Interpolator
         m_data.reserve(m_args.time_mesh_ptr->size());
 
         // WritePolicy moves all solutions at each time step to m_data
-        m_solver.setMaxIterations(num_iters); 
         m_solver.Calculate(m_args, VecSaveWrite(m_data)); 
 
         // update status of interp 

@@ -50,8 +50,8 @@ class ExplicitSolver
       exec.set_mesh(args.domain_mesh_ptr);
       m_rhs.set_mesh(args.domain_mesh_ptr); 
 
-      auto it = args.time_mesh_ptr->cbegin() + args.ICs.size() - 1; 
-      auto end = args.time_mesh_ptr->cend() - 1;
+      auto it = std::next(args.time_mesh_ptr->cbegin(), args.ICs.size() - 1); 
+      auto end = std::prev(args.time_mesh_ptr->cend());
 
       exec.ConsumeSolutionList(args.ICs.begin(), args.ICs.end()); // no more .cbegin() -> should use move semantics
       exec.ConsumeTimeList(args.time_mesh_ptr->cbegin(), std::next(it)); 
