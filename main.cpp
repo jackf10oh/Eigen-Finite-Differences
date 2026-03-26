@@ -12,50 +12,39 @@
 #include<Eigen/Dense>
 
 #include<LinOps/All.hpp> 
-#include<OutsideSteps/All.hpp> 
-#include<OutsideSteps/BoundaryCondsXD/BCList.hpp> 
-#include<TExprs/All.hpp> 
-#include<Solvers/All.hpp> 
+// #include<OutsideSteps/All.hpp> 
+// #include<OutsideSteps/BoundaryCondsXD/BCList.hpp> 
+// #include<TExprs/All.hpp> 
+// #include<Solvers/All.hpp> 
 
 #include<Utilities/PrintVec.hpp>
 #include<Utilities/BumpFunc.hpp>
+
+#include "OutsideSteps/include/OutsideSteps/StepContexts.hpp"
+// #include "OutsideSteps/include/OutsideSteps/OStepBase.hpp" 
+// #include "OutsideSteps/include/OutsideSteps/BoundaryConds1D/BCPair.hpp"
+// #include "OutsideSteps/include/OutsideSteps/BoundaryConds1D/DirichletBC.hpp"   
+
 
 using std::cout, std::endl;
 
 int main()
 {
   // iomanip 
-  std::cout << std::setprecision(3); 
+  // std::cout << std::setprecision(3); 
+  auto m = LinOps::make_mesh(0.0, 10.0, 11); 
+  int x, r; 
 
-  // Defining Meshes + ICs 
-  Solvers::SolverArgs args{
-    .domain_mesh_ptr = LinOps::make_mesh(0.0, 10.0, 31), // start, end, nsteps 
-    .time_mesh_ptr = LinOps::make_mesh(0.0,4.0, 21), 
-    .ICs = {} 
-  }; 
-  // bump on [3,5] with maximum at (4, 3)
-  BumpFunc f{.L = 3.0, .R = 5.0, .c=4.0, .h=10};
-  args.ICs = { make_Discretization(args.domain_mesh_ptr, f).values() }; 
+  auto t01 = OSteps::make_time(); 
+  auto t02 = OSteps::make_time(1.0); 
+  auto t03 = OSteps::make_time(1.0,2.0); 
+  auto t04 = OSteps::make_time(1.0,2.0, m); // creates its own owning copy of m ... 
   
-  // LHS time derivs ----------------------------------------------------------------
-  auto time_expr = TExprs::NthTimeDeriv(1); 
+  auto ctx01 = OSteps::make_context(); 
+  auto ctx02 = OSteps::make_context(m); // creates its own owning copy of m ...  
+  auto ctx03 = OSteps::make_context(m, &x); 
+  auto ctx04 = OSteps::make_context(m, &x, &r);  
 
-  // building RHS expression -----------------------------------------------------
-  using D = LinOps::NthDerivOp;
-  auto space_expr = 0.2 * D(2) - 1.0 * D(1); 
-
-  // Boundary Conditions + --------------------------------------------------------------------- 
-  auto left = OSteps::DirichletBC(0.0); 
-  auto right = OSteps::DirichletBC(0.0); 
-  auto bcs = OSteps::BCPair(left,right); 
-
-  // Solving --------------------------------------------------------------------- 
-  Solvers::ImplicitSolver my_solver(time_expr, space_expr, std::tie(bcs));
-  my_solver.Calculate(args, Solvers::PrintWrite{} ); 
-
-  // Interpolating ---------------------------------------------------------
-  Solvers::Interpolator my_interp(time_expr, space_expr, std::tie(bcs), args); 
-  my_interp.FillVals(); 
-  print_mat(my_interp.StoredData(), "Solutions through time");
-  // std::cout << "solution at (t,x) :" << interp.SolAt(t,x) << std::endl; 
+  print_vec(*t04.container, "time container"); 
+  print_vec(*ctx04.getMesh(), "mesh domain"); 
 };
