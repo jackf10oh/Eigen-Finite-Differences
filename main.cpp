@@ -21,9 +21,11 @@
 #include<Utilities/BumpFunc.hpp>
 
 #include "OutsideSteps/include/OutsideSteps/StepContexts.hpp"
-// #include "OutsideSteps/include/OutsideSteps/OStepBase.hpp" 
-// #include "OutsideSteps/include/OutsideSteps/BoundaryConds1D/BCPair.hpp"
-// #include "OutsideSteps/include/OutsideSteps/BoundaryConds1D/DirichletBC.hpp"   
+#include "OutsideSteps/include/OutsideSteps/OStepBase.hpp" 
+#include "OutsideSteps/include/OutsideSteps/BoundaryConds1D/BCPair.hpp"
+#include "OutsideSteps/include/OutsideSteps/BoundaryConds1D/DirichletBC.hpp"   
+#include "OutsideSteps/include/OutsideSteps/BoundaryConds1D/NeumannBC.hpp"   
+#include "OutsideSteps/include/OutsideSteps/BoundaryConds1D/RobinBC.hpp"   
 
 
 using std::cout, std::endl;
@@ -47,4 +49,10 @@ int main()
 
   print_vec(*t04.container, "time container"); 
   print_vec(*ctx04.getMesh(), "mesh domain"); 
+
+  LinOps::MatrixStorage_t M = LinOps::RandLinOp(m).GetMat().sparseView(); 
+  
+  auto bcs = OSteps::BCPair(OSteps::NeumannBC(1.0), OSteps::RobinBC(1.0)); 
+  bcs.MatBeforeStep<OSteps::FDStep_Type::IMPLICIT>(M,OSteps::make_time(), OSteps::make_context(m)); 
+  cout << M << endl; 
 };
