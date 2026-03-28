@@ -31,13 +31,13 @@ class OStepBase
     void BeforeLinAlgebra(const TCtx& t, Ctx& ctx){/* edit everything before linear algebra starts*/}
 
     template<FDStep_Type STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void MatBeforeStep(LinOps::MatrixStorage_t& Mat, const TCtx& t, const Ctx& ctx) const {/* edit the solution vector after the step */}
+    void MatBeforeStep(LinOps::MatrixStorage_t& Mat, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
     
     template<FDStep_Type STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecBeforeStep(StridedRef_t u, const TCtx& t, const Ctx& ctx) const {/* edit the solution vector after the step */}
+    void VecBeforeStep(StridedRef_t u, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
 
     template<FDStep_Type STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecAfterStep(StridedRef_t u, const TCtx& t, const Ctx& ctx) const {/* edit the solution vector after the step */}
+    void VecAfterStep(StridedRef_t u, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
 
 }; 
 

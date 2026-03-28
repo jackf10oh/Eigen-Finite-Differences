@@ -7,6 +7,7 @@
 #ifndef OSTEPS_ALL_H
 #define OSTEPS_ALL_H 
 
+#include "StepContexts.hpp" 
 #include "OStepBase.hpp" 
 
 #include "BoundaryConds1D/BCPair.hpp"

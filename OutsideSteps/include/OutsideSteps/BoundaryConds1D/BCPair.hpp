@@ -18,8 +18,8 @@ class BCPair: public OStepBase<BCPair<LBC_T,RBC_T>>
 {
   public:
     // Member Data -----------------------------------------------------------
-    LBC_T m_left; 
-    RBC_T m_right; 
+    typename std::remove_reference<LBC_T>::type m_left; 
+    typename std::remove_reference<RBC_T>::type m_right; 
     
   public:
     // Constructors + Destructor =================================================
@@ -29,7 +29,7 @@ class BCPair: public OStepBase<BCPair<LBC_T,RBC_T>>
       : m_left(l),m_right(r)
     {}; 
 
-    BCPair(const BCPair& other)=delete; 
+    BCPair(const BCPair& other)=default; 
 
     // destructor
     virtual ~BCPair()=default; 
