@@ -10,7 +10,7 @@
 #include<iostream>
 #include<vector>
 #include<tuple>
-// #include<unsupported/Eigen/KroneckerProduct>
+#include<Eigen/Dense>
 #include<Utilities/FillRowExpr.hpp>
 #include<Utilities/FillStencil.hpp>
 #include<Utilities/BlockDiagExpr.hpp> 
@@ -100,7 +100,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
     } // end MatBeforeStep 
 
     template<FDStep_Type STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecBeforeStep(StridedRef_t u, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
+    void VecBeforeStep(StridedRef_t u, const TCtx& t, const Ctx& ctx)
     {
       // check args are compaitble 
       const auto& mesh = ctx.getMesh(); 
@@ -115,9 +115,16 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
           // Mesh1D that this bc_pair operates on  
           const auto& mesh_1dim = mesh->GetMesh(dim); 
           // vector of eigen stride views that "look" like Discretization1Ds along mesh_1dim 
-          auto views = mesh->OneDim_views(Sol, dim); 
+          using Stride_t = typename Eigen::Stride<0,Eigen::Dynamic>; 
+          using StrideView_t = typename Eigen::Map<Eigen::VectorXd, Eigen::Unaligned, Stride_t>; 
+          std::size_t mod = mesh->sizes_middle_product(0,dim); 
+          std::size_t num_copies = mod * mesh->sizes_middle_product(dim+1, mesh->dims()); 
+          std::size_t s0 = mesh->dim_size(dim); 
+          std::size_t scale = mod * s0;  
+          Stride_t stride(0, mod); 
+          
           // iterate through views that look like Mesh1D
-          for(std::size_t i=0; i<views.size(); i++){
+          for(std::size_t i=0; i < num_copies; i++){
             // determine if it has been set by lower dimension 
             bool set_by_low_dim = false; 
             std::size_t s1 = 1; 
@@ -132,8 +139,10 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
             }
             // if it hasn't, use BC on it. 
             if(!set_by_low_dim){
-              bc_pair.m_left.SetImpSolL(t.next, mesh_1dim, views[i]); 
-              bc_pair.m_right.SetImpSolR(t.next, mesh_1dim, views[i]); 
+              std::size_t offset = (mod ? i % mod : i) + (scale * (i/mod));
+              StrideView_t view(u.data()+offset, s0, stride); 
+              bc_pair.m_left.SetImpSolL(t.next, mesh_1dim, view); 
+              bc_pair.m_right.SetImpSolR(t.next, mesh_1dim, view); 
             }
           }
         }; // end set_dim_boundaries lambda 
@@ -144,7 +153,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
           [&](const auto&... args){
             (set_dim_boundaries_imp(args, dim++), ...);
           }, 
-          m_list
+          m_bcs_list
         ); 
       } // end if constexpr(step)
     } // end VecBeforeStep 
@@ -162,13 +171,19 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
         // without double assigning to corners/edges of XDim space 
 
         auto set_dim_boundaries = [&](const auto& bc_pair, std::size_t dim){
+          using Stride_t = typename Eigen::Stride<0,Eigen::Dynamic>; 
+          using StrideView_t = typename Eigen::Map<Eigen::VectorXd, Eigen::Unaligned, Stride_t>; 
           // Mesh1D that this bc_pair operates on  
           const auto& mesh_1dim = mesh->GetMesh(dim); // get the Mesh1D 
           // vector of eigen stride views that "look" like Discretization1Ds along mesh_1dim 
-          auto views = mesh->OneDim_views(Sol,dim); 
+          std::size_t mod = mesh->sizes_middle_product(0,dim); 
+          std::size_t num_copies = mod * mesh->sizes_middle_product(dim+1, mesh->dims()); 
+          std::size_t s0 = mesh->dim_size(dim); 
+          std::size_t scale = mod * s0;  
+          Stride_t stride(0, mod); 
 
           // iterate through views that look like Mesh1D
-          for(std::size_t i=0; i<views.size(); i++){
+          for(std::size_t i=0; i < num_copies; i++){
             // determine if it has been set by lower dimension 
             bool set_by_low_dim = false; 
             std::size_t s1 = 1; 
@@ -183,8 +198,10 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
             }
             // if it hasn't, use BC on it. 
             if(!set_by_low_dim){
-              bc_pair.m_left.SetSolL(t.next, mesh_1dim, views[i]); 
-              bc_pair.m_right.SetSolR(t.next, mesh_1dim, views[i]); 
+              std::size_t offset = (mod ? i % mod : i) + (scale * (i/mod));
+              StrideView_t view(u.data()+offset, s0, stride); 
+              bc_pair.m_left.SetSolL(t.next, mesh_1dim, view); 
+              bc_pair.m_right.SetSolR(t.next, mesh_1dim, view); 
             }
           } // end for loop through 1 dimensional views 
 
@@ -196,7 +213,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
           [&](const auto&... args){
             (set_dim_boundaries(args, dim++), ...);
           }, 
-          m_list
+          m_bcs_list
         ); 
       } // end if constexpr(step)
     } // end VecAfterStep
@@ -226,7 +243,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
         for(; it; ++it) std::get<Idx>(m_mats).coeffRef(it.row(),it.col()) = it.value();  
       }
     }
-    
+
     template<std::size_t... Is>
     void prepare_flat_stencils(double t, const LinOps::MeshXD_SPtr_t& m, std::index_sequence<Is...>){
       (flat_stencil<Is>(t,m), ...); 
@@ -255,26 +272,10 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
     }
 }; // end class BCList 
 
-
 } // end namespace Fds 
 
 #endif // BCListXD.hpp 
 
-// N = 1: 
-// first row and last row are set for each block that is middle_product(0,1) rows big 
-
-// N = 2: 
-// first blocks and last blocks are set according to 1D rows
-// blocks are middle_product(0,1) big and 1 is ignored on both side.  
-
-// N = 3 
-// first blocks and last blocks set according to 1D rows 
-// blocks are middle_product(0,2) big and middle_product(0,1) rows are ignored on both sides of blocks 
-
-// N = 4 
-// first blocks and last blocks set according to 1D rows 
-// rows are middle_product(0,3) big and middle_product(0,2) rows are ignored on both sides? 
- 
 /* // order of priority for BCListXD.list to be applied 
 corners / edges of XDim space are given priority to whichever BC would cover it first 
 0 is unaffected by BCs. 
