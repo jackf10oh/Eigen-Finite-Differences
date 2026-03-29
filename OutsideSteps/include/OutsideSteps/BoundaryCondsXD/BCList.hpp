@@ -21,6 +21,7 @@
 
 namespace OSteps{
 
+namespace traits{ 
 template<typename T>
 struct is_bc_pair_impl : public std::false_type{}; 
 
@@ -37,28 +38,31 @@ template<typename T, std::size_t... Is>
 auto make_repeat_tuple(std::index_sequence<Is...>){
   return std::tuple< repeat_type<T,Is>... >{}; 
 }
+} // end namespace traits 
 
 template<typename... BCPairs_Ts>
 class BCList : public OStepBase<BCList<BCPairs_Ts...>>
 {
-  public:
+  private:
     // member data. -------------------------------------------------
     // list of boundary conditions. 1 per Dimension 
     std::tuple< std::remove_reference_t<BCPairs_Ts>... > m_bcs_list; 
-    using MATS_T = decltype(make_repeat_tuple<LinOps::MatrixStorage_t>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{})); 
+    using MATS_T = decltype(OSteps::traits::make_repeat_tuple<LinOps::MatrixStorage_t>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{})); 
     MATS_T m_mats; 
+    
+  public:
     // Constructors + Destructors =========================================
     BCList()=delete; 
     
     template<typename = std::enable_if_t<
       std::conjunction_v<
-          is_bc_pair<BCPairs_Ts> ...
+          OSteps::traits::is_bc_pair<BCPairs_Ts> ...
         >
       >
     >
     BCList(BCPairs_Ts... args) 
       : m_bcs_list(args...), 
-      m_mats(make_repeat_tuple<LinOps::MatrixStorage_t>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{}))
+      m_mats(OSteps::traits::make_repeat_tuple<LinOps::MatrixStorage_t>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{}))
     { 
       // reserves 10 entries inside of a MatrixStorage_t
       auto reserve_lam = [](auto& mat){mat.reserve(10);}; 

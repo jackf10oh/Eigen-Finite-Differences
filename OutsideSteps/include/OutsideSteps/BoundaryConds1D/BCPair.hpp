@@ -16,7 +16,9 @@ namespace OSteps{
 template<typename LBC_T,typename RBC_T>
 class BCPair: public OStepBase<BCPair<LBC_T,RBC_T>>
 {
-  public:
+  template<typename... BCPairs_Ts>
+  friend class BCList; 
+  private:
     // Member Data -----------------------------------------------------------
     typename std::remove_reference<LBC_T>::type m_left; 
     typename std::remove_reference<RBC_T>::type m_right; 
@@ -27,7 +29,7 @@ class BCPair: public OStepBase<BCPair<LBC_T,RBC_T>>
 
     BCPair(LBC_T l, RBC_T r)
       : m_left(l),m_right(r)
-    {}; 
+    {};
 
     BCPair(const BCPair& other)=default; 
 
