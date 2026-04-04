@@ -79,6 +79,7 @@ class FornCalc
       // for number of nodes n=2, ..., N (first node was zero index)
       for(std::size_t n=1; n<m_n_nodes; n++)
       {
+        std::cout << "n: " << n << " c1; " << c1 << std::endl; 
         // std::cout << "N=" << n << std::endl;
         // c1 *= (x_bar-nodes[n-1]);
         // reset c5. it depends on node[n]
