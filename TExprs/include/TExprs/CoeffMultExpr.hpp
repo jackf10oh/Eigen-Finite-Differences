@@ -31,9 +31,11 @@ class CoeffMultExpr : public TimeDerivBase<CoeffMultExpr<Coeff,TimeDeriv>, std::
   public:
     // Constructors + Destructor ====================================
     CoeffMultExpr()=delete;  
+    
     CoeffMultExpr(LStorage c_init, RStorage rhs_init)
       : m_coeff(c_init), m_rhs(rhs_init)
     {}
+
     CoeffMultExpr(const CoeffMultExpr& other)=default; 
 
     // destructor 
@@ -110,15 +112,15 @@ std::enable_if_t<
 // Operator for Scalar c, TimeDeriv Ut making expression c*Ut 
 template<
   typename Scalar, 
-  typename TimeDeriv
->
-std::enable_if_t<
-  std::conjunction_v<
-    TExprs::traits::is_timederiv_crtp<TimeDeriv>,
-    std::is_arithmetic<std::remove_reference_t<std::remove_cv_t<Scalar>>>
-  >, 
-  TExprs::CoeffMultExpr<Scalar,TimeDeriv>
-> operator*(Scalar&& c, TimeDeriv&& rhs)
+  typename TimeDeriv, 
+  typename = std::enable_if_t<
+    std::conjunction_v<
+      TExprs::traits::is_timederiv_crtp<TimeDeriv>,
+      std::is_arithmetic<std::remove_reference_t<std::remove_cv_t<Scalar>>>
+    >
+  > 
+> 
+auto operator*(Scalar&& c, TimeDeriv&& rhs)
 {
   return TExprs::CoeffMultExpr<Scalar,TimeDeriv>(std::forward<Scalar>(c), std::forward<TimeDeriv>(rhs)); 
 }

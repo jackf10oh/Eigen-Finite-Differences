@@ -27,7 +27,7 @@ class FornArrayCalc
   public:
     // Constructors + Destructor =========================================================
     FornArrayCalc(){ static_assert(M+1 >= N, "FornbergArrayCalc requires NUM_NODES + 1 >= ORDER"); };
-    FornArrayCalc(const FornArrayCalc& other)=delete; 
+    FornArrayCalc(const FornArrayCalc& other)=default; 
     // destructor 
     ~FornArrayCalc()=default; 
     
@@ -38,7 +38,7 @@ class FornArrayCalc
 
     // Updates m_arr to contain weights up to order n
     template<typename Input_Iter>
-    void Calculate(double x_bar, Input_Iter start, Input_Iter end)
+    void calculate(double x_bar, Input_Iter start, Input_Iter end)
     {
       // make sure distance(start,end) == numNodes 
       if(std::distance(start,end) != numNodes) throw std::runtime_error("FornbergArrayCalc error: distance(start,end) != numNodes");  
@@ -71,15 +71,11 @@ class FornArrayCalc
       double c2; 
       // c3 holds the difference (nodes[new]-nodes[old])
       double c3; 
-
-      std::cout << "n: " << 1 << " c1; " << c1 << std::endl; 
-
     
       // for number of nodes n=3, ..., N (first node was zero index)
       if constexpr(numNodes >= 3){
         for(std::size_t n=2; n < numNodes; n++)
         {
-          std::cout << "n: " << n << " c1; " << c1 << std::endl; 
           // c1 *= (x_bar-nodes[n-1]);
           // reset c5. it depends on node[n]
           c2=1.0; 
@@ -145,7 +141,7 @@ class FornArrayCalc
       // Weights now contains LaGrange Interpolant Polynomials for 
       // nodes a0, a1, ..., an evaluated at x_bar
       
-    } // end Calculate ------------
+    } // end calculate ------------
 };
 
 #endif // FornbergArrayCalc.hpp

@@ -21,13 +21,13 @@ class Executor
 {
   public:
     // Type Defs ------------------------------------------- 
-    using Tup = std::remove_cv_t<std::remove_reference_t<decltype(std::declval<TimeDeriv>().toTuple())>>;
-    using ScalarTup = std::remove_cv_t<std::remove_reference_t<decltype(TExprs::traits::filter_tup<TExprs::traits::coeffat_returns_double>(std::declval<Tup&>()))>>;
-    using MatrixTup = std::remove_cv_t<std::remove_reference_t<decltype(TExprs::traits::filter_tup<TExprs::traits::coeffat_returns_other>(std::declval<Tup&>()))>>;
+    using Tup = std::remove_cv_t<std::remove_reference_t<decltype(std::declval<TimeDeriv&>().toTuple())>>;
+    using ScalarTup = std::remove_cv_t<std::remove_reference_t<decltype(TExprs::traits::filter_tup<TExprs::traits::coeffat_returns_double>(std::declval<Tup>()))>>;
+    using MatrixTup = std::remove_cv_t<std::remove_reference_t<decltype(TExprs::traits::filter_tup<TExprs::traits::coeffat_returns_other>(std::declval<Tup>()))>>;
     using InvCoeff = std::conditional_t<std::tuple_size<MatrixTup>::value==0, double, TExprs::Matrix>; 
 
     // number of nodes used in Fornberg algorithm 
-    static constexpr std::size_t numNodes = M; 
+    static constexpr std::size_t numNodes = std::max(M, TimeDeriv::maxOrder+1); 
 
   private:
     // Member Data ---------------------------------

@@ -14,16 +14,20 @@ namespace TExprs{
 
 // ====================================================== 
 template<typename... Args>
-class SumExpr : public TimeDerivBase<SumExpr<Args...>, TExprs::internal::variadicFoldMaximum<Args::maxOrder...>::value> 
+class SumExpr : public TimeDerivBase<SumExpr<Args...>, TExprs::internal::variadicFoldMaximum<std::remove_reference_t<std::remove_cv_t<Args>>::maxOrder...>::value> 
 {
   public:
     std::tuple<Args...> m_args; 
   public:
     // Constructors + Destructor ================================
     SumExpr()=delete; 
-    SumExpr(std::tuple<Args...> tup_init, std::size_t order) 
+
+    SumExpr(std::tuple<Args...> tup_init) 
       : m_args( tup_init ) 
     {} 
+    
+    SumExpr(const SumExpr& other)=default;
+
     // destructor 
     ~SumExpr()=default; 
 
@@ -32,7 +36,7 @@ class SumExpr : public TimeDerivBase<SumExpr<Args...>, TExprs::internal::variadi
     decltype(auto) coeffAt(const Cont& v) const = delete; 
 
     // Lvalue toTuple 
-    auto& toTuple() & 
+    auto toTuple() & 
     { return m_args; }
 
     // Rvalue toTuple -> move args 
@@ -45,11 +49,11 @@ class SumExpr : public TimeDerivBase<SumExpr<Args...>, TExprs::internal::variadi
 template<typename LHS, typename RHS>
 auto make_SumExpr(LHS&& lhs, RHS&& rhs)
 {
-  std::size_t m = std::max(lhs.Order(), rhs.Order()); 
-  auto left_tup = std::forward<LHS>(lhs).toTuple(); 
-  auto right_tup = std::forward<RHS>(rhs).toTuple(); 
-  auto cat = std::tuple_cat(left_tup, right_tup); 
-  return SumExpr(cat, m); 
+  static_assert(
+    TExprs::traits::is_timederiv_crtp<LHS>::value && TExprs::traits::is_timederiv_crtp<RHS>::value,
+    "SumExpr must be constructed from 2 Time Derivative Expressions!"
+  );
+  return SumExpr(std::tuple_cat(std::forward<LHS>(lhs).toTuple(),std::forward<RHS>(rhs).toTuple())); 
 }
 
 } // end namespace TExprs 

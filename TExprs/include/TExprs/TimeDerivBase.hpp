@@ -58,7 +58,7 @@ class TimeDerivBase
     auto toTuple() &&
     {
       // std::cout << "Rvalue Base .toTuple()" << std::endl; 
-      return std::make_tuple(static_cast<Derived&&>(*this)); // rvalue -> rvalue ref
+      return std::make_tuple(std::move(static_cast<Derived&&>(*this))); // rvalue -> move
     }
 
     std::string toString() const {return "hi from base"; }; 
@@ -90,11 +90,17 @@ class TimeDerivBase
       return (-1.0) * std::move(static_cast<Derived&>(*this)); 
     }
 
-    // Binary Subtraction (Ut - Utt) -> (Ut) + (-Utt) ----------------------------------
+    // Binary Subtraction (Ut - Utt) -> (Ut) + (-Utt) (Lvalue) ----------------------------------
     template<typename R, typename = std::enable_if_t<TExprs::traits::is_timederiv_crtp<R>::value>>
-    auto operator-(R&& rhs)
+    auto operator-(R&& rhs) & 
     {
-      return this->operator+(-std::forward<R>(rhs)); 
+      return (*this) + (-std::forward<R>(rhs)); 
+    }
+    // (Rvalue)
+    template<typename R, typename = std::enable_if_t<TExprs::traits::is_timederiv_crtp<R>::value>>
+    auto operator-(R&& rhs) && 
+    {
+      return std::move(*this) + (-std::forward<R>(rhs)); 
     }
 }; 
 

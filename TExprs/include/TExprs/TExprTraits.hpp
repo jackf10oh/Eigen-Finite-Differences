@@ -61,7 +61,7 @@ struct Storage<T, std::enable_if_t<is_timederiv_crtp<T>::value>>
 {
   using type = std::conditional_t<
     std::is_lvalue_reference<T>::value && !(is_coeffmult_crtp<T>::value), 
-    T&, 
+    T,
     std::remove_reference_t<T>
   >; 
 }; 
@@ -113,10 +113,16 @@ template<template<typename...> class PRED, typename TUP_T>
 auto filter_tup(TUP_T tup)
 {
   auto filter_lam = [](auto&& elem){
-    using CLEAN_T = std::remove_reference_t<std::remove_cv_t<decltype(elem)>>;
+    using T = decltype(elem); 
+    using CLEAN_T = std::remove_reference_t<std::remove_cv_t<T>>;
     if constexpr(PRED<CLEAN_T>::value){
       // singleton tuple ( elem )
-      return std::make_tuple(std::forward<decltype(elem)>(elem)); 
+      if constexpr(std::is_lvalue_reference<T>::value){
+        return std::tie(elem); 
+      }
+      else{
+        return std::make_tuple(std::move(elem)); 
+      }
     }
     else{
       // empty tuple ( _ )
