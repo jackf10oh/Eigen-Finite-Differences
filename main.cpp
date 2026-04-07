@@ -18,7 +18,7 @@
 // #include<Solvers/All.hpp> 
 
 #include<Utilities/PrintVec.hpp>
-#include<Utilities/FornbergArrayCalc.hpp> 
+#include<Utilities/BumpFunc.hpp> 
 
 using std::cout, std::endl;
 
@@ -26,76 +26,42 @@ int main()
 {
   // iomanip 
   std::cout << std::setprecision(3); 
-
-  constexpr std::size_t order = 2; 
-  constexpr std::size_t num_nodes = 3; 
-  double x_bar = 1.0; 
-
-  FornArrayCalc<num_nodes, order> calc;
-  FornCalc calc2(num_nodes, order);
   
-  LinOps::Mesh1D_SPtr_t m = LinOps::make_mesh(0.0, num_nodes - 1, num_nodes); 
+  // domain mesh 
+  auto domain = LinOps::make_mesh(0.0,10.0,21); 
 
-  calc.calculate(x_bar, m->cbegin(), m->cend()); 
-  calc2.Calculate(x_bar, m->cbegin(), m->cend(), order); 
- 
-  // print_vec(calc.getArray(), "array calc"); 
-  // print_vec(calc2.m_arr, "vector calc"); 
+  // times mesh
+  auto times = LinOps::make_mesh(0.0,4.0,20); 
 
-  TExprs::NthTimeDeriv<2> Utt{};
-  auto c_func =  [](double x){ return x*x; }; 
-  auto c = LinOps::AutonomousCoeff(c_func); 
+  // ICs 
+  BumpFunc b{.L = 3.0, .R=7.0, .c=5.0,  .h=2.0}; 
+  std::vector<Eigen::VectorXd> sols{ LinOps::make_Discretization(domain, b).values() }; 
 
-  auto mult = 2.0 * Utt; 
-  auto mult02 = c * Utt; 
+  // LHS in time 
+  auto Ut = TExprs::NthTimeDeriv<1>{}; 
 
-  auto lam = [&](auto&& arg){ cout << "arg is lval? " << std::is_lvalue_reference<decltype(arg)>::value << "\n"; }; 
+  // RHS in space 
+  auto expr = 0.5 * LinOps::NthDerivOp(2) - 0.5 * LinOps::NthDerivOp(1); 
+  expr.set_mesh(domain); 
 
-  lam(Utt); 
-  lam(mult); 
-  lam(mult02); 
+  // Solving with explicit steps manually... 
+  auto exec = TExprs::make_Executor(Ut); 
+  auto it = times->cbegin(); 
+  exec.pushTimeRange(it,++it); 
+  exec.pushSolution(sols[0]); 
 
-  auto lam02 = [&](auto&& arg){ cout << "store by lval? " << std::is_lvalue_reference<typename TExprs::traits::Storage<decltype(arg)>::type>::value << "\n"; };
-  lam02(Utt); 
-  lam02(mult); 
-  lam02(mult02); 
+  auto end = times->cend(); 
+  for(; it!=end; ++it)
+  {
+    exec.pushTime(*it); 
+    exec.calculate(*std::prev(it)); 
+    Eigen::VectorXd next_sol = exec.getInvCoeff() * expr.GetMat() * exec.getCurrentSolution() + exec.getRhsExpression();
 
-  cout << "-----------------------\n"; 
-  cout << "1." << endl; 
-  auto lam03 = [&](auto&& arg){ cout << "numNodes: " << arg.numNodes << " size of times: " << arg.getStoredTimes().size() << " size of sols: " << arg.getStoredSolutions().size() << "\n"; }; 
-  auto x1 = TExprs::make_Executor<4>(Utt); 
-  lam03(x1); 
-
-  cout << "2." << endl; 
-  TExprs::Executor<decltype(mult),6> x2(mult); 
-  lam03(x2); 
-
-  cout << "3." << endl; 
-  auto x3 = TExprs::make_Executor<5>(mult02); 
-  lam03(x3); 
-
-
-  using TExprs::NthTimeDeriv; 
-  // auto messy = NthTimeDeriv<7>{} - NthTimeDeriv<4>{} + NthTimeDeriv<2>{}; 
-  auto messy = NthTimeDeriv<7>{} - NthTimeDeriv<4>{} + NthTimeDeriv<2>{}; 
-
-  auto tup = messy.toTuple(); 
-  cout << "tuple[0] is lval? " << std::is_lvalue_reference<std::tuple_element_t<0,decltype(tup)>>::value << "\n"; 
-  cout << "tuple[1] is lval? " << std::is_lvalue_reference<std::tuple_element_t<1,decltype(tup)>>::value << "\n"; 
-  cout << "tuple[2] is lval? " << std::is_lvalue_reference<std::tuple_element_t<2,decltype(tup)>>::value << "\n"; 
+    next_sol[0] = next_sol[next_sol.size()-1] = 0.0;
+     
+    sols.push_back(next_sol); 
+    exec.pushSolution(std::move(next_sol)); 
+  }
   
-  cout << "finish -----------------------\n"; 
-
-  cout << "-----------------------\n"; 
-
-  auto result01 = TExprs::traits::filter_tup<TExprs::traits::coeffat_returns_double>(mult.toTuple()); 
-  auto result02 = TExprs::traits::filter_tup<TExprs::traits::coeffat_returns_other>(mult.toTuple()); 
-  cout << "size of tuple 01: " << std::tuple_size_v<decltype(result01)> << "\n"; 
-  cout << "size of tuple 02: " << std::tuple_size_v<decltype(result02)> << "\n"; 
-
-  cout << "tuple[0] is lval? " << std::is_lvalue_reference<std::tuple_element<0,decltype(mult.toTuple())>::type>::value << "\n"; 
-  cout << "tuple[0] is lval? " << std::is_lvalue_reference<std::tuple_element<0,decltype(result01)>::type>::value << "\n"; 
-
-  auto x = TExprs::make_Executor(messy); 
-  cout << x.numNodes << endl; 
+  print_mat(sols,"Solutions"); 
 };

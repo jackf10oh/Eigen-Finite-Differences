@@ -180,8 +180,8 @@ class Executor
       ); 
     }
 
-    void calculate(){ 
-      m_weights_calc.calculate(); 
+    void calculate(double t){ 
+      m_weights_calc.calculate(t, m_stored_times.cbegin(), m_stored_times.cend()); 
       m_inv_coeff = buildInvCoeff(); 
     }
 
@@ -200,7 +200,7 @@ class Executor
     {
       // assuming all the time derivatives don't have a time dependent CoeffOp, 
       // we can just use a super fast fold expression. 
-      return -m_inv_coeff * (getRhsExpression_impl_helper<idxs> + ...); 
+      return -m_inv_coeff * (getRhsExpression_impl_helper<idxs>() + ...); 
     }
 
     template<std::size_t ithNode>
