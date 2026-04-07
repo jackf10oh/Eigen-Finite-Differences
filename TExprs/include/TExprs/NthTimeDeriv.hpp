@@ -12,30 +12,27 @@
 namespace TExprs{
 
 // ===============================================================
-class NthTimeDeriv : public TExprs::internal::TimeDerivBase<NthTimeDeriv> 
+template<std::size_t N>
+class NthTimeDeriv : public TExprs::TimeDerivBase<NthTimeDeriv<N>, N> 
 {
-  private:
-    // Member Data ---------------
 
   public:
+    // Memeber Data ------------------------------------- 
+    static constexpr std::size_t order = N; 
+
     // Constructors + Destructor ====================================
-    // NthTimeDeriv()=delete; // necessary?  
-    NthTimeDeriv(std::size_t order=1)
-      : TimeDerivBase<NthTimeDeriv>(order)
-    {}
-    NthTimeDeriv(const NthTimeDeriv& other)
-      : TimeDerivBase<NthTimeDeriv>(other.m_order)
-    {} 
+    NthTimeDeriv()=default;
+    NthTimeDeriv(const NthTimeDeriv& other)=default;
+    
     // destructor 
     ~NthTimeDeriv()=default; 
 
     // Member Funcs =================================================== 
-    template<typename Cont>
-    decltype(auto) CoeffAt(const Cont& v, std::size_t n_nodes_per_row, std::size_t ith_node) const 
+    template<std::size_t ithCol, std::size_t nCols, typename Cont>
+    decltype(auto) coeffAt(const Cont& v) const 
     {
-      std::size_t offset = this->m_order * n_nodes_per_row; 
-      return v[ith_node + offset]; 
-    } 
+      return v[nCols * order + ithCol]; 
+    }
 
     // using LhsBase<NthTimeDeriv>::toTuple; 
     std::string toString() const {return "hi from NthTimeDeriv"; }; 
