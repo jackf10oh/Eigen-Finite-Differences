@@ -182,7 +182,9 @@ class Executor
 
     void calculate(double t){ 
       m_weights_calc.calculate(t, m_stored_times.cbegin(), m_stored_times.cend()); 
-      m_inv_coeff = buildInvCoeff(); 
+      // possibly detect if any LinOps are time dependent? 
+      // setTime(t); // handle inside of an outside step...   
+      /* m_inv_coeff = */ buildInvCoeff(); 
     }
 
     decltype(auto) getRhsExpression()
@@ -256,18 +258,17 @@ class Executor
             }, 
             m_scalar_coeff_sum_partition
         );
-        return 1.0 / s;  
+        m_inv_coeff = 1.0 / s;  
       }
       else if constexpr(std::tuple_size<ScalarTup>::value == 0){ 
         // all COeffAt's evaluate to matrix -> return (sum(coeffs)).cwiseInverse 
-        TExprs::Matrix A = std::apply(
+        auto expr = std::apply(
               [&](auto&&... coeffs){
                 return (coeffs.template coeffAt<numNodes-1, numNodes>(m_weights_calc.getArray()) + ...); 
               }, 
               m_mat_coeff_sum_partition 
         ); 
-        TExprs::Matrix B = A.cwiseInverse(); 
-        return B; 
+        m_inv_coeff = expr.cwiseInverse(); 
       }
       else{ 
         // throw std::runtime_error("This formula hasn't been implemented yet!"); 
@@ -278,18 +279,15 @@ class Executor
             }, 
             m_scalar_coeff_sum_partition
         );
-        TExprs::Matrix A = std::apply(
+        auto expr = std::apply(
               [&](auto&&... coeffs){
                 return (coeffs.template coeffAt<numNodes-1, numNodes>(m_weights_calc.getArray()) + ...); 
               }, 
               m_mat_coeff_sum_partition 
         ); 
-
-        // combine s, A along diagonal 
-        A = A.cwiseInverse(); 
-        s = (1.0) / s; 
-        for(std::size_t i=0; i<A.rows(); ++i) A.coeffRef(i,i) += s; 
-        return A; 
+        auto repeated = Eigen::VectorXd::NullaryExpr(expr.rows(), [s](std::size_t i){ return s; });  
+        // combine repeated s, A along diagonal 
+        m_inv_coeff = (expr + repeated.asDiagonal()).cwiseInverse(); 
       }
     } 
 
