@@ -33,7 +33,7 @@ struct TimeContext
   {}
 }; 
 
-template<typename M=traits::NA, typename X=traits::NA, typename R=traits::NA>
+template<typename M=traits::NA, typename X=traits::NA, typename R=traits::NA, typename S=traits::NA>
 class Context
 {
   private:
@@ -41,10 +41,11 @@ class Context
     std::shared_ptr<M> mesh;
     X* const executor; 
     R* const rhs_expr;
+    S* const solver; 
   public:
     // Contstructor ======================================================= 
-    Context(std::shared_ptr<M> m=nullptr, X* const x=nullptr, R* const r=nullptr)
-      : mesh(std::move(m)), executor(x), rhs_expr(r) 
+    Context(std::shared_ptr<M> m=nullptr, X* const x=nullptr, R* const r=nullptr, S* s=nullptr)
+      : mesh(std::move(m)), executor(x), rhs_expr(r), solver(s)
     {}
 
     // Member Funcs ==================================================
@@ -55,6 +56,8 @@ class Context
     const X& getExecutor() const { return *executor; }
     R& getRhsExpr(){ return *rhs_expr; }
     const R& getRhsExpr() const { return *rhs_expr; } 
+    S& getSolver(){ return *solver; }
+    const S& getSolver() const { return *solver; }  
 
 }; 
 

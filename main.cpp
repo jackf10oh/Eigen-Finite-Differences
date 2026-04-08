@@ -46,4 +46,4 @@ int main()
   bcs.VecAfterStep<OSteps::FDStep_Type::EXPLICIT>(vec.values(), OSteps::make_time(), OSteps::make_context(m)); 
 
   print_mat(m->OneDim_views(vec.values()), "vec"); 
-};
+} 
