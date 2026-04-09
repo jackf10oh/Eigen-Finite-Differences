@@ -36,13 +36,13 @@ class RandOp : public LinOpMixIn<RandOp>, public LinOpBase1D<RandOp>, public Lin
     // fit operator to a domain mesh 
     void setMesh1D_impl(const Mesh1D_SPtr_t& m)
     {
-      m_mat = Eigen::MatrixXd::Random(m->size(), m->size()); 
+      m_mat = Eigen::MatrixXd::Random(m->size(), m->size()).sparseView(); 
     };
 
     // fit operator to a domain mesh 
     void setMeshXD_impl(const MeshXD_SPtr_t& m)
     {
-      m_mat = Eigen::MatrixXd::Random(m->sizes_product(), m->sizes_product()); 
+      m_mat = Eigen::MatrixXd::Random(m->sizes_product(), m->sizes_product()).sparseView(); 
     };
 
 }; // end  RandOp

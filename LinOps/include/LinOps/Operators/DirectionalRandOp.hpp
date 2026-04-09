@@ -49,7 +49,7 @@ class DirectionalRandOp: public LinOpMixIn<DirectionalRandOp>, public LinOpBaseX
     void setMeshXD_impl(const MeshXD_SPtr_t& m){
       m_prod_before = m->sizes_middle_product(m_direction+1,m->dims()); 
       m_prod_after = m->sizes_middle_product(0,m_direction); 
-      m_mat =  Eigen::MatrixXd::Random(m_dim_size,m_dim_size).sparseView(); 
+      m_mat =  Eigen::MatrixXd::Random(m->dim_size(m_direction),m->dim_size(m_direction)).sparseView(); 
     }  
 }; 
 
