@@ -9,7 +9,7 @@
 
 #include "TimeDerivBase.hpp"
 #include "NthTimeDeriv.hpp" 
-#include<LinOps/LinOpTraits.hpp> // LinOps::traits::Storage_t<> 
+#include<LinOps/LinOpTraits.hpp> // LinOps::traits::Storage<> 
 
 namespace TExprs{
 namespace internal{
@@ -20,7 +20,7 @@ class CoeffMultExpr : public TimeDerivBase<CoeffMultExpr<COEFF_T,RHS_T>>
 {
   public:
     // Type Defs --------------------- 
-    using Lhs_t = typename LinOps::traits::Storage_t<COEFF_T>::type; 
+    using Lhs_t = typename LinOps::traits::Storage<COEFF_T>::type; 
     using Rhs_t = typename std::conditional_t<
       std::conjunction_v<
         std::is_same<std::remove_cv_t<std::remove_reference_t<RHS_T>>, NthTimeDeriv>, 
@@ -60,7 +60,7 @@ class CoeffMultExpr : public TimeDerivBase<CoeffMultExpr<COEFF_T,RHS_T>>
     auto CoeffAt(const Cont& v, std::size_t n_nodes_per_row, std::size_t ith_node) const 
     {
       if constexpr(LinOps::traits::is_coeffop_crtp<Lhs_t>::value){
-        return m_coeff.GetMat() * m_rhs.CoeffAt(v,n_nodes_per_row,ith_node);  
+        return m_coeff.getMat() * m_rhs.CoeffAt(v,n_nodes_per_row,ith_node);  
       }
       else if constexpr(std::is_same<double, std::remove_cv_t<std::remove_reference_t<Lhs_t>>>::value){
         return m_coeff * m_rhs.CoeffAt(v,n_nodes_per_row,ith_node); 
@@ -83,13 +83,13 @@ class CoeffMultExpr : public TimeDerivBase<CoeffMultExpr<COEFF_T,RHS_T>>
     } // end set_mesh(m) 
 
     // set_time(t) overrides TimeDerivBase
-    void SetTime(double t)
+    void setTime(double t)
     {
       if constexpr(LinOps::traits::is_coeffop_crtp<Lhs_t>::value)
       {
-        m_coeff.SetTime(t); 
+        m_coeff.setTime(t); 
       }
-      m_rhs.SetTime(t); 
+      m_rhs.setTime(t); 
     }
 
     // using LhsBase<LhsCoeffMultExpr<COEFF_T>>::toTuple; 

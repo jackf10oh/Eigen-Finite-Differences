@@ -13,7 +13,7 @@
 #include "../../LinearOpBase.hpp" 
 #include "NthDerivOp.hpp" 
 
-namespace LinOps{
+namespace linops{
 
 class DirectionalNthDerivOp : public LinOpMixIn<DirectionalNthDerivOp>, public LinOpBaseXD<DirectionalNthDerivOp>
 {
@@ -47,8 +47,8 @@ class DirectionalNthDerivOp : public LinOpMixIn<DirectionalNthDerivOp>, public L
     std::size_t Order() const {return m_order; }
 
     // Getters to Matrix 
-    auto GetMat(){ return make_HighDim(make_BlockDiag( m_onedim_stencil.GetMat(),m_prod_before),m_prod_after); }; 
-    auto GetMat() const { return make_HighDim(make_BlockDiag(  m_onedim_stencil.GetMat(),m_prod_before),m_prod_after); }; 
+    auto asMatrix(){ return make_HighDim(make_BlockDiag( m_onedim_stencil.asMatrix(),m_prod_before),m_prod_after); }; 
+    auto asMatrix() const { return make_HighDim(make_BlockDiag(  m_onedim_stencil.asMatrix(),m_prod_before),m_prod_after); }; 
 
     // getters to mesh 
     MeshXD_WPtr_t get_weak_meshxd() const { return m_mesh_ptr; }
@@ -71,7 +71,7 @@ class DirectionalNthDerivOp : public LinOpMixIn<DirectionalNthDerivOp>, public L
     
 }; // end class DirectionalNthDerivOp
 
-} // end namespace LinOps 
+} // end namespace linops 
 
 #endif // DirectionalNthDerivOp.hpp 
 

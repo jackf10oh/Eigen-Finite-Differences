@@ -9,62 +9,55 @@
 
 #include<cstdint>
 #include<Utilities/FornbergCalc.hpp>
-#include "../../LinearOpBase.hpp" 
 
-namespace LinOps{
+#include "../../LinOpMixIn.hpp"
+#include "../../LinOpBase.hpp" 
 
+namespace linops{
+
+template<std::size_t orderN = 1>
 class NthDerivOp : public LinOpMixIn<NthDerivOp>, public LinOpBase1D<NthDerivOp>
 {
   private:
-    // member data 
-    Mesh1D_WPtr_t m_mesh_ptr; 
-    MatrixStorage_t m_stencil; 
-    std::size_t m_order; 
+    // member data ----------------------------------------------------------- 
+    linops::Matrix m_stencil; 
   public:
+    static constexpr std::size_t order = orderN; 
+
     // Constructors + Destructor ===================================================
-    // from mesh + order 
-    NthDerivOp(const LinOps::Mesh1D_SPtr_t& m, std::size_t order=1)
-      : m_order(order)
-    {set_mesh(m);};
-    // from order 
-    NthDerivOp(std::size_t order=1)
-      : m_order(order)
-    {};
+    // default 
+    NthDerivOp()=default; 
+
+    // from mesh
+    NthDerivOp(const linops::Mesh1D_SPtr_t& m)
+    {setMesh1D(m);};
+
+    // copy 
+    NthDerivOp(const NthDerivOp& other)=default; 
+
     // destructor
     ~NthDerivOp()=default; 
     
     // Member Funcs =====================================================
-    // current order or Derivative 
-    std::size_t Order() const {return m_order; };
 
     // Matrix Getters 
-    MatrixStorage_t& GetMat(){ return m_stencil; }; 
-    const MatrixStorage_t& GetMat() const { return m_stencil; };  
+    const Matrix& asMatrix() const { return m_stencil; };  
     
-    // mesh getters 
-    Mesh1D_WPtr_t get_weak_mesh1d() const { return m_mesh_ptr; }
-    Mesh1D_SPtr_t get_mesh1d() const { return m_mesh_ptr.lock(); } 
-
     // set the mesh domain the derivative operator works on 
-    void set_mesh(const Mesh1D_SPtr_t& m)
+    void setMesh1D_impl(const Mesh1D_SPtr_t& m)
     {
-      // ensure we aren't resetting the mesh again
-      if(!m_mesh_ptr.owner_before(m) && !m.owner_before(m_mesh_ptr)) return;
-      // throw error on nullptr 
-      if(!m) throw std::runtime_error("NthDerivOp .set_mesh(Mesh1D_SPtr_t) error: Mesh1D_SPtr_t is expired!"); 
-      // point to new mesh 
-      m_mesh_ptr = m;  
-
-      // perform work on m ... 
+      if constexpr(order == 1){ 
+        m_stencil.setIdentity(); 
+        return; 
+      } 
 
       const std::size_t mesh_size = m->size();
 
       // resize matrix to fit
       m_stencil.resize(mesh_size,mesh_size);
-      // set all entries to zero
-      // m_stencil.setZero(); // no longer needed since setFromTriples 
-      std::size_t one_sided_skirt = m_order;  
-      std::size_t centered_skirt = (m_order+1)/2;  
+      
+      constexpr std::size_t one_sided_skirt = order;  
+      constexpr std::size_t centered_skirt = (order+1)/2;  
 
       // allocate full list of coeff triples 
       typedef Eigen::Triplet<double> T;
@@ -131,6 +124,6 @@ class NthDerivOp : public LinOpMixIn<NthDerivOp>, public LinOpBase1D<NthDerivOp>
 
 }; 
 
-} // end namespace LinOps 
+} // end namespace linops 
 
 #endif // NthDerivOp.hpp

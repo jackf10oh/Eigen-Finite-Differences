@@ -12,7 +12,7 @@
 #ifndef EXPLICITSOLVER_H
 #define EXPLICITSOLVER_H 
 
-#include<LinOps/LinOpTraits.hpp> // trait to check RHS has .GetMat() 
+#include<LinOps/LinOpTraits.hpp> // trait to check RHS has .getMat() 
 #include<TExprs/TimeDerivBase.hpp> // trait to check LHS is a time deriv + MatrixStorage_t 
 #include<TExprs/TExprExecutor.hpp> // TExprExecutor class 
 #include<OutsideSteps/OStepBase.hpp> // FDStep_Type scoped enumeration 
@@ -67,7 +67,7 @@ class ExplicitSolver
           m_ostep_tup
         ); 
 
-        Mat = m_rhs.GetMat(); 
+        Mat = m_rhs.getMat(); 
 
         // working on right end of [t(n-1), t(n)]
         ++it;

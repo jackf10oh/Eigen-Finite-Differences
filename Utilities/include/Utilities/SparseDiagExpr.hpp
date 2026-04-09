@@ -49,7 +49,7 @@ class SparseDiag : public Eigen::SparseMatrixBase< SparseDiag<ArgType,P> > {
     
     // constructors 
     SparseDiag(const ArgType& arg_init, std::size_t repeats_init=1) : m_arg(arg_init), m_num_repeats(repeats_init) {
-      // static_assert( std::is_same<ArgType, MatrixStorage_t>::value, "Invalid arg type. SparseDiag must be constructed from MatrixStorage_t."); 
+      // static_assert( std::is_same<ArgType, Matrix>::value, "Invalid arg type. SparseDiag must be constructed from Matrix."); 
       if(arg_init.rows()!=1 && arg_init.cols()!=1) throw std::invalid_argument("SparseDiag must be constructed from expr with .rows()==1 or .cols()==1"); 
       if(repeats_init<1) throw std::invalid_argument("SparseDiag must be constructed with num_repeats >= 1."); 
       m_is_horizontal = arg_init.rows()==1; 

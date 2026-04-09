@@ -1,0 +1,182 @@
+// LineOpBase.hpp
+//
+// CTRP base for 1D differential operator L
+// where L works on function discretizations across x0 , ..., xN 
+//
+// JAF 12/7/2025
+
+#ifndef LINEAROPBASE_H
+#define LINEAROPBASE_H
+
+#include<cstdint>
+#include<Eigen/Core>
+#include<Eigen/SparseCore>
+
+#include "Mesh1D.hpp"
+#include "MeshXD.hpp"
+#include "Vector1D.hpp"
+#include "VectorXD.hpp"
+
+namespace linops{
+
+using Matrix = Eigen::SparseMatrix<double,Eigen::RowMajor>; 
+
+// forward declaration 
+template<typename T> class LinOpBaseXD; 
+
+template<typename Derived>
+class LinOpBase1D 
+{
+  friend LinOpBaseXD<Derived>; 
+  public:
+    // Type Defs -----------------------------------------------------
+    typedef struct{} is_1dim_linop_tag; // to tell if a class derived from LinOpBase1D<>
+  
+  private:
+    // Member Data ---------------------------------------------------- 
+    Mesh1D_WPtr_t m_mesh_ptr; 
+
+  public:
+    // Member Funcs  ======================================================
+
+    // multiply the underlying expression with linops::Vector1D's underlying Eigen::VectorXd
+    linops::Vector1D apply(const linops::Vector1D& d) const 
+    {
+      Eigen::VectorXd v = static_cast<const Derived*>(this)->asMatrix() * d.values();  // calculate A*b
+      linops::Vector1D result(std::move(v), this->m_mesh_ptr); // move A*b into result's values
+      return result;
+    };
+
+    // fit operator to a mesh of rectangular domain 
+    void setMesh1D(const Mesh1D_SPtr_t& m) 
+    {
+      // if Derived is an expression 
+      if constexpr(traits::is_expr_crtp<Derived>::value){
+        auto& expr = static_cast<Derived&>(*this);  
+        if constexpr(traits::is_1dim_linop_crtp<typename Derived::LStorage_t>::value) expr.getLhs().setMesh1D(m); 
+        if constexpr(traits::is_1dim_linop_crtp<typename Derived::RStorage_t>::value) expr.getRhs().setMesh1D(m); 
+      }
+      // Non Expression case ... 
+      else{
+        /* // // ensure we aren't resetting the mesh again
+        // if(!m_mesh_ptr.owner_before(m) && !m.owner_before(m_mesh_ptr)) return;
+        // // on nullptr throw an error  
+        // if(!m) throw std::runtime_error("set_mesh error: std::shared_ptr<const Mesh1D> is expried"); 
+        */ 
+       // store the mesh
+        m_mesh_ptr = m;   
+        // if the derived is also a 1D linop clear the mesh 
+        if constexpr(traits::is_1dim_linop_crtp<Derived>::value){
+          static_cast<Derived*>(this)->clearMeshXD();
+        }
+        // // perform work on m 
+        setMesh1D_impl(m);
+      }
+    };
+    // Must implement! -------------------------
+    void setMesh1D_impl(const Mesh1D_SPtr_t& m)
+    {
+      static_cast<Derived*>(this)->setMesh1D_impl(m); 
+    }
+    
+    // return Mesh1D pointed to
+    Mesh1D_SPtr_t getMesh1D() const 
+    {
+      // if Derived is an expression 
+      if constexpr(traits::is_expr_crtp<Derived>::value){
+        auto& expr = static_cast<const Derived&>(*this);  
+        if constexpr(traits::is_1dim_linop_crtp<typename Derived::LStorage_t>::value) return expr.getLhs().getMesh1D(); 
+        else if constexpr(traits::is_1dim_linop_crtp<typename Derived::RStorage_t>::value) return expr.getRhs().getMesh1D(); 
+        else static_assert(false, "cannot call getMesh1D() on expr with no LinOpBase1D's in it!"); 
+      }
+      // Non Expression case ... 
+      else{
+        return this->m_mesh_ptr.lock();
+      }
+    } 
+
+  protected:
+    // Unreachable except other base. 
+    void clearMesh1D(){ this->m_mesh_ptr = Mesh1D_SPtr_t{}; }
+}; // end LinOpBase1D<>  
+
+template<typename Derived>
+class LinOpBaseXD 
+{
+  friend LinOpBase1D<Derived>; 
+  public:
+    // Type Defs -----------------------------------------------------
+    typedef struct{} is_xdim_linop_tag; // to tell if a class derived from LinOpBase1D<>
+
+  private:
+    // Member Data ------------------------------------------------- 
+    MeshXD_WPtr_t m_mesh_ptr; 
+
+  public:
+    // Member Funcs  ======================================================
+
+    // multiply the underlying expression with linops::VectorXD's underlying Eigen::VectorXd
+    linops::VectorXD apply(const linops::VectorXD& d) const 
+    {
+      Eigen::VectorXd v = static_cast<const Derived*>(this)->asMatrix() * d.values();  // calculate A*b
+      linops::VectorXD result(std::move(v), this->m_mesh_ptr); // move A*b into result's values
+      return result;
+    };
+
+    // fit operator to a mesh of rectangular domain 
+    void setMeshXD(const MeshXD_SPtr_t& m) 
+    {
+      // if Derived is an expression 
+      if constexpr(traits::is_expr_crtp<Derived>::value){
+        auto& expr = static_cast<Derived&>(*this);  
+        if constexpr(traits::is_xdim_linop_crtp<typename Derived::LStorage_t>::value) expr.getLhs().setMeshXD(m); 
+        if constexpr(traits::is_xdim_linop_crtp<typename Derived::RStorage_t>::value) expr.getRhs().setMeshXD(m); 
+      }
+      // Non Expression case ... 
+      else{
+        /* // // ensure we aren't resetting the mesh again
+        // if(!m_mesh_ptr.owner_before(m) && !m.owner_before(m_mesh_ptr)) return;
+        // // on nullptr throw an error  
+        // if(!m) throw std::runtime_error("set_mesh error: std::shared_ptr<const Mesh1D> is expried"); 
+        */ 
+        // store the mesh
+        m_mesh_ptr = m;  
+        // if the derived is also a 1D linop clear the mesh 
+        if constexpr(traits::is_1dim_linop_crtp<Derived>::value){
+          static_cast<Derived*>(this)->clearMesh1D();
+        }  
+        // // perform work on m 
+        static_cast<Derived*>(this)->setMeshXD_impl(m);
+      }
+    };
+
+    // must implement! 
+    void setMeshXD_impl(const MeshXD_SPtr_t& m)
+    {
+      static_cast<Derived*>(this)->setMeshXD_impl(m); 
+    }
+    
+    // return Mesh1D pointed to
+    MeshXD_SPtr_t getMeshXD() const 
+    {
+      // if Derived is an expression 
+      if constexpr(traits::is_expr_crtp<Derived>::value){
+        auto& expr = static_cast<const Derived&>(*this);  
+        if constexpr(traits::is_xdim_linop_crtp<typename Derived::LStorage_t>::value) return expr.getLhs().getMeshXD(); 
+        else if constexpr(traits::is_xdim_linop_crtp<typename Derived::RStorage_t>::value) return expr.getRhs().getMeshXD(); 
+        else static_assert(false, "cannot call getMeshXD() on expr with no LinOpBaseXD's in it!"); 
+      }
+      // Non Expression case ... 
+      else{
+        return this->m_mesh_ptr.lock();
+      }
+    } 
+    
+  protected:
+    // Unreachable except other base. 
+    void clearMeshXD(){ this->m_mesh_ptr = MeshXD_SPtr_t{}; }
+}; // end LinOpBaseXD<>  
+
+} // end namespace linops 
+
+#endif // LinearOpBase.hpp

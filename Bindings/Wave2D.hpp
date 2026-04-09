@@ -26,7 +26,7 @@ class origin_bump : public OSteps::OStepBaseXD<origin_bump>
 
   public:
     // Member Funcs ------------------------------------------------
-    // Calls SetTime on any LinOps inside the expression
+    // Calls setTime on any LinOps inside the expression
     template<typename TIME_ITER, typename LHS_EXECUTOR, typename RHS_EXPR, OSteps::FDStep_Type Step>
     void BeforeLinAlgebra(TIME_ITER& time_iter, LinOps::MeshXD_SPtr_t& mesh, LHS_EXECUTOR& exec, RHS_EXPR& rhs_expr)
     { 
@@ -56,7 +56,7 @@ struct Wave2D_impl
 {
   // Utt 
   using Lhs_t = TExprs::NthTimeDeriv;  
-  Lhs_t Lhs = TExprs::NthTimeDeriv(2);
+  Lhs_t getLhs = TExprs::NthTimeDeriv(2);
   
   // = Uxx + Uyy 
   LinOps::DirectionalNthDerivOp Uxx = LinOps::DirectionalNthDerivOp(2,0);  
@@ -91,7 +91,7 @@ struct Wave2D : public Wave2D_impl, public Solvers::Interpolator<Wave2D_impl::Lh
   using Interp_t = Solvers::Interpolator<Wave2D_impl::Lhs_t, Wave2D_impl::Rhs_t, Wave2D_impl::OStep_t, LinOps::MeshXD_SPtr_t>; 
   Wave2D()
     :Wave2D_impl(), 
-    Interp_t(this->Lhs, this->Rhs, this->osteps)
+    Interp_t(this->getLhs, this->Rhs, this->osteps)
   {};  
 
   void set_damping(double damping)

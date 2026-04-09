@@ -12,7 +12,7 @@
 #include "MeshXD.hpp"
 #include<LinOps/LinOpTraits.hpp> // callable_traits<T> 
 
-namespace LinOps{
+namespace linops{
 
 class VectorXD
 {
@@ -103,8 +103,8 @@ class VectorXD
 }; 
 
 // set vector to match a mesh size and set it constant 
-LinOps::VectorXD make_Discretization(const MeshXD_SPtr_t& m, double val){ 
-  LinOps::VectorXD result(m);
+linops::VectorXD make_Discretization(const MeshXD_SPtr_t& m, double val){ 
+  linops::VectorXD result(m);
   result.values().setConstant(val); 
   return result;
 } 
@@ -116,7 +116,7 @@ typename = std::enable_if_t<
   !std::is_arithmetic_v<std::remove_reference_t<std::remove_cv_t<F>>>
   >
 >
-LinOps::VectorXD make_Discretization(const MeshXD_SPtr_t& m, F func)
+linops::VectorXD make_Discretization(const MeshXD_SPtr_t& m, F func)
 {
   // assert func returns double 
   static_assert(std::is_same<typename traits::callable_traits<F>::result_type, double>::value, "static assert error: callable type F must return a double"); 
@@ -128,7 +128,7 @@ LinOps::VectorXD make_Discretization(const MeshXD_SPtr_t& m, F func)
       "# dims of MeshXD_SPtr_t must be >= # args in callable F"); 
   
   // result returns by make_Discretization() 
-  LinOps::VectorXD result(m); 
+  linops::VectorXD result(m); 
 
   if constexpr(num_args == 0){
     result.values().setConstant( func() );
@@ -169,6 +169,6 @@ LinOps::VectorXD make_Discretization(const MeshXD_SPtr_t& m, F func)
   return result;
 }
 
-} // end namespace LinOps 
+} // end namespace linops 
 
 #endif // VectorXD.hpp

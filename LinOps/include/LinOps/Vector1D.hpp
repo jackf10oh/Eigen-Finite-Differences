@@ -1,4 +1,4 @@
-// Vector.hpp
+// Vector1D.hpp
 //
 // Discretization of a function F(x0), ..., F(xN) on a mesh x0, ..., xN
 //
@@ -13,10 +13,10 @@
 #include<Eigen/Core>
 #include <type_traits>
 
-#include "Mesh.hpp"
+#include "Mesh1D.hpp"
 #include "LinOpTraits.hpp"
 
-namespace LinOps{
+namespace linops{
 
 class Vector1D
 {
@@ -106,8 +106,8 @@ class Vector1D
 }; // end Vector1D 
 
 // set vector to a constant -------------------------------------------------------------
-LinOps::Vector1D make_Discretization(const Mesh1D_SPtr_t& m, double val){
-  LinOps::Vector1D result(m);
+linops::Vector1D make_Discretization(const Mesh1D_SPtr_t& m, double val){
+  linops::Vector1D result(m);
   result.values().setConstant(val); 
   return result; 
 }
@@ -119,12 +119,12 @@ typename = std::enable_if_t<
   !std::is_arithmetic_v<std::remove_reference_t<std::remove_cv_t<F>>>
   >
 >
-LinOps::Vector1D make_Discretization(const Mesh1D_SPtr_t& m, F func)
+linops::Vector1D make_Discretization(const Mesh1D_SPtr_t& m, F func)
 {
   static_assert(std::is_same<typename traits::callable_traits<F>::result_type, double>::value, "static assert error: callable type F must return a double"); 
   static_assert(traits::callable_traits<F>::num_args <= 1, "static assert error: callable type F must take <= args for Mesh1D"); 
 
-  LinOps::Vector1D result(m); 
+  linops::Vector1D result(m); 
 
   constexpr std::size_t N = traits::callable_traits<F>::num_args; 
   if constexpr(N == 1){
@@ -136,6 +136,6 @@ LinOps::Vector1D make_Discretization(const Mesh1D_SPtr_t& m, F func)
   return result; 
 }
 
-} // end namespace LinOps 
+} // end namespace linops 
 
-#endif // Vector.hpp
+#endif // Vector1D.hpp

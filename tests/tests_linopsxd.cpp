@@ -13,7 +13,7 @@
 
 #include<LinOps/All.hpp>
 
-using namespace LinOps; 
+using namespace linops; 
 
 // Mesh Suite ==================================================== 
 // Test all constructors 
@@ -34,10 +34,10 @@ TEST(MeshXDSuite, MeshXDConstructible){
 
   // from std::vector<> of std::shared_ptr<Mesh1D> 
   // const!  
-  auto mesh_1d_01 = LinOps::make_mesh(); 
-  auto mesh_1d_02 = LinOps::make_mesh(-10.0,0.0,21); 
-  auto mesh_1d_03 = LinOps::make_mesh(0.0,10.0,101);
-  auto v = std::vector<LinOps::Mesh1D_SPtr_t>({mesh_1d_01,mesh_1d_02,mesh_1d_03}); 
+  auto mesh_1d_01 = linops::make_mesh(); 
+  auto mesh_1d_02 = linops::make_mesh(-10.0,0.0,21); 
+  auto mesh_1d_03 = linops::make_mesh(0.0,10.0,101);
+  auto v = std::vector<linops::Mesh1D_SPtr_t>({mesh_1d_01,mesh_1d_02,mesh_1d_03}); 
   MeshXD from_vec(v); 
 
   // copy 
@@ -107,20 +107,20 @@ TEST(MeshXDSuite, MeshXDSizesGetters){
 // Test all constructors 
 TEST(VectorXDSuite, VectorXDConstructible){
   // default constructor leaves m_vals, m_dims, m_mesh_ptr all empty 
-  LinOps::VectorXD empty_disc; 
+  linops::VectorXD empty_disc; 
 
   // 1 dim from single size
   std::size_t N=67; 
-  LinOps::VectorXD from_size_1d(N); 
+  linops::VectorXD from_size_1d(N); 
 
   // from X dimensional MeshXDPtr_t
   auto meshes_1d = std::make_shared<MeshXD>(std::size_t{1}); 
   auto meshes_3d = std::make_shared<MeshXD>(std::size_t{3}); 
-  LinOps::VectorXD from_meshes_1d(meshes_1d); 
-  LinOps::VectorXD from_meshes_3d(meshes_3d); 
+  linops::VectorXD from_meshes_1d(meshes_1d); 
+  linops::VectorXD from_meshes_3d(meshes_3d); 
 
   // copy 
-  LinOps::VectorXD from_other(from_meshes_1d); 
+  linops::VectorXD from_other(from_meshes_1d); 
 
 }
 
@@ -153,32 +153,32 @@ TEST(VectorXDSuite, VectorXDSizesGetters){
   
   // returns # of steps in a specific dimension 
   ASSERT_EQ(from_ends_steps_dims->dim_size(0), \
-            LinOps::VectorXD(from_ends_steps_dims).dim_size(0)); 
+            linops::VectorXD(from_ends_steps_dims).dim_size(0)); 
             
   ASSERT_EQ(from_ends_steps_dims->dim_size(1), \
-            LinOps::VectorXD(from_ends_steps_dims).dim_size(1));  
+            linops::VectorXD(from_ends_steps_dims).dim_size(1));  
 
-  EXPECT_ANY_THROW(LinOps::VectorXD(from_ends_steps_dims).dim_size(10)); // 10 > # of dims 
+  EXPECT_ANY_THROW(linops::VectorXD(from_ends_steps_dims).dim_size(10)); // 10 > # of dims 
 
   // // returns product of (# of steps per dim)
   ASSERT_EQ(from_ends_list_steps_list01->sizes_product(), \
-            LinOps::VectorXD(from_ends_list_steps_list01).sizes_product());  
+            linops::VectorXD(from_ends_list_steps_list01).sizes_product());  
 
   ASSERT_EQ(from_ends_list_steps_list02->sizes_product(), \
-            LinOps::VectorXD(from_ends_list_steps_list02).sizes_product());  
+            linops::VectorXD(from_ends_list_steps_list02).sizes_product());  
   
   // returns product of (# of steps per dim) for dim [start,end)
   ASSERT_EQ(from_ends_list_steps_list02->sizes_middle_product(0,3), \
-            LinOps::VectorXD(from_ends_list_steps_list02).sizes_middle_product(0,3));  
+            linops::VectorXD(from_ends_list_steps_list02).sizes_middle_product(0,3));  
 
   ASSERT_EQ(from_ends_list_steps_list02->sizes_middle_product(0,2), \
-            LinOps::VectorXD(from_ends_list_steps_list02).sizes_middle_product(0,2));
+            linops::VectorXD(from_ends_list_steps_list02).sizes_middle_product(0,2));
 
   ASSERT_EQ(from_ends_list_steps_list02->sizes_middle_product(1,3), \
-            LinOps::VectorXD(from_ends_list_steps_list02).sizes_middle_product(1,3));
+            linops::VectorXD(from_ends_list_steps_list02).sizes_middle_product(1,3));
  
-  EXPECT_ANY_THROW(LinOps::VectorXD(from_ends_list_steps_list02).sizes_middle_product(0,10)); // 10 > # of dims 
-  EXPECT_ANY_THROW(LinOps::VectorXD(from_ends_list_steps_list02).sizes_middle_product(4,0)); // start > end 
+  EXPECT_ANY_THROW(linops::VectorXD(from_ends_list_steps_list02).sizes_middle_product(0,10)); // 10 > # of dims 
+  EXPECT_ANY_THROW(linops::VectorXD(from_ends_list_steps_list02).sizes_middle_product(4,0)); // start > end 
 }
 
 // Testing set_init() for constant
@@ -187,7 +187,7 @@ TEST(VectorXDSuite, VectorXDSetByConstant){
   auto my_meshes = make_meshXD(); 
   
   double val_init = 6.7; 
-  auto my_disc = LinOps::make_Discretization(my_meshes, val_init); 
+  auto my_disc = linops::make_Discretization(my_meshes, val_init); 
 
   for(auto& val : my_disc.values()){
     ASSERT_EQ(val, val_init); 
@@ -206,10 +206,10 @@ TEST(VectorXDSuite, VectorXDSetByCallable){
   auto my_mesh_2d = make_meshXD(0.0,10.0,21, 2); 
   auto my_mesh_3d = make_meshXD(0.0,10.0,21, 3); 
 
-  LinOps::VectorXD my_disc; 
+  linops::VectorXD my_disc; 
 
   // set init 1D case 
-  my_disc = LinOps::make_Discretization(my_mesh_1d, lam01); 
+  my_disc = linops::make_Discretization(my_mesh_1d, lam01); 
   for(std::size_t i=0; i<my_disc.dim_size(0); i++){
     double x = my_mesh_1d->GetMeshAt(0)->at(i); 
     double lam_val = lam01(x); 
@@ -219,7 +219,7 @@ TEST(VectorXDSuite, VectorXDSetByCallable){
   }
 
   // set init 2D case 
-  my_disc = LinOps::make_Discretization(my_mesh_2d, lam02); 
+  my_disc = linops::make_Discretization(my_mesh_2d, lam02); 
   for(std::size_t i=0; i<my_disc.dim_size(0); i++){
 
     double x = my_mesh_2d->GetMeshAt(0)->at(i); 
@@ -239,7 +239,7 @@ TEST(VectorXDSuite, VectorXDSetByCallable){
   }
 
   // set init 3D case 
-  my_disc = LinOps::make_Discretization(my_mesh_3d, lam03); 
+  my_disc = linops::make_Discretization(my_mesh_3d, lam03); 
   for(std::size_t i=0; i<my_disc.dim_size(0); i++){
 
     double x = my_mesh_3d->GetMeshAt(0)->at(i); 
@@ -264,7 +264,7 @@ TEST(VectorXDSuite, VectorXDSetByCallable){
 
   // last case: we can use lower dimensional function on higher dimension mesh
   // i.e. lam02 takes 2 dims but my_mesh3d has 3 dims
-  my_disc = LinOps::make_Discretization(my_mesh_3d, lam02); 
+  my_disc = linops::make_Discretization(my_mesh_3d, lam02); 
   for(std::size_t i=0; i<my_disc.dim_size(0); i++){
 
     double x = my_mesh_3d->GetMeshAt(0)->at(i); 
@@ -296,7 +296,7 @@ TEST(VectorXDSuite, VectorXDSetByCallable){
 TEST(XDOperatorsTestSuite, AutonomousCoeffTest)
 {
   // make a mesh 
-  auto my_mesh = LinOps::make_mesh(0.0,4.0,5); 
+  auto my_mesh = linops::make_mesh(0.0,4.0,5); 
 
   // some lambdas to test out 
   auto lam01 = [](double x){return x*x;}; // x^2
@@ -306,7 +306,7 @@ TEST(XDOperatorsTestSuite, AutonomousCoeffTest)
   
   // take 1 coeff_op and 1 lambda. 
   auto check_lam = [&](const auto& coeff_op, auto func){
-    MatrixStorage_t A = coeff_op.GetMat(); 
+    Matrix A = coeff_op.asMatrix(); 
     // check each value of diag = func(t,x) or func(t) 
     for(std::size_t i=0; i<A.rows(); i++){
       ASSERT_EQ(    
@@ -345,7 +345,7 @@ TEST(XDOperatorsTestSuite, AutonomousCoeffTest)
 TEST(CoeffOpTestSuite, TimeDepCoeffTest)
 {
   // make a mesh 
-  auto my_mesh = LinOps::make_mesh(0.0,4.0,5); 
+  auto my_mesh = linops::make_mesh(0.0,4.0,5); 
 
   // some lambdas to test out 
   auto lam01 = [](double t){return t*t;}; // t^2
@@ -354,18 +354,18 @@ TEST(CoeffOpTestSuite, TimeDepCoeffTest)
   
   // take 1 coeff_op and 1 lambda. check each value of diag = func(t,x) or func(t) 
   auto check_lam = [&](const auto& coeff_op, auto func){
-    MatrixStorage_t A = coeff_op.GetMat(); 
+    Matrix A = coeff_op.asMatrix(); 
     for(std::size_t i=0; i<A.rows(); i++){
-      if constexpr(LinOps::traits::callable_traits<decltype(func)>::num_args==2){
+      if constexpr(linops::traits::callable_traits<decltype(func)>::num_args==2){
         ASSERT_EQ(     
           A.coeff(i,i), 
-          func(coeff_op.Time(), my_mesh->cbegin()[i])         
+          func(coeff_op.getTime(), my_mesh->cbegin()[i])         
         ); 
       } 
-      if constexpr(LinOps::traits::callable_traits<decltype(func)>::num_args==1){
+      if constexpr(linops::traits::callable_traits<decltype(func)>::num_args==1){
         ASSERT_EQ(    
           A.coeff(i,i), 
-          func(coeff_op.Time())   
+          func(coeff_op.getTime())   
         ); 
       } 
     }
@@ -373,22 +373,22 @@ TEST(CoeffOpTestSuite, TimeDepCoeffTest)
 
   // make coeff
   double t = 3.0; 
-  LinOps::TimeDepCoeff coeff01(lam01,my_mesh); 
-  coeff01.SetTime(t); 
+  linops::TimeDepCoeff coeff01(lam01,my_mesh); 
+  coeff01.setTime(t); 
 
   // check they have the same values 
-  ASSERT_NEAR(coeff01.GetMat(), lam01(t), 1e-3); // coeff01 is a scalar!
+  ASSERT_NEAR(coeff01.asMatrix(), lam01(t), 1e-3); // coeff01 is a scalar!
 
   // set to new functions / discretization 
-  LinOps::TimeDepCoeff coeff02(lam02,my_mesh); 
-  coeff02.SetTime(t); 
+  linops::TimeDepCoeff coeff02(lam02,my_mesh); 
+  coeff02.setTime(t); 
 
   // check they have the same values 
   check_lam(coeff02, lam02); 
   
   // set to new functions / discretization 
-  LinOps::TimeDepCoeff coeff03(lam03,my_mesh); 
-  coeff03.SetTime(t); 
+  linops::TimeDepCoeff coeff03(lam03,my_mesh); 
+  coeff03.setTime(t); 
 
   // check they have the same values 
   check_lam(coeff03, lam03); 

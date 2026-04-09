@@ -62,8 +62,8 @@ class TimeDerivBase
     template<typename ANYMESHPTR_T>
     void set_mesh(ANYMESHPTR_T m){}; 
 
-    // default of SetTime() just do nothing. 
-    void SetTime(double t){}; 
+    // default of setTime() just do nothing. 
+    void setTime(double t){}; 
 
     // packs this pointer into iterable tuple object. note: SumExpr will override it
     auto toTuple() &

@@ -1,6 +1,6 @@
 // LinOpTraits.hpp
 //
-// List of TMP functions for LinOps 
+// List of TMP functions for linops 
 //
 // JAF 12/7/2025
 
@@ -8,10 +8,13 @@
 #define LINOPTRAITS_H
 
 #include<type_traits>
+#include<Eigen/SparseCore>
 
-namespace LinOps{
+namespace linops{
 
 // Forward Declarations - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+using Matrix = Eigen::SparseMatrix<double,Eigen::RowMajor>; 
 
 template<typename Derived>
 class LinOpMixIn;
@@ -31,31 +34,31 @@ namespace internal{
 struct linop_bin_add_op
 {
   template<typename L1, typename L2>
-  auto operator()(const L1& A, const L2& B) const { return (A.GetMat()) + (B.GetMat()); }
+  auto operator()(const L1& A, const L2& B) const { return (A.asMatrix()) + (B.asMatrix()); }
 }; 
 // L1 - L2 
 struct linop_bin_subtract_op
 {
   template<typename L1, typename L2>
-  auto operator()(const L1& A, const L2& B) const { return (A.GetMat()) - (B.GetMat()); }
+  auto operator()(const L1& A, const L2& B) const { return (A.asMatrix()) - (B.asMatrix()); }
 }; 
 // c * L
 struct scalar_left_mult_op 
 {
   template<typename L2>
-  auto operator()(const double& c, const L2& B) const { return  c*(B.GetMat()); }
+  auto operator()(const double& c, const L2& B) const { return  c*(B.asMatrix()); }
 }; 
 // -L 
 struct unary_negate_op
 {
   template<typename L1>
-  auto operator()(const L1& B) const { return  -(B.GetMat()); }
+  auto operator()(const L1& B) const { return  -(B.asMatrix()); }
 }; 
 // composition: L1( L2( . ) )
 struct linopXlinop_mult_op
 {
   template<typename L1, typename L2>
-  auto operator()(const L1& A, const L2& B) const { return  (A.GetMat())*(B.GetMat()); }
+  auto operator()(const L1& A, const L2& B) const { return  (A.asMatrix())*(B.asMatrix()); }
 }; 
 
 } // end namespace internal 
@@ -129,7 +132,7 @@ struct is_coeffop_crtp_impl<T, std::void_t<typename T::is_coeff_flag>>: std::tru
 
 namespace traits{
 template<typename T>
-using is_coeffop_crtp = LinOps::internal::is_coeffop_crtp_impl<typename std::remove_cv_t<std::remove_reference_t<T>> >; 
+using is_coeffop_crtp = linops::internal::is_coeffop_crtp_impl<typename std::remove_cv_t<std::remove_reference_t<T>> >; 
 } // end namespace traits
 
 // given a type T see if it is an expression - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -152,18 +155,18 @@ using is_expr_crtp = internal::is_expr_crtp_impl<std::remove_cv_t<std::remove_re
 namespace traits{
 // as a reference or a value in a binary expression
 template<typename T, typename = void>
-struct Storage_t 
+struct Storage 
 {
   using type = T; 
 }; 
 
-template<typename LINOP_T>
-struct Storage_t<LINOP_T, std::enable_if_t< is_linop_crtp<LINOP_T>::value > >
+template<typename LinopT>
+struct Storage<LinopT, std::enable_if_t< is_linop_crtp<LinopT>::value > >
 {
   using type = std::conditional_t<
-    std::is_lvalue_reference<LINOP_T>::value && !(is_expr_crtp<LINOP_T>::value), // if T is an lvalue LinOpBase + not expression 
-    LINOP_T, // store by lvalue LINOP_T& 
-    std::remove_reference_t<LINOP_T> // else store rvalue by value
+    std::is_lvalue_reference<LinopT>::value && !(is_expr_crtp<LinopT>::value), // if T is an lvalue LinOpBase + not expression 
+    LinopT, // store by lvalue LinopT& 
+    std::remove_reference_t<LinopT> // else store rvalue by value
   >; 
 }; 
 
@@ -271,6 +274,6 @@ class callable_traits
 
 } // end namespace traits 
 
-} // end namespace LinOps 
+} // end namespace linops 
 
 #endif // LinOpTraits.hpp

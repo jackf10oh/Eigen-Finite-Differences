@@ -9,7 +9,7 @@
 #ifndef IMPLICITSOLVER_H
 #define IMPLICITSOLVER_H 
 
-#include<LinOps/LinOpTraits.hpp> // trait to check RHS has .GetMat() 
+#include<LinOps/LinOpTraits.hpp> // trait to check RHS has .getMat() 
 #include<TExprs/TimeDerivBase.hpp> // trait to check LHS is a time deriv + MatrixStorage_t 
 #include<TExprs/TExprExecutor.hpp> // TExprExecutor class 
 #include<OutsideSteps/OStepBase.hpp> // FDStep_Type scoped enumeration 
@@ -71,13 +71,13 @@ class ImplicitSolver
         t = *it; 
 
         // moved into an ostep that sets time + mesh of lhs executor / rhs expression 
-        // m_rhs.SetTime(t);
-        // exec.SetTime(t); 
+        // m_rhs.setTime(t);
+        // exec.setTime(t); 
 
         exec.BuildNextTime(t); 
         
         // Mat = I - inv_coeff * FDStencil ; 
-        Mat = m_rhs.GetMat(); 
+        Mat = m_rhs.getMat(); 
         // scale Mat according to 1 / dt ... 
         if constexpr(std::is_same<decltype(exec.inv_coeff()), const double&>::value){
           // INV_COEFF_T is a scalar

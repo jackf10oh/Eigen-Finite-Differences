@@ -12,9 +12,11 @@
 #include<memory>
 #include<algorithm>
 #include<numeric>
-#include<LinOps/Mesh.hpp>
+#include<LinOps/Mesh1D.hpp>
 
-namespace LinOps{
+#include<Eigen/Sparse>
+
+namespace linops{
 
 // forward declaration -> aliases
 class MeshXD; 
@@ -38,7 +40,7 @@ class MeshXD
       : m_mesh_vec(n_dims_init)
     {
       for(std::size_t dim_i=0; dim_i<n_dims_init; dim_i++){
-        m_mesh_vec[dim_i] = LinOps::make_mesh(0.0, 1.0, 5); 
+        m_mesh_vec[dim_i] = linops::make_mesh(0.0, 1.0, 5); 
       }; 
     };
     
@@ -46,7 +48,7 @@ class MeshXD
     MeshXD(double left=0.0, double right=1.0, std::size_t n_steps=11,std::size_t n_dims=1)
       : m_mesh_vec(n_dims)
     {
-      auto original_ptr = LinOps::make_mesh(left,right,n_steps); 
+      auto original_ptr = linops::make_mesh(left,right,n_steps); 
       for(auto& ptr : m_mesh_vec) ptr=original_ptr;  
     }
     
@@ -58,7 +60,7 @@ class MeshXD
       auto nstep_it = nsteps_vec.begin();
       auto axes_it=axes_vec.begin();
       for(auto write=m_mesh_vec.begin(); write!=m_mesh_vec.end(); write++){
-        *write = LinOps::make_mesh(axes_it->first, axes_it->second, *nstep_it); 
+        *write = linops::make_mesh(axes_it->first, axes_it->second, *nstep_it); 
         axes_it++; 
         nstep_it++; 
       }
@@ -156,6 +158,6 @@ auto make_meshXD(const std::shared_ptr<const MeshXD>& other)
   return other; 
 }
 
-} // end namespace LinOps 
+} // end namespace linops 
 
 #endif // MeshXD.hpp

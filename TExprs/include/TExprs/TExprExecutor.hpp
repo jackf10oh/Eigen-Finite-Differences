@@ -190,7 +190,7 @@ class TExprExecutor
     void expr_SetTime(double t)
     {
       auto SetTime_lam = [&](auto&& elem){
-        elem.SetTime(t); 
+        elem.setTime(t); 
       };
       auto set_mesh_for = [&](auto&&... elems){(SetTime_lam(std::forward<decltype(elems)>(elems)),...);}; 
       // std::apply(set_mesh_for, m_scalar_coeff_sum_partition); // unnecessary.  

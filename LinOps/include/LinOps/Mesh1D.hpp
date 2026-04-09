@@ -1,4 +1,4 @@
-// Mesh.hpp
+// Mesh1D.hpp
 //
 // 1D Mesh classes for rectangular domains
 // representing Domain x0 , ..., xN 
@@ -14,7 +14,7 @@
 #include<memory> 
 #include<type_traits>
 
-namespace LinOps{
+namespace linops{
 
 // forward declaration -> aliases
 class Mesh1D; 
@@ -81,6 +81,6 @@ auto make_mesh(Args... args)
   return std::make_shared<const Mesh1D>(args...); 
 }
 
-} // end namespace LinOps 
+} // end namespace linops 
 
-#endif // Mesh.hpp
+#endif // Mesh1D.hpp

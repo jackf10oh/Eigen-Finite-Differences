@@ -8,103 +8,106 @@
 #define LINOPEXPR_H
 
 #include<type_traits>
-#include "LinearOpBase.hpp"
+#include "LinOpBase.hpp"
 #include "LinOpTraits.hpp"
 
-namespace LinOps{
+namespace linops{
 
 // Expression of L,R, BinOp, + Mesh =====================================================
-template<typename Lhs_t, typename Rhs_t, typename BinaryOp_t>
-class LinOpExpr : public LinOpMixIn< LinOpExpr<Lhs_t, Rhs_t, BinaryOp_t> >, public LinOpBase1D< LinOpExpr<Lhs_t, Rhs_t, BinaryOp_t> >, public LinOpBaseXD< LinOpExpr<Lhs_t, Rhs_t, BinaryOp_t> >
+template<typename L, typename R, typename BinaryOp>
+class LinOpExpr : public LinOpMixIn< LinOpExpr<L, R, BinaryOp> >, public LinOpBase1D< LinOpExpr<L, R, BinaryOp> >, public LinOpBaseXD< LinOpExpr<L, R, BinaryOp> >
 {
   public:
     // Type Defs --------------------------------------
-    using LStorage_t = typename traits::Storage_t<Lhs_t>::type;
-    using RStorage_t = typename traits::Storage_t<Rhs_t>::type;
-    using Operator_t = BinaryOp_t; 
+    using LStorage = typename traits::Storage<L>::type;
+    using RStorage = typename traits::Storage<R>::type;
+    using Operator = BinaryOp; 
 
   private:
     // Member Data ---------------------------------------------
-    LStorage_t m_Lhs;
-    RStorage_t m_Rhs;
-    const BinaryOp_t m_BinOp; 
+    LStorage m_lhs;
+    RStorage m_rhs;
+    const BinaryOp m_binop; 
     
   public:
     // Constructors + Destructor =============================================================
+    
     // default 
     LinOpExpr()=delete; 
+
     // from Lhs, Rhs, BinOp, + Mesh 
-    LinOpExpr(LStorage_t A, RStorage_t B)
-      : m_Lhs(A), m_Rhs(B), m_BinOp()
+    LinOpExpr(LStorage A, RStorage B)
+      : m_lhs(A), m_rhs(B), m_binop()
     {
-      constexpr bool both_linop = traits::is_linop_crtp<Lhs_t>::value && traits::is_linop_crtp<Rhs_t>::value;
-      constexpr bool both_1d = traits::is_1dim_linop_crtp<Lhs_t>::value && traits::is_1dim_linop_crtp<Rhs_t>::value;
-      constexpr bool both_xd = traits::is_xdim_linop_crtp<Lhs_t>::value && traits::is_xdim_linop_crtp<Rhs_t>::value;
+      constexpr bool both_linop = traits::is_linop_crtp<L>::value && traits::is_linop_crtp<R>::value;
+      constexpr bool both_1d = traits::is_1dim_linop_crtp<L>::value && traits::is_1dim_linop_crtp<R>::value;
+      constexpr bool both_xd = traits::is_xdim_linop_crtp<L>::value && traits::is_xdim_linop_crtp<R>::value;
       if constexpr(both_linop){
         static_assert(both_1d || both_xd, "Error constructing LinOpExpr: tried to mix strictly 1D operator with strictly XD operator"); 
       }
     };
+
     // copy 
     LinOpExpr(const LinOpExpr& other)=default; 
+
     // destructor
     ~LinOpExpr()=default;
 
     // Member Funcs ======================================================================
 
-    // returns combination bin_op(A,B) of 2 stored LinOps ----------------
-    decltype(auto) GetMat()
+    // returns combination bin_op(A,B) of 2 stored linops ----------------
+    decltype(auto) asMatrix()
     {
-      return m_BinOp(m_Lhs, m_Rhs); 
+      return m_binop(m_lhs, m_rhs); 
     };
-    decltype(auto) GetMat() const
+    decltype(auto) asMatrix() const
     {
-      return m_BinOp(m_Lhs, m_Rhs); 
+      return m_binop(m_lhs, m_rhs); 
     };
 
     // fixes ambiguous .apply() .set_mesh()? 
-    using LinOpBase1D<LinOpExpr<Lhs_t,Rhs_t,BinaryOp_t> >::apply; 
-    using LinOpBaseXD<LinOpExpr<Lhs_t,Rhs_t,BinaryOp_t> >::apply; 
-    using LinOpBase1D<LinOpExpr<Lhs_t,Rhs_t,BinaryOp_t>>::set_mesh; 
-    using LinOpBaseXD<LinOpExpr<Lhs_t,Rhs_t,BinaryOp_t>>::set_mesh; 
+    using LinOpBase1D<LinOpExpr<L,R,BinaryOp> >::apply; 
+    using LinOpBaseXD<LinOpExpr<L,R,BinaryOp> >::apply; 
+    using LinOpBase1D<LinOpExpr<L,R,BinaryOp>>::setMesh1D; 
+    using LinOpBaseXD<LinOpExpr<L,R,BinaryOp>>::setMeshXD; 
 
     // Expr Only ==============================================================
 
     // Lhs/Rhs getters --------------------------------------------------
     // Lhs 
-    LStorage_t& Lhs(){ return m_Lhs; }; 
-    const LStorage_t& Lhs() const { return m_Lhs; }; 
+    LStorage& getLhs(){ return m_lhs; }; 
+    const LStorage& getLhs() const { return m_lhs; }; 
     // rhs 
-    RStorage_t& Rhs(){ return m_Rhs; }; 
-    const RStorage_t& Rhs() const { return m_Rhs; }; 
+    RStorage& getRhs(){ return m_rhs; }; 
+    const RStorage& getRhs() const { return m_rhs; }; 
    
 };
 
 // Specialization for Unary operators --------------------------------------------
-template<typename Lhs_t, typename UnaryOp_t>
-class LinOpExpr<Lhs_t, void, UnaryOp_t> : public LinOpMixIn< LinOpExpr<Lhs_t, void, UnaryOp_t> >, public LinOpBase1D< LinOpExpr<Lhs_t, void, UnaryOp_t> >, public LinOpBaseXD< LinOpExpr<Lhs_t, void, UnaryOp_t> >
+template<typename L, typename UnaryOp>
+class LinOpExpr<L, void, UnaryOp> : public LinOpMixIn< LinOpExpr<L, void, UnaryOp> >, public LinOpBase1D< LinOpExpr<L, void, UnaryOp> >, public LinOpBaseXD< LinOpExpr<L, void, UnaryOp> >
 {
   public:
     // Type Defs ------------------------------------------------------------------
-    using LStorage_t = typename traits::Storage_t<Lhs_t>::type;
-    using RStorage_t = void; // not storing a second argument anymore 
-    using Operator_t = UnaryOp_t; 
-
+    using LStorage = typename traits::Storage<L>::type;
+    using RStorage = void; // not storing a second argument anymore 
+    using Operator = UnaryOp; 
 
   private:
     // Member Data -------------------------------------------------------------
-    LStorage_t m_Lhs;
-    // RStorage_t m_Rhs; // not storing a second argument anymore 
-    const UnaryOp_t m_UnarOp; 
+    LStorage m_lhs;
+    // RStorage m_rhs; // not storing a second argument anymore 
+    const UnaryOp m_unarop; 
     
   public:
     // Constructors / Destructors ===============================================
     // default 
     LinOpExpr()=delete; 
     // from lhs, unar_op, + mesh
-    LinOpExpr(LStorage_t A)
-      : m_Lhs(A), m_UnarOp()
+    LinOpExpr(LStorage A)
+      : m_lhs(A), m_unarop()
     {
-      constexpr bool A_is_linop = traits::is_linop_crtp<Lhs_t>::value;
+      constexpr bool A_is_linop = traits::is_linop_crtp<L>::value;
       static_assert(A_is_linop, "Error constructing Unary LinOpExpr: single linop A is not linop!"); 
     };
     // copy 
@@ -114,35 +117,33 @@ class LinOpExpr<Lhs_t, void, UnaryOp_t> : public LinOpMixIn< LinOpExpr<Lhs_t, vo
 
     // Member Funcs ======================================================================
 
-    // returns Op( A ) of 1 stored LinOps --------------------------------------
-    decltype(auto) GetMat()
+    // returns Op( A ) of 1 stored linops --------------------------------------
+    decltype(auto) asMatrix()
     {
-      // return m_BinOp(m_Lhs, m_Rhs); 
-      return m_UnarOp(m_Lhs); 
+      // return m_binop(m_lhs, m_rhs); 
+      return m_unarop(m_lhs); 
     };
-    decltype(auto) GetMat() const
+    decltype(auto) asMatrix() const
     {
-      // return m_BinOp(m_Lhs, m_Rhs); 
-      return m_UnarOp(m_Lhs); 
+      // return m_binop(m_lhs, m_rhs); 
+      return m_unarop(m_lhs); 
     };
 
-    // fixes ambiguous .apply() .set_mesh()? 
-    using LinOpBase1D<LinOpExpr<Lhs_t,void,UnaryOp_t>>::apply; 
-    using LinOpBaseXD<LinOpExpr<Lhs_t,void,UnaryOp_t>>::apply; 
-    using LinOpBase1D<LinOpExpr<Lhs_t,void,UnaryOp_t>>::set_mesh; 
-    using LinOpBaseXD<LinOpExpr<Lhs_t,void,UnaryOp_t>>::set_mesh; 
+    // fixes ambiguous .apply() ?
+    using LinOpBase1D<LinOpExpr<L,void,UnaryOp>>::apply; 
+    using LinOpBaseXD<LinOpExpr<L,void,UnaryOp>>::apply;  
 
     // Expr Only ==============================================================
 
     // Lhs/Rhs getters --------------------------------------------------
     // Lhs 
-    LStorage_t& Lhs(){ return m_Lhs; };     
-    const LStorage_t& Lhs() const { return m_Lhs; };     
-    // since nothing is stored. but still declared so that decltype(Rhs()) is still usable
-    void Rhs(){};    
+    LStorage& getLhs(){ return m_lhs; };     
+    const LStorage& getLhs() const { return m_lhs; };     
+    // since nothing is stored. but still declared so that decltype(getRhs()) is still usable
+    void getRhs() const {};    
     
 };
 
-} // end namespace LinOps 
+} // end namespace linops 
 
 #endif // LinOpExpr.hpp

@@ -1,7 +1,7 @@
 // SetTimeOstep.hpp
 //
 // Outside step that only has an effect on LHS TExpr executor + RHS LinOp expression 
-// by calling their SetTime() member functions 
+// by calling their setTime() member functions 
 // 
 // JAF 2/3/2026 
 
@@ -15,19 +15,19 @@ namespace OSteps{
 class SetTimeOStep: public OStepBaseXD<>, public OStepBase1D<>
 {
   public:
-    // Calls SetTime on any LinOps inside the expression
+    // Calls setTime on any LinOps inside the expression
     template<typename TIME_ITER, typename LHS_EXECUTOR, typename RHS_EXPR, FDStep_Type Step>
     void BeforeLinAlgebra(TIME_ITER& time_iter, Mesh1D_SPtr_t& mesh, LHS_EXECUTOR& exec, RHS_EXPR& rhs_expr) 
     {
       if constexpr(Step == FDStep_Type::EXPLICIT){
         exec.expr_SetTime(*time_iter); 
-        rhs_expr.SetTime(*time_iter); 
+        rhs_expr.setTime(*time_iter); 
         exec.set_mesh(mesh); 
         rhs_expr.set_mesh(mesh); 
       }
       if constexpr(Step == FDStep_Type::IMPLICIT){
         exec.expr_SetTime(*(time_iter+1)); 
-        rhs_expr.SetTime(*(time_iter+1)); 
+        rhs_expr.setTime(*(time_iter+1)); 
         exec.set_mesh(mesh); 
         rhs_expr.set_mesh(mesh); 
       }
@@ -38,13 +38,13 @@ class SetTimeOStep: public OStepBaseXD<>, public OStepBase1D<>
     {
       if constexpr(Step == FDStep_Type::EXPLICIT){
         exec.expr_SetTime(*time_iter); 
-        rhs_expr.SetTime(*time_iter); 
+        rhs_expr.setTime(*time_iter); 
         exec.set_mesh(mesh); 
         rhs_expr.set_mesh(mesh); 
       }
       if constexpr(Step == FDStep_Type::IMPLICIT){
         exec.expr_SetTime(*(time_iter+1)); 
-        rhs_expr.SetTime(*(time_iter+1)); 
+        rhs_expr.setTime(*(time_iter+1)); 
         exec.set_mesh(mesh); 
         rhs_expr.set_mesh(mesh); 
       }

@@ -16,7 +16,7 @@
 #include "../../Vector.hpp"
 #include "../../VectorXD.hpp"
 
-namespace LinOps{
+namespace linops{
 
 namespace internal{
 
@@ -61,10 +61,10 @@ class TimeDepCoeff :
     TimeDepCoeff()=delete; // no default constructor
 
     // from callable + mesh1d
-    TimeDepCoeff(FUNC_STORAGE_T f_init, const LinOps::Mesh1D_SPtr_t& m = nullptr)
+    TimeDepCoeff(FUNC_STORAGE_T f_init, const linops::Mesh1D_SPtr_t& m = nullptr)
       : m_function(f_init)
     {
-      constexpr bool returns_double = std::is_same<double, typename LinOps::traits::callable_traits<FUNC_STORAGE_T>::result_type>::value; 
+      constexpr bool returns_double = std::is_same<double, typename linops::traits::callable_traits<FUNC_STORAGE_T>::result_type>::value; 
       constexpr bool args_more_than_zero = (traits::callable_traits<FUNC_STORAGE_T>::num_args > 0);
       static_assert(args_more_than_zero && returns_double,"Error constructing coeff: F doesn't return double or have args > 0");  
       if(m)
@@ -74,10 +74,10 @@ class TimeDepCoeff :
       }
     }
     // from callable + meshxd 
-    TimeDepCoeff(FUNC_STORAGE_T f_init, const LinOps::MeshXD_SPtr_t& m)
+    TimeDepCoeff(FUNC_STORAGE_T f_init, const linops::MeshXD_SPtr_t& m)
       : m_function(f_init)
     {
-      constexpr bool returns_double = std::is_same<double, typename LinOps::traits::callable_traits<FUNC_STORAGE_T>::result_type>::value; 
+      constexpr bool returns_double = std::is_same<double, typename linops::traits::callable_traits<FUNC_STORAGE_T>::result_type>::value; 
       constexpr bool args_more_than_zero = (traits::callable_traits<FUNC_STORAGE_T>::num_args > 0);
       static_assert(args_more_than_zero && returns_double,"Error constructing coeff: F doesn't return double or have args > 0");  
       if(m)
@@ -94,7 +94,7 @@ class TimeDepCoeff :
 
     // Member Funcs =============================================================
     // Matrix getters 
-    auto GetMat()
+    auto asMatrix()
     {
       if constexpr(N > 1){
         return SparseDiag<Eigen::VectorXd, SparseDiagPattern::CYCLE>(this->m_diag_vals, this->m_prod_after); 
@@ -106,7 +106,7 @@ class TimeDepCoeff :
         static_assert(false, "must have num_args >= 1 in TimeDep"); 
       }
     };
-    auto GetMat() const
+    auto asMatrix() const
     {
       if constexpr(N > 1){
         return SparseDiag<Eigen::VectorXd, SparseDiagPattern::CYCLE>(this->m_diag_vals, this->m_prod_after); 
@@ -174,7 +174,7 @@ class TimeDepCoeff :
       else if constexpr(N > 1){
         using Bind_t = typename traits::callable_traits<FUNC_STORAGE_T>::BindFirst_t; 
         Bind_t binded(m_function, t); 
-        this->m_diag_vals = LinOps::make_Discretization(m_owned_subdim_mesh_ptr,binded).values(); 
+        this->m_diag_vals = linops::make_Discretization(m_owned_subdim_mesh_ptr,binded).values(); 
       }
       else{
         static_assert(false, "must use # of args >= 1 in Func for TimeDepCoeff"); 
@@ -182,6 +182,6 @@ class TimeDepCoeff :
     };
 }; 
 
-} // end namespace LinOps 
+} // end namespace linops 
 
 #endif // TimeDepCoeff.hpp 

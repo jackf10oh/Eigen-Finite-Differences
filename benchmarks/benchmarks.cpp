@@ -164,7 +164,7 @@ static void BENCHMARK_ConvectionDiffusionExpression_N_Manual_explicit_steps(benc
 
     // fill out the stencil matrix
     fdm_scheme.set_mesh(my_mesh);
-    const MatrixStorage_t stencil = fdm_scheme.GetMat(); 
+    const Matrix stencil = fdm_scheme.asMatrix(); 
 
     state.ResumeTiming();
 

@@ -32,7 +32,7 @@ class SumExpr : public TimeDerivBase<SumExpr<Args...>>
     auto CoeffAt(const Cont& v, std::size_t n_nodes_per_row, std::size_t ith_node) const = delete;
     template<typename ANYMESHPTR_T>
     void set_mesh(ANYMESHPTR_T m)=delete; 
-    void SetTime(double t)=delete; 
+    void setTime(double t)=delete; 
     auto& toTuple() &
     {
       // std::cout << "Lvalue SumExpr .toTuple()" << std::endl; 
