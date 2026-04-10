@@ -19,8 +19,8 @@
 #include "Operators/IOp.hpp"
 #include "Operators/RandOp.hpp"
 #include "Operators/DirectionalRandOp.hpp"
-// #include "Operators/DiffOps/NthDerivOp.hpp"
-// #include "Operators/DiffOps/DirectionalNthDerivOp.hpp" 
+#include "Operators/DiffOps/NthDerivOp.hpp"
+#include "Operators/DiffOps/DirectionalNthDerivOp.hpp" 
 
 #include "CoeffOpMixIn.hpp"
 #include "Operators/CoeffOps/AutonomousCoeff.hpp"

@@ -15,8 +15,8 @@
 
 namespace linops{
 
-template<std::size_t orderN = 1>
-class NthDerivOp : public LinOpMixIn<NthDerivOp>, public LinOpBase1D<NthDerivOp>
+template<std::size_t orderN>
+class NthDerivOp : public LinOpMixIn<NthDerivOp<orderN>>, public LinOpBase1D<NthDerivOp<orderN>>
 {
   private:
     // member data ----------------------------------------------------------- 
@@ -30,7 +30,7 @@ class NthDerivOp : public LinOpMixIn<NthDerivOp>, public LinOpBase1D<NthDerivOp>
 
     // from mesh
     NthDerivOp(const linops::Mesh1D_SPtr_t& m)
-    {setMesh1D(m);};
+    {this->setMesh1D(m);};
 
     // copy 
     NthDerivOp(const NthDerivOp& other)=default; 
@@ -62,20 +62,20 @@ class NthDerivOp : public LinOpMixIn<NthDerivOp>, public LinOpBase1D<NthDerivOp>
       // allocate full list of coeff triples 
       typedef Eigen::Triplet<double> T;
       std::vector<T> tripletList;
-      tripletList.resize(2*centered_skirt*(1+m_order) + (mesh_size-2*centered_skirt)*(1+2*centered_skirt)); // not sure if this is correct size of lise...
+      tripletList.resize(2*centered_skirt*(1+orderN) + (mesh_size-2*centered_skirt)*(1+2*centered_skirt)); // not sure if this is correct size of lise...
 
       // begin OpenMP parallel section. **** COMMENTED OUT: std::vector writing is not thread safe ******
       // #pragma omp parallel 
       {
         // instantiate stateful fornberg calculator. one per thread 
-        FornCalc weight_calc(1+2*((m_order+1)/2),m_order);
+        FornCalc weight_calc(1+2*((orderN+1)/2),orderN);
         // first rows with forward stencil
         // #pragma omp for nowait 
         for(std::size_t i=0; i<centered_skirt; i++)
         {
           auto left = m->cbegin()+i;
           auto right = left+one_sided_skirt+1; 
-          auto weights = weight_calc.GetWeights(*left, left,right, m_order); 
+          auto weights = weight_calc.GetWeights(*left, left,right, orderN); 
           std::size_t offset=i; 
           for(auto& w : weights){
             tripletList[i*(1+one_sided_skirt) 
@@ -89,7 +89,7 @@ class NthDerivOp : public LinOpMixIn<NthDerivOp>, public LinOpBase1D<NthDerivOp>
         {
           auto left = m->cbegin()-centered_skirt+i;  
           auto right = left+(centered_skirt+1+centered_skirt);
-          auto weights = weight_calc.GetWeights(m->at(i), left,right, m_order);
+          auto weights = weight_calc.GetWeights(m->at(i), left,right, orderN);
           int offset = -centered_skirt;
           for(auto& w : weights){
             tripletList[centered_skirt*(1+one_sided_skirt) 
@@ -104,7 +104,7 @@ class NthDerivOp : public LinOpMixIn<NthDerivOp>, public LinOpBase1D<NthDerivOp>
         {
           auto right = m->cbegin() + i; 
           auto left = right-(one_sided_skirt+1); 
-          auto weights = weight_calc.GetWeights(*right, left,right, m_order); 
+          auto weights = weight_calc.GetWeights(*right, left,right, orderN); 
           int offset= -one_sided_skirt;
           for(auto it=weights.cbegin(); it!=weights.cend(); it++){
             tripletList[centered_skirt*(1+one_sided_skirt)
