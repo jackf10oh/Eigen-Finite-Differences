@@ -79,6 +79,21 @@ template<typename T>
 using is_linop_crtp = internal::is_linop_crtp_impl<std::remove_reference_t<std::remove_cv_t<T>>>; 
 } // end namespace traits 
 
+// given a type, detect if it is a time dependent Linear Op - - - - - - - - - - - - -
+namespace internal{
+template<typename T, typename = void> 
+struct is_time_dep_impl : public std::false_type{}; 
+
+template<typename T> 
+struct is_time_dep_impl<T,std::enable_if_t<linops::traits::is_linop_crtp<T>::value>> : public std::conditional_t<T::isTimeDep, std::true_type, std::false_type>{}; 
+
+} // end namespace internal 
+
+namespace traits{
+template<typename T>
+using is_time_dep = linops::internal::is_time_dep_impl<std::remove_reference_t<std::remove_cv_t<T>>>; 
+}
+
 // given a type, detect if it is derived from LinOpBase1D<> - - - - - - - - - - - - 
 namespace internal{
 template<typename T, typename = void>

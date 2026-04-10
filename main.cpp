@@ -38,15 +38,7 @@ int main()
   
   auto expr = c02 * I; 
 
-  std::cout << "enter time: ";
-  double time;  
-  std::cin >> time;
-
-  expr.setMesh1D(m); 
-  expr.setTime(time);  
-  
-  linops::Matrix M = expr.asMatrix(); 
-  
-  cout << M << endl; 
-
+  cout << "Identity is time dep? " << I.isTimeDep << endl; 
+  cout << "TimeDepCoeff is time dep? " << c02.isTimeDep << endl;
+  cout << "expr is time dep? " << expr.isTimeDep << endl;  
 };

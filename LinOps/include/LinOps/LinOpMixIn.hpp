@@ -42,7 +42,9 @@ class LinOpMixIn : private internal::LinOpMixInData<Derived>
     using DerivedT = Derived;
 
     // Member Data -------------------
-    // inherited in LinOpMixInData<>
+    // detects if Derived implements its own setTime_impl. 
+    static constexpr bool isTimeDep = (&DerivedT::setTime_impl != &LinOpMixIn::setTime_impl); 
+    // double m_current_time inherited in LinOpMixInData<>
 
   public:
 

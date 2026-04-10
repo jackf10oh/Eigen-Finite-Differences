@@ -23,7 +23,7 @@ class CoeffOpMixIn : public LinOpMixIn<Derived>
     // Type Defs --------------------------------
     using DerivedT = Derived; // So LinOpMixIn case access Derived type of grandchild classes
     struct is_coeff_flag{}; // flag type for any derived class to be picked up by is_coeffop_crtp<>::value trait  
-
+    static constexpr std::size_t numArgs = traits::callable_traits<Callable>::num_args; 
   protected:
     // Member Data -------------------------------------- 
     Callable m_callable; 

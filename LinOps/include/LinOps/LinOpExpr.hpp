@@ -23,6 +23,9 @@ class LinOpExpr : public LinOpMixIn< LinOpExpr<L, R, BinaryOp> >, public LinOpBa
     using RStorage = typename traits::Storage<R>::type;
     using Operator = BinaryOp; 
 
+    // shadows LinOpMixin's isTimeDep. 
+    static constexpr bool isTimeDep = traits::is_time_dep<L>::value || traits::is_time_dep<R>::value;  
+
   private:
     // Member Data ---------------------------------------------
     LStorage m_lhs;
