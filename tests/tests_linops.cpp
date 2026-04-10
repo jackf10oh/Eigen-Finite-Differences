@@ -83,7 +83,7 @@ TEST(VectorSuite1d, Disc1DConstructible)
 TEST(VectorSuite1d, Disc1DMovable)
 {
   int n_steps=11; 
-  auto my_mesh = make_mesh(0.0,10.0,n_steps); 
+  auto my_mesh = make_Mesh1D(0.0,10.0,n_steps); 
   linops::Vector1D moved_from(my_mesh);
   linops::Vector1D moved_to(std::move(moved_from));  
   // ASSERT_TRUE(moved_from.get_mesh1d().expired()); // no longer altering mesh in moved_from 
@@ -94,7 +94,7 @@ TEST(VectorSuite1d, Disc1DMovable)
 
 TEST(VectorSuite1d, Disc1DSetMesh)
 {
-  auto my_mesh = make_mesh(); 
+  auto my_mesh = make_Mesh1D(); 
   linops::Vector1D my_vals; 
   ASSERT_FALSE(my_vals.get_mesh1d()); 
   linops::Vector1D discretization_w_stored_mesh(my_mesh); 
@@ -103,7 +103,7 @@ TEST(VectorSuite1d, Disc1DSetMesh)
 
 TEST(VectorSuite1d, Disc1DSetCosntant)
 {
-  auto my_mesh = make_mesh(); 
+  auto my_mesh = make_Mesh1D(); 
   double val_set = 0.0; 
 
   linops::Vector1D my_vals = linops::make_Discretization(my_mesh, val_set); 
@@ -123,7 +123,7 @@ TEST(VectorSuite1d, Disc1DSetByCallable)
 
   int n_steps = 101; 
   double left=0, right=100; 
-  auto my_mesh = make_mesh(left,right,n_steps); 
+  auto my_mesh = make_Mesh1D(left,right,n_steps); 
 
   // with lambda 
   linops::Vector1D my_vals = linops::make_Discretization(my_mesh,my_lambda); 
@@ -144,7 +144,7 @@ TEST(VectorSuite1d, Disc1DIterators)
 {
     // simply make a mesh and do nothing with it
   int n_steps = 11;
-  auto my_mesh = make_mesh(0.0,10.0,n_steps);
+  auto my_mesh = make_Mesh1D(0.0,10.0,n_steps);
 
   linops::Vector1D my_vals(my_mesh); 
 
@@ -176,7 +176,7 @@ TEST(LinearOperatorSuite, IdentityConstructible)
   ASSERT_EQ(Identity01.get_mesh1d(),nullptr);
 
   // construct with ptr arg
-  auto my_mesh = make_mesh(); 
+  auto my_mesh = make_Mesh1D(); 
   IOp Identity02(my_mesh);
   ASSERT_EQ(Identity02.get_mesh1d(), my_mesh);   
 
@@ -198,7 +198,7 @@ TEST(LinearOperatorSuite, RandLinOpConstructible)
   ASSERT_EQ(Rand01.get_mesh1d(),nullptr);
 
   // construct with ptr arg
-  auto my_mesh = make_mesh(); 
+  auto my_mesh = make_Mesh1D(); 
   RandLinOp Rand02(my_mesh);
   ASSERT_EQ(Rand02.get_mesh1d(), my_mesh);   
 };
@@ -206,7 +206,7 @@ TEST(LinearOperatorSuite, RandLinOpConstructible)
 TEST(LinearOperatorSuite, RandLinOpGetMat)
 {
   // construct with ptr arg
-  auto my_mesh = make_mesh(); 
+  auto my_mesh = make_Mesh1D(); 
   RandLinOp Rand01(my_mesh);
 
   ASSERT_EQ(Rand01.get_mesh1d(), my_mesh);   
@@ -217,7 +217,7 @@ TEST(LinearOperatorSuite, RandLinOpGetMat)
 TEST(LinearOperatorSuite, RandLinOpApply)
 {
   // setup mesh + discretization 
-  auto my_mesh = make_mesh(); 
+  auto my_mesh = make_Mesh1D(); 
   auto func = [](double x){return x*x;}; // x^2 
 
   linops::Vector1D my_vals = linops::make_Discretization(my_mesh, func);
@@ -238,7 +238,7 @@ TEST(LinearOperatorSuite, RandLinOpApply)
 // Using LinOpExpr. 
 TEST(LinearOperatorSuite, BasicAddition)
 {
-  auto my_mesh = make_mesh(); 
+  auto my_mesh = make_Mesh1D(); 
   // construct without ptr arg
   auto make_I_rval = [my_mesh](){return IOp(my_mesh);}; 
   IOp I_lval(my_mesh);
@@ -282,7 +282,7 @@ TEST(LinearOperatorSuite, BasicAddition)
 
 TEST(LinearOperatorSuite, ScalarMultiplication)
 {
-  auto my_mesh = make_mesh(); 
+  auto my_mesh = make_Mesh1D(); 
   RandLinOp L1(my_mesh);
 
   // test multiplication with rvals
@@ -306,7 +306,7 @@ TEST(LinearOperatorSuite, ScalarMultiplication)
 TEST(LinearOperatorSuite, Composition)
 {
   // get a mesh
-  auto my_mesh = make_mesh(); 
+  auto my_mesh = make_Mesh1D(); 
 
   // vector of [1,1,...,1]
   linops::Vector1D my_vals = linops::make_Discretization(my_mesh, 1.0); 
@@ -340,7 +340,7 @@ TEST(LinearOperatorSuite, Composition)
 
 TEST(LinearOperatorSuite, ExpressionChaining)
 {
-  auto my_mesh = make_mesh(); 
+  auto my_mesh = make_Mesh1D(); 
   // just a messy expression 
   auto my_expr = (2.0*(2.0*(2.0*(2.0*IOp())))).compose(50*IOp(my_mesh) + RandLinOp() + IOp() - RandLinOp(my_mesh).compose(IOp(my_mesh)));
   // not all lhs/rhs had a mesh in expression construction 
@@ -378,7 +378,7 @@ TEST(LinearOperatorSuite, Method_set_mesh_ExprHooking)
   auto Expr = I_lval + IOp();
 
   // make mesh and give it to expression
-  auto my_mesh = make_mesh();
+  auto my_mesh = make_Mesh1D();
   Expr.set_mesh(my_mesh); 
 
   // both Lhs and Rhs should now have m_mesh_ptr == my_mesh
@@ -480,10 +480,10 @@ TEST(NthDerivOpSuite, NthDerivOpConstructible)
 // testing set_mesh() completes with no errors. 
 TEST(NthDerivOpSuite, Method_set_mesh_completing)
 {
-  auto my_mesh_01 = linops::make_mesh(0.0,10.0,11);
-  auto my_mesh_02 = linops::make_mesh(0.0,10.0,101);
-  auto my_mesh_03 = linops::make_mesh(0.0,10.0,1001);
-  auto my_mesh_04 = linops::make_mesh(0.0,10.0,10001);
+  auto my_mesh_01 = linops::make_Mesh1D(0.0,10.0,11);
+  auto my_mesh_02 = linops::make_Mesh1D(0.0,10.0,101);
+  auto my_mesh_03 = linops::make_Mesh1D(0.0,10.0,1001);
+  auto my_mesh_04 = linops::make_Mesh1D(0.0,10.0,10001);
 
   using linops::NthDerivOp; 
   auto D1 = NthDerivOp(1); 

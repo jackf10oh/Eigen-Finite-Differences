@@ -34,9 +34,9 @@ TEST(MeshXDSuite, MeshXDConstructible){
 
   // from std::vector<> of std::shared_ptr<Mesh1D> 
   // const!  
-  auto mesh_1d_01 = linops::make_mesh(); 
-  auto mesh_1d_02 = linops::make_mesh(-10.0,0.0,21); 
-  auto mesh_1d_03 = linops::make_mesh(0.0,10.0,101);
+  auto mesh_1d_01 = linops::make_Mesh1D(); 
+  auto mesh_1d_02 = linops::make_Mesh1D(-10.0,0.0,21); 
+  auto mesh_1d_03 = linops::make_Mesh1D(0.0,10.0,101);
   auto v = std::vector<linops::Mesh1D_SPtr_t>({mesh_1d_01,mesh_1d_02,mesh_1d_03}); 
   MeshXD from_vec(v); 
 
@@ -129,13 +129,13 @@ TEST(VectorXDSuite, VectorXDConstructible){
 // Testing all method that return sizes. should match original MeshXDPtr_t 
 TEST(VectorXDSuite, VectorXDSizesGetters){
   // simply make a mesh and do nothing with it
-  auto my_mesh = make_meshXD(); 
+  auto my_mesh = make_MeshXD(); 
   // make a unit mesh, 5 steps per dim, X dimensions 
   std::size_t X = 4; 
-  auto from_dims_only = make_meshXD(X); 
+  auto from_dims_only = make_MeshXD(X); 
   // make a mesh with custom endpoints, # of steps, # of dimension 
   std::size_t n_steps=31; 
-  auto from_ends_steps_dims = make_meshXD(-10.0,20.0,n_steps, 3); 
+  auto from_ends_steps_dims = make_MeshXD(-10.0,20.0,n_steps, 3); 
 
   // from std::vec of [left,right] and n_steps 
   std::size_t X1{8}, X2{16}, X3{32}; 
@@ -143,8 +143,8 @@ TEST(VectorXDSuite, VectorXDSizesGetters){
   bounds_vec_t bound_vals01{{0.0,4.0}}, bound_vals02{{0.0,4.0},{-2.0,2.0},{-4.0,0.0}}; 
   using nsteps_vec_t = std::vector<std::size_t>; 
   nsteps_vec_t nsteps01{X1}, nsteps02{X1, X2, X3}; 
-  auto from_ends_list_steps_list01 = make_meshXD(bound_vals01, nsteps01); 
-  auto from_ends_list_steps_list02 = make_meshXD(bound_vals02, nsteps02); 
+  auto from_ends_list_steps_list01 = make_MeshXD(bound_vals01, nsteps01); 
+  auto from_ends_list_steps_list02 = make_MeshXD(bound_vals02, nsteps02); 
 
   // size getters should give same result across VectorXD / MeshXDPtr_t 
   // returns # of dimensions 
@@ -184,7 +184,7 @@ TEST(VectorXDSuite, VectorXDSizesGetters){
 // Testing set_init() for constant
 TEST(VectorXDSuite, VectorXDSetByConstant){
 
-  auto my_meshes = make_meshXD(); 
+  auto my_meshes = make_MeshXD(); 
   
   double val_init = 6.7; 
   auto my_disc = linops::make_Discretization(my_meshes, val_init); 
@@ -202,9 +202,9 @@ TEST(VectorXDSuite, VectorXDSetByCallable){
   auto lam02 = [](double x, double y){return std::sqrt(x*x + y*y);}; 
   auto lam03 = [](double x, double y, double z){return std::sqrt(x*x + y*y + z*z);}; 
 
-  auto my_mesh_1d = make_meshXD(0.0,10.0,21, 1); 
-  auto my_mesh_2d = make_meshXD(0.0,10.0,21, 2); 
-  auto my_mesh_3d = make_meshXD(0.0,10.0,21, 3); 
+  auto my_mesh_1d = make_MeshXD(0.0,10.0,21, 1); 
+  auto my_mesh_2d = make_MeshXD(0.0,10.0,21, 2); 
+  auto my_mesh_3d = make_MeshXD(0.0,10.0,21, 3); 
 
   linops::VectorXD my_disc; 
 
@@ -296,7 +296,7 @@ TEST(VectorXDSuite, VectorXDSetByCallable){
 TEST(XDOperatorsTestSuite, AutonomousCoeffTest)
 {
   // make a mesh 
-  auto my_mesh = linops::make_mesh(0.0,4.0,5); 
+  auto my_mesh = linops::make_Mesh1D(0.0,4.0,5); 
 
   // some lambdas to test out 
   auto lam01 = [](double x){return x*x;}; // x^2
@@ -345,7 +345,7 @@ TEST(XDOperatorsTestSuite, AutonomousCoeffTest)
 TEST(CoeffOpTestSuite, TimeDepCoeffTest)
 {
   // make a mesh 
-  auto my_mesh = linops::make_mesh(0.0,4.0,5); 
+  auto my_mesh = linops::make_Mesh1D(0.0,4.0,5); 
 
   // some lambdas to test out 
   auto lam01 = [](double t){return t*t;}; // t^2

@@ -97,8 +97,8 @@ using HeatPDE = Concrete_PDE_1D<HeatPDE_impl>;
 
   HeatPDE pde; 
   
-  pde.Args().domain_mesh_ptr = LinOps::make_mesh(0.0, 10.0, 17); 
-  pde.Args().time_mesh_ptr = LinOps::make_mesh(0.0,5.0,21); 
+  pde.Args().domain_mesh_ptr = LinOps::make_Mesh1D(0.0, 10.0, 17); 
+  pde.Args().time_mesh_ptr = LinOps::make_Mesh1D(0.0,5.0,21); 
   pde.Args().bcs = std::make_shared<Fds::BCPair>(Fds::make_dirichlet(0.0), Fds::make_dirichlet(0.0)); 
 
   LinOps::Discretization1D d; 

@@ -52,7 +52,7 @@ class Interpolator
     Interpolator(LHS_EXPR& lhs, RHS_EXPR& rhs, OSTEP_TUP ostep_init, SolverArgs<M> args_init = {})
       : m_data(0), 
       m_args(std::move(args_init)), 
-      m_high_dim_mesh(LinOps::make_meshXD(m_args.domain_mesh_ptr)), 
+      m_high_dim_mesh(LinOps::make_MeshXD(m_args.domain_mesh_ptr)), 
       m_solver(lhs,rhs,ostep_init), 
       m_calculated(false) 
     {}
@@ -102,7 +102,7 @@ class Interpolator
     void Reset()
     {      
       m_data.resize(0); 
-      m_high_dim_mesh = LinOps::make_meshXD(m_args.domain_mesh_ptr); 
+      m_high_dim_mesh = LinOps::make_MeshXD(m_args.domain_mesh_ptr); 
       m_calculated=false; 
     }
     

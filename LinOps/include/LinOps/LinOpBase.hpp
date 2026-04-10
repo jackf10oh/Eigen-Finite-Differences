@@ -53,8 +53,8 @@ class LinOpBase1D
       // if Derived is an expression 
       if constexpr(traits::is_expr_crtp<Derived>::value){
         auto& expr = static_cast<Derived&>(*this);  
-        if constexpr(traits::is_1dim_linop_crtp<typename Derived::LStorage_t>::value) expr.getLhs().setMesh1D(m); 
-        if constexpr(traits::is_1dim_linop_crtp<typename Derived::RStorage_t>::value) expr.getRhs().setMesh1D(m); 
+        if constexpr(traits::is_1dim_linop_crtp<typename Derived::LStorage>::value) expr.getLhs().setMesh1D(m); 
+        if constexpr(traits::is_1dim_linop_crtp<typename Derived::RStorage>::value) expr.getRhs().setMesh1D(m); 
       }
       // Non Expression case ... 
       else{

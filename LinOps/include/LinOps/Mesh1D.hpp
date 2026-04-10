@@ -76,7 +76,7 @@ class Mesh1D
 
 // quick helper to wrap std::make_shared<Mesh1D> or other Mesh1D derived types  
 template<typename... Args> 
-auto make_mesh(Args... args)
+auto make_Mesh1D(Args... args)
 {
   return std::make_shared<const Mesh1D>(args...); 
 }

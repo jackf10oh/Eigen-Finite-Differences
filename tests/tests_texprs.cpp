@@ -152,9 +152,9 @@ TEST(GenSolverSuite, UtilityMethods)
   auto r = 3.14159; // pi 
   int n_gridpoints = 21;
   // mesh in space 
-  auto my_mesh = LinOps::make_mesh(0.0,r,n_gridpoints); 
+  auto my_mesh = LinOps::make_Mesh1D(0.0,r,n_gridpoints); 
   // mesh in time 
-  auto time_mesh = LinOps::make_mesh(0.0, 5.0, 8); 
+  auto time_mesh = LinOps::make_Mesh1D(0.0, 5.0, 8); 
 
   // Initializing IC discretizations -------------------------------------------------------
   LinOps::Discretization1D my_vals;
@@ -196,9 +196,9 @@ TEST(GenSolverSuite, UtilityMethods)
   auto r = 3.14159; // pi  
   int n_gridpoints = 21;
   // mesh in space 
-  auto my_mesh = LinOps::make_meshXD(0.0,r,n_gridpoints,2); 
+  auto my_mesh = LinOps::make_MeshXD(0.0,r,n_gridpoints,2); 
   // mesh in time 
-  auto time_mesh = LinOps::make_mesh(0.0, 3.0, 101); 
+  auto time_mesh = LinOps::make_Mesh1D(0.0, 3.0, 101); 
 
   // Initializing IC discretizations -------------------------------------------------------
   LinOps::DiscretizationXD my_vals;
@@ -251,9 +251,9 @@ TEST(GenSolverSuite, UtilityMethods)
   auto r = 3.14159; // pi  
   int n_gridpoints = 21;
   // mesh in space 
-  auto my_mesh = LinOps::make_meshXD(0.0,r,n_gridpoints,2); 
+  auto my_mesh = LinOps::make_MeshXD(0.0,r,n_gridpoints,2); 
   // mesh in time 
-  auto time_mesh = LinOps::make_mesh(0.0, 3.0, 101); 
+  auto time_mesh = LinOps::make_Mesh1D(0.0, 3.0, 101); 
 
   // Initializing IC discretizations -------------------------------------------------------
   LinOps::DiscretizationXD my_vals;
@@ -305,9 +305,9 @@ TEST(GenSolverSuite, UtilityMethods)
   auto r = 3.14159; // pi  
   int n_gridpoints = 21;
   // mesh in space 
-  auto my_mesh = LinOps::make_mesh(0.0,r,n_gridpoints); 
+  auto my_mesh = LinOps::make_Mesh1D(0.0,r,n_gridpoints); 
   // mesh in time 
-  auto time_mesh = LinOps::make_mesh(0.0, 3.0, 101); 
+  auto time_mesh = LinOps::make_Mesh1D(0.0, 3.0, 101); 
 
   // Initializing IC discretizations -------------------------------------------------------
   LinOps::Discretization1D my_vals;

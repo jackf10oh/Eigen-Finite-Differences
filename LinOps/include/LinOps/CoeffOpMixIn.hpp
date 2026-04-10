@@ -16,7 +16,7 @@
 namespace linops{
 
 template<typename Derived, typename Callable>
-class CoeffOpMixIn : public LinOpMixIn<CoeffOpMixIn<Derived, Callable>>
+class CoeffOpMixIn : public LinOpMixIn<Derived>
 {
 
   public:
@@ -26,7 +26,7 @@ class CoeffOpMixIn : public LinOpMixIn<CoeffOpMixIn<Derived, Callable>>
 
   protected:
     // Member Data -------------------------------------- 
-    Callable m_callable
+    Callable m_callable; 
     Eigen::VectorXd m_diag; 
     std::size_t m_prod_after; 
 
@@ -41,7 +41,7 @@ class CoeffOpMixIn : public LinOpMixIn<CoeffOpMixIn<Derived, Callable>>
     {}
 
     // copy 
-    CoeffOpMixIn(const CoeffOpMixIn& other) m_callable(other.m_callable); 
+    CoeffOpMixIn(const CoeffOpMixIn& other)=default; 
 
     // destructor 
     ~CoeffOpMixIn()=default; 
@@ -52,11 +52,13 @@ class CoeffOpMixIn : public LinOpMixIn<CoeffOpMixIn<Derived, Callable>>
       constexpr std::size_t n = linops::traits::callable_traits<Callable>::num_args; 
       if constexpr(n==0)
       {
-        return Eigen::VectorXd::NullaryExpr( m_prod_after, [val = m_diag[0]](std::size_t idx){ return val; }); 
+        auto repeated = Eigen::VectorXd::NullaryExpr( m_prod_after, [val = m_diag[0]](std::size_t idx){ return val; });  
+        return repeated.asDiagonal(); 
       }
       else
       {
-        return Eigen::VectorXd::NullaryExpr(m_diag.size() * m_prod_after, [&](std::size_t idx){ return m_diag[idx % m_prod_after]; }); 
+        auto repeated = Eigen::VectorXd::NullaryExpr(m_diag.size() * m_prod_after, [&](std::size_t idx){ return m_diag[idx % m_diag.size()]; }); 
+        return  repeated.asDiagonal(); 
       }
     }
 
@@ -76,7 +78,7 @@ class CoeffOpMixIn : public LinOpMixIn<CoeffOpMixIn<Derived, Callable>>
 
     void fillDiagonal(const linops::Mesh1D_SPtr_t& m)
     {
-      constexpr n = linops::traits::callable_traits<Callable>::num_args; 
+      constexpr std::size_t n = linops::traits::callable_traits<Callable>::num_args; 
       if constexpr(n==0){
         m_prod_after = m->size(); 
         m_diag.resize(1); 
@@ -86,7 +88,7 @@ class CoeffOpMixIn : public LinOpMixIn<CoeffOpMixIn<Derived, Callable>>
         m_prod_after = 1;
         std::size_t s = m->size();  
         m_diag.resize(s); 
-        for(auto i=0; i<s; ++i) m_diag[i] = m_callable(m[i]); 
+        for(auto i=0; i<s; ++i) m_diag[i] = m_callable((*m)[i]); 
       }
       else{
         throw std::runtime_error("CoeffOpMixin error. fillDiagonal called on Mesh1D when callable had > 1 arguments"); 
@@ -95,7 +97,7 @@ class CoeffOpMixIn : public LinOpMixIn<CoeffOpMixIn<Derived, Callable>>
 
     void fillDiagonal(const linops::MeshXD_SPtr_t& m)
     {
-      constexpr n = linops::traits::callable_traits<Callable>::num_args; 
+      constexpr std::size_t n = linops::traits::callable_traits<Callable>::num_args; 
       if(n > m->dims()) throw std::runtime_error("CoeffOpMixin error. fillDiagonal called on MeshXD when callale had num args > dims in mesh");
 
       std::size_t end = m->sizes_middle_product(0,n); 
@@ -115,9 +117,9 @@ class CoeffOpMixIn : public LinOpMixIn<CoeffOpMixIn<Derived, Callable>>
       {
         for(std::size_t ith_dim=0; ith_dim < n; ++ith_dim)
         {
-          coords[ith_dim] = (m->GetMesh(ith_dim))[flat_idx % prods_arr[ith_dim]]; 
-          m_diag = std::apply(m_callable, coords); 
+          coords[ith_dim] = (*(m->GetMesh(ith_dim)))[flat_idx % prods_arr[ith_dim]]; 
         }
+        m_diag[flat_idx] = std::apply(m_callable, coords); 
       }
     }
 
@@ -127,7 +129,7 @@ class CoeffOpMixIn : public LinOpMixIn<CoeffOpMixIn<Derived, Callable>>
     auto operator*(RHS&& rhs)
     {
       static_assert(!traits::is_coeffop_crtp<RHS>::value,"Coefficients are meant to multiply c*L for L linear operator. not another Coefficient. a*b*L should be written as 1 functions");
-      return LinOpMixIn<CoeffOpMixIn<Derived>>::compose(std::forward<RHS>(rhs));
+      return LinOpMixIn<Derived>::compose(std::forward<RHS>(rhs));
     };
     
     // delting a ton of operators out of LinOpMixIn 

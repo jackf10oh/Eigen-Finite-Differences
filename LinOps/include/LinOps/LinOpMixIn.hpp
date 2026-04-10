@@ -54,10 +54,10 @@ class LinOpMixIn : private internal::LinOpMixInData<Derived>
       // if we are an expression 
       if constexpr(traits::is_expr_crtp<typename Derived::DerivedT>::value){
         const auto& expr = static_cast<const typename Derived::DerivedT&>(*this);
-        if constexpr(linops::traits::is_linop_crtp<typename Derived::DerivedT::LStorage_t>::value){
+        if constexpr(linops::traits::is_linop_crtp<typename Derived::DerivedT::LStorage>::value){
           return expr.getLhs().getTime();
         }
-        else if constexpr(linops::traits::is_linop_crtp<typename Derived::DerivedT::RStorage_t>::value){
+        else if constexpr(linops::traits::is_linop_crtp<typename Derived::DerivedT::RStorage>::value){
           return expr.Rhs().getTime();
         }
       }
@@ -75,13 +75,13 @@ class LinOpMixIn : private internal::LinOpMixInData<Derived>
       {
         auto& expr = static_cast<typename Derived::DerivedT&>(*this);
         // if LHS of expr is LinOp
-        if constexpr(linops::traits::is_linop_crtp<typename Derived::DerivedT::LStorage_t>::value) 
+        if constexpr(linops::traits::is_linop_crtp<typename Derived::DerivedT::LStorage>::value) 
         {
           // LHS sets time 
           expr.getLhs().setTime(t);
         }
         // if RHS of expr is LinOp
-        if constexpr(linops::traits::is_linop_crtp<typename Derived::DerivedT::RStorage_t>::value)
+        if constexpr(linops::traits::is_linop_crtp<typename Derived::DerivedT::RStorage>::value)
         {
           // RHS sets time 
           expr.getRhs().setTime(t);

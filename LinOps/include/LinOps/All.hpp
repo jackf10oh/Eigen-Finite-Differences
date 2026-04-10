@@ -21,7 +21,9 @@
 #include "Operators/DirectionalRandOp.hpp"
 // #include "Operators/DiffOps/NthDerivOp.hpp"
 // #include "Operators/DiffOps/DirectionalNthDerivOp.hpp" 
-// #include "Operators/CoeffOps/AutonomousCoeff.hpp"
-// #include "Operators/CoeffOps/TimeDepCoeff.hpp"
+
+#include "CoeffOpMixIn.hpp"
+#include "Operators/CoeffOps/AutonomousCoeff.hpp"
+#include "Operators/CoeffOps/TimeDepCoeff.hpp"
 
 #endif // All.hpp

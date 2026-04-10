@@ -22,18 +22,18 @@ class AutonomousCoeff : public CoeffOpMixIn<AutonomousCoeff<Callable>, Callable>
 
     // from callable 
     AutonomousCoeff(Callable f)
-      : CoeffOpMixIn(f) 
+      : CoeffOpMixIn<AutonomousCoeff<Callable>, Callable>(f) 
     {}
 
     // from Mesh1D + callable 
     AutonomousCoeff(const Mesh1D_SPtr_t m, Callable f)
-      : CoeffOpMixIn(f) 
-    {setMesh1D(m);}
+      : CoeffOpMixIn<AutonomousCoeff<Callable>, Callable>(f) 
+    {this->setMesh1D(m);}
 
     // from Mesh1D + callable 
     AutonomousCoeff(const MeshXD_SPtr_t m, Callable f)
-      : CoeffOpMixIn(f) 
-    {setMeshXD(m);}
+      : CoeffOpMixIn<AutonomousCoeff<Callable>, Callable>(f) 
+    {this->setMeshXD(m);}
 
     // copy constructor
     AutonomousCoeff(const AutonomousCoeff& other)=default; 
@@ -44,12 +44,12 @@ class AutonomousCoeff : public CoeffOpMixIn<AutonomousCoeff<Callable>, Callable>
     // Member Funcs =============================================================
     void setMesh1D_impl(const Mesh1D_SPtr_t& m)
     {
-      CoeffOpMixIn<AutonomousCoeff,Callable>::fillDiagonal(m)
+      CoeffOpMixIn<AutonomousCoeff,Callable>::fillDiagonal(m); 
     }
 
     void setMeshXD_impl(const MeshXD_SPtr_t& m)
     {
-      CoeffOpMixIn<AutonomousCoeff,Callable>::fillDiagonal(m)
+      CoeffOpMixIn<AutonomousCoeff,Callable>::fillDiagonal(m); 
     }
 }; 
 

@@ -40,7 +40,7 @@ class MeshXD
       : m_mesh_vec(n_dims_init)
     {
       for(std::size_t dim_i=0; dim_i<n_dims_init; dim_i++){
-        m_mesh_vec[dim_i] = linops::make_mesh(0.0, 1.0, 5); 
+        m_mesh_vec[dim_i] = linops::make_Mesh1D(0.0, 1.0, 5); 
       }; 
     };
     
@@ -48,7 +48,7 @@ class MeshXD
     MeshXD(double left=0.0, double right=1.0, std::size_t n_steps=11,std::size_t n_dims=1)
       : m_mesh_vec(n_dims)
     {
-      auto original_ptr = linops::make_mesh(left,right,n_steps); 
+      auto original_ptr = linops::make_Mesh1D(left,right,n_steps); 
       for(auto& ptr : m_mesh_vec) ptr=original_ptr;  
     }
     
@@ -60,7 +60,7 @@ class MeshXD
       auto nstep_it = nsteps_vec.begin();
       auto axes_it=axes_vec.begin();
       for(auto write=m_mesh_vec.begin(); write!=m_mesh_vec.end(); write++){
-        *write = linops::make_mesh(axes_it->first, axes_it->second, *nstep_it); 
+        *write = linops::make_Mesh1D(axes_it->first, axes_it->second, *nstep_it); 
         axes_it++; 
         nstep_it++; 
       }
@@ -147,13 +147,13 @@ class MeshXD
 };
 
 template<typename... Args> 
-auto make_meshXD(Args... args)
+auto make_MeshXD(Args... args)
 {
   return std::make_shared<const MeshXD>(args...); 
 }
 
 // just return the input args if called on a shared_ptr<MeshXD>
-auto make_meshXD(const std::shared_ptr<const MeshXD>& other)
+const auto& make_MeshXD(const std::shared_ptr<const MeshXD>& other)
 {
   return other; 
 }
