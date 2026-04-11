@@ -38,7 +38,9 @@ class RandOp : public LinOpMixIn<RandOp>, public LinOpBase1D<RandOp>, public Lin
 
     // matrix getters 
     const auto& asMatrix() const { return m_mat; };
-
+    
+  protected: 
+    // Unreachable ------------------------------------------------------------
     // fit operator to a domain mesh 
     void setMesh1D_impl(const SharedConstMesh1D& m)
     {

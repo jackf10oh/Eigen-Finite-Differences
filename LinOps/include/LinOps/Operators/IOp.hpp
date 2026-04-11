@@ -40,6 +40,8 @@ class IOp : public LinOpMixIn<IOp>, public LinOpBase1D<IOp>, public LinOpBaseXD<
     linops::Vector1D apply(const linops::Vector1D& d_arr) const { return d_arr; } 
     linops::VectorXD apply(const linops::VectorXD& d_arr) const { return d_arr; } 
 
+  protected: 
+    // Unreachable ------------------------------------------------------------
     // fit operator to a domain mesh 
     void setMesh1D_impl(const SharedConstMesh1D& m) 
     {

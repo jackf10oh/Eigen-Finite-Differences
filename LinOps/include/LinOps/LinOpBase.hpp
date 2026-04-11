@@ -73,11 +73,6 @@ class LinOpBase1D
         setMesh1D_impl(m);
       }
     };
-    // Must implement! -------------------------
-    void setMesh1D_impl(const SharedConstMesh1D& m)
-    {
-      static_cast<Derived*>(this)->setMesh1D_impl(m); 
-    }
     
     // return Mesh1D pointed to
     SharedConstMesh1D getMesh1D() const 
@@ -96,8 +91,21 @@ class LinOpBase1D
     } 
 
   protected:
-    // Unreachable except other base. 
+    // Unreachable except by other base. 
     void clearMesh1D(){ this->m_mesh_ptr = SharedConstMesh1D{}; }
+
+    // Must implement! -------------------------
+    void setMesh1D_impl(const SharedConstMesh1D& m)
+    {
+      // static_cast<Derived*>(this)->setMesh1D_impl(m);
+      Accessor::call_setMesh1D_impl(*this, m);  
+    }
+
+    struct Accessor : public Derived
+    {
+      static void call_setMesh1D_impl(LinOpBase1D& self, const SharedConstMesh1D& m){ static_cast<Accessor&>(self).setMesh1D_impl(m); }
+    }; 
+
 }; // end LinOpBase1D<>  
 
 template<typename Derived>
@@ -146,15 +154,10 @@ class LinOpBaseXD
           static_cast<Derived*>(this)->clearMesh1D();
         }  
         // // perform work on m 
-        static_cast<Derived*>(this)->setMeshXD_impl(m);
+        // static_cast<Derived*>(this)->setMeshXD_impl(m);
+        Accessor::call_setMeshXD_impl(*this, m); 
       }
     };
-
-    // must implement! 
-    void setMeshXD_impl(const SharedConstMeshXD& m)
-    {
-      static_cast<Derived*>(this)->setMeshXD_impl(m); 
-    }
     
     // return Mesh1D pointed to
     SharedConstMeshXD getMeshXD() const 
@@ -175,6 +178,19 @@ class LinOpBaseXD
   protected:
     // Unreachable except other base. 
     void clearMeshXD(){ this->m_mesh_ptr = SharedConstMeshXD{}; }
+
+    // must implement! 
+    void setMeshXD_impl(const SharedConstMeshXD& m)
+    {
+      // static_cast<Derived*>(this)->setMeshXD_impl(m); 
+      Accessor::call_setMeshXD_impl(*this, m); 
+    }
+
+    struct Accessor : public Derived
+    {
+      static void call_setMeshXD_impl(LinOpBaseXD& self, const SharedConstMeshXD& m){ static_cast<Accessor&>(self).setMeshXD_impl(m); }
+    }; 
+
 }; // end LinOpBaseXD<>  
 
 } // end namespace linops 

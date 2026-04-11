@@ -94,7 +94,8 @@ class LinOpMixIn : private internal::LinOpMixInData<Derived>
       {
         // store new time.   
         this->m_current_time = t;
-        static_cast<typename Derived::DerivedT*>(this)->setTime_impl(t);
+        // static_cast<typename Derived::DerivedT*>(this)->setTime_impl(t);
+        Accessor::call_setTime_impl(*this, t); 
       } 
     }
     void setTime_impl(double t){ /* do nothing by default ...*/}; 
@@ -207,6 +208,12 @@ class LinOpMixIn : private internal::LinOpMixInData<Derived>
         static_cast<typename Derived::DerivedT&&>(*this) // lhs
       );
     }
+
+  private:
+    struct Accessor : public DerivedT
+    {
+      static void call_setTime_impl(LinOpMixIn& self, double t){ static_cast<Accessor&>(self).setTime_impl(t); }
+    };
 
 }; // end LinOpMixIn<> 
 

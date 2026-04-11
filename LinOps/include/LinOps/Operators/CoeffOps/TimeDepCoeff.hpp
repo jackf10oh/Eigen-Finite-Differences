@@ -52,7 +52,9 @@ class TimeDepCoeff : public CoeffOpMixIn<TimeDepCoeff<Callable>, typename traits
     using LinOpBase1D<TimeDepCoeff>::apply; 
     using LinOpBaseXD<TimeDepCoeff>::setMesh; 
     using LinOpBaseXD<TimeDepCoeff>::apply; 
-
+    
+  protected: 
+    // Unreachable ------------------------------------------------------------
     void setMesh1D_impl(const SharedConstMesh1D& m)
     {
       m_owned_mesh = linops::make_MeshXD(m); 

@@ -43,6 +43,8 @@ class NthDerivOp : public LinOpMixIn<NthDerivOp<orderN>>, public LinOpBase1D<Nth
     // Matrix Getters 
     const Matrix& asMatrix() const { return m_stencil; };  
     
+  protected: 
+    // Unreachable ------------------------------------------------------------
     // set the mesh domain the derivative operator works on 
     void setMesh1D_impl(const SharedConstMesh1D& m)
     {

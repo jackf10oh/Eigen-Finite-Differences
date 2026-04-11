@@ -47,6 +47,8 @@ class AutonomousCoeff : public CoeffOpMixIn<AutonomousCoeff<Callable>, Callable>
     using LinOpBaseXD<AutonomousCoeff>::setMesh; 
     using LinOpBaseXD<AutonomousCoeff>::apply; 
 
+  protected: 
+    // Unreachable ------------------------------------------------------------
     void setMesh1D_impl(const SharedConstMesh1D& m)
     {
       CoeffOpMixIn<AutonomousCoeff,Callable>::fillDiagonal(m); 
