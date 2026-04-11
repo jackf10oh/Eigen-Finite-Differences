@@ -12,7 +12,8 @@
 #include "../LinOpMixIn.hpp"
 #include "../LinOpBase.hpp" 
 
-namespace linops{
+namespace fdm{
+  namespace linops{
 
 template<std::size_t orderN>
 class NthDerivOp : public LinOpMixIn<NthDerivOp<orderN>>, public LinOpBase1D<NthDerivOp<orderN>>
@@ -125,6 +126,6 @@ class NthDerivOp : public LinOpMixIn<NthDerivOp<orderN>>, public LinOpBase1D<Nth
 
 }; 
 
-} // end namespace linops 
-
+  } // end namespace linops 
+} // end namespace fdm  
 #endif // NthDerivOp.hpp

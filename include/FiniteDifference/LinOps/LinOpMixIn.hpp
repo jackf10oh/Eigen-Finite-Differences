@@ -10,7 +10,8 @@
 #include "LinOpTraits.hpp"
 #include "LinOpExpr.hpp"
 
-namespace linops{
+namespace fdm{
+  namespace linops{
 
 namespace internal{
 // Leafs of an expression hold double m_current_time
@@ -233,6 +234,7 @@ auto operator*(Scalar&& c, R&& rhs){
   return std::forward<R>(rhs).left_scalar_mult_impl( std::forward<Scalar>(c) ); 
 }
 
-} // end namespace linops 
+  } // end namespace linops 
+} // end namespace fdm  
 
 #endif // LinOpMixIn.hpp 

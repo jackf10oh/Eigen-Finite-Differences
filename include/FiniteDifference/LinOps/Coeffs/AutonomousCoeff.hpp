@@ -10,7 +10,8 @@
 #include "../CoeffMixIn.hpp" 
 #include "../LinOpBase.hpp" 
 
-namespace linops{
+namespace fdm{
+  namespace linops{
 
 template<typename Callable>
 class AutonomousCoeff : public CoeffMixIn<AutonomousCoeff<Callable>, Callable>, public LinOpBase1D<AutonomousCoeff<Callable>>, public LinOpBaseXD<AutonomousCoeff<Callable>>
@@ -60,6 +61,6 @@ class AutonomousCoeff : public CoeffMixIn<AutonomousCoeff<Callable>, Callable>, 
     }
 }; 
 
-} // end namespace linops 
-
+  } // end namespace linops 
+} // end namespace fdm  
 #endif // AutonomousCoeff.hpp 

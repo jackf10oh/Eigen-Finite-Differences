@@ -11,7 +11,8 @@
 #include "LinOpMixin.hpp"
 #include "LinOpBase.hpp"
 
-namespace linops{
+namespace fdm{
+  namespace linops{
 
 class IOp : public LinOpMixIn<IOp>, public LinOpBase1D<IOp>, public LinOpBaseXD<IOp>
 {
@@ -56,6 +57,7 @@ class IOp : public LinOpMixIn<IOp>, public LinOpBase1D<IOp>, public LinOpBaseXD<
 
 }; // End IOp 
 
-} // end namespace linops 
+  } // end namespace linops 
+} // end namespace fdm  
 
 #endif

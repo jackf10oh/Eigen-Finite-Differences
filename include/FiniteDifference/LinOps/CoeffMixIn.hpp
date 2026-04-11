@@ -13,7 +13,8 @@
 #include "LinOpMixIn.hpp"
 #include "LinOpBase.hpp"
 
-namespace linops{
+namespace fdm{
+  namespace linops{
 
 template<typename Derived, typename Callable>
 class CoeffMixIn : public LinOpMixIn<Derived>
@@ -144,6 +145,7 @@ class CoeffMixIn : public LinOpMixIn<Derived>
     auto left_scalar_mult_impl(double c)=delete; 
 };
 
-} // end namespace linops 
+  } // end namespace linops 
+} // end namespace fdm  
 
 #endif // CoeffMixIn.hpp 

@@ -11,7 +11,8 @@
 #include "LinOpBase.hpp"
 #include "LinOpTraits.hpp"
 
-namespace linops{
+namespace fdm{
+  namespace linops{
 
 // Expression of L,R, BinOp, + Mesh =====================================================
 template<typename L, typename R, typename BinaryOp>
@@ -138,6 +139,7 @@ class LinOpExpr<L, void, UnaryOp> : public LinOpMixIn< LinOpExpr<L, void, UnaryO
     
 };
 
-} // end namespace linops 
+  } // end namespace linops 
+} // end namespace fdm  
 
 #endif // LinOpExpr.hpp

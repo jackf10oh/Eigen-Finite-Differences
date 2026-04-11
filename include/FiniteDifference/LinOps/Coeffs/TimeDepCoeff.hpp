@@ -11,7 +11,8 @@
 #include "../LinOpBase.hpp" 
 #include "../LinOpTraits.hpp" // callable traits -> bind_first
 
-namespace linops{
+namespace fdm{
+  namespace linops{
 
 template<typename Callable>
 class TimeDepCoeff : public CoeffMixIn<TimeDepCoeff<Callable>, typename traits::callable_traits<Callable>::BindFirst_t>, public LinOpBase1D<TimeDepCoeff<Callable>>, public LinOpBaseXD<TimeDepCoeff<Callable>>
@@ -72,6 +73,7 @@ class TimeDepCoeff : public CoeffMixIn<TimeDepCoeff<Callable>, typename traits::
     }
 }; 
 
-} // end namespace linops 
+  } // end namespace linops 
+} // end namespace fdm  
 
 #endif // TimeDepCoeff.hpp 

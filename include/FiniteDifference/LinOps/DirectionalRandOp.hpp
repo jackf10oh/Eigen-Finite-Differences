@@ -12,7 +12,8 @@
 #include "../Utilities/BlockDiagExpr.hpp"
 #include "../Utilities/HighDimExpr.hpp"
 
-namespace linops{
+namespace fdm{
+  namespace linops{
 
 class DirectionalRandOp: public LinOpMixIn<DirectionalRandOp>, public LinOpBaseXD<DirectionalRandOp> 
 {
@@ -54,6 +55,7 @@ class DirectionalRandOp: public LinOpMixIn<DirectionalRandOp>, public LinOpBaseX
     }  
 }; 
 
-} // end namespace linops 
+  } // end namespace linops 
+} // end namespace fdm  
 
 #endif 

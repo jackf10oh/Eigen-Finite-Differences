@@ -19,7 +19,8 @@
 #include "../MeshXD.hpp"
 #include "../VectorXD.hpp"
 
-namespace linops{
+namespace fdm{
+  namespace linops{
 
 // forward declaration 
 template<typename T> class LinOpBaseXD; 
@@ -193,6 +194,7 @@ class LinOpBaseXD
 
 }; // end LinOpBaseXD<>  
 
-} // end namespace linops 
+  } // end namespace linops 
+} // end namespace fdm  
 
 #endif // LinearOpBase.hpp

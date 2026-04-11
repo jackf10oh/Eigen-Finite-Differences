@@ -12,7 +12,8 @@
 #include "../LinOpBase.hpp" 
 #include "NthDerivOp.hpp" 
 
-namespace linops{
+namespace fdm{
+  namespace linops{
 
 template<std::size_t dir, std::size_t orderN>
 class DirectionalNthDerivOp : public LinOpMixIn<DirectionalNthDerivOp<dir,orderN>>, public LinOpBaseXD<DirectionalNthDerivOp<dir,orderN>>
@@ -57,7 +58,8 @@ class DirectionalNthDerivOp : public LinOpMixIn<DirectionalNthDerivOp<dir,orderN
     
 }; // end class DirectionalNthDerivOp
 
-} // end namespace linops 
+  } // end namespace linops 
+} // end namespace fdm  
 
 #endif // DirectionalNthDerivOp.hpp 
 

@@ -29,7 +29,8 @@ using Matrix = Eigen::SparseMatrix<double,Eigen::RowMajor>;
 
 } // end namespace fdm 
 
-namespace linops{
+namespace fdm{
+  namespace linops{
 
 template<typename Derived>
 class LinOpMixIn;
@@ -309,6 +310,7 @@ class callable_traits
 
 } // end namespace traits 
 
-} // end namespace linops 
+  } // end namespace linops 
+} // end namespace fdm  
 
 #endif // LinOpTraits.hpp
