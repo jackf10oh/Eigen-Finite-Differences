@@ -34,12 +34,12 @@ class TimeDepCoeff : public CoeffOpMixIn<TimeDepCoeff<Callable>, typename traits
     // from Mesh1D + callable 
     TimeDepCoeff(const SharedConstMesh1D m, Callable f)
       : CoeffOpMixIn<TimeDepCoeff<Callable>, Binded>(Binded(f, 0.0)) 
-    {this->setMesh1D(m);}
+    {this->setMesh(m);}
 
     // from Mesh1D + callable 
     TimeDepCoeff(const SharedConstMeshXD m, Callable f)
       : CoeffOpMixIn<TimeDepCoeff<Callable>, Binded>(Binded(f, 0.0)) 
-    {this->setMeshXD(m);}
+    {this->setMesh(m);}
 
     // copy constructor
     TimeDepCoeff(const TimeDepCoeff& other)=default; 
@@ -48,6 +48,11 @@ class TimeDepCoeff : public CoeffOpMixIn<TimeDepCoeff<Callable>, typename traits
     ~TimeDepCoeff()=default;
 
     // Member Funcs =============================================================
+    using LinOpBase1D<TimeDepCoeff>::setMesh; 
+    using LinOpBase1D<TimeDepCoeff>::apply; 
+    using LinOpBaseXD<TimeDepCoeff>::setMesh; 
+    using LinOpBaseXD<TimeDepCoeff>::apply; 
+
     void setMesh1D_impl(const SharedConstMesh1D& m)
     {
       m_owned_mesh = linops::make_MeshXD(m); 

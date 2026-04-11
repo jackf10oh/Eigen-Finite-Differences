@@ -36,6 +36,6 @@ int main()
 
   auto my_expr = rhs2; 
 
-  my_expr.setMesh1D(mesh); 
+  my_expr.setMesh(mesh); 
   cout << my_expr.asMatrix() << endl; 
 };

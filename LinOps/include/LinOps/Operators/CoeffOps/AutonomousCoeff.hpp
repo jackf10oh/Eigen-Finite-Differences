@@ -33,7 +33,7 @@ class AutonomousCoeff : public CoeffOpMixIn<AutonomousCoeff<Callable>, Callable>
     // from Mesh1D + callable 
     AutonomousCoeff(const SharedConstMeshXD m, Callable f)
       : CoeffOpMixIn<AutonomousCoeff<Callable>, Callable>(f) 
-    {this->setMeshXD(m);}
+    {this->setMesh(m);}
 
     // copy constructor
     AutonomousCoeff(const AutonomousCoeff& other)=default; 
@@ -42,6 +42,11 @@ class AutonomousCoeff : public CoeffOpMixIn<AutonomousCoeff<Callable>, Callable>
     ~AutonomousCoeff()=default;
 
     // Member Funcs =============================================================
+    using LinOpBase1D<AutonomousCoeff>::setMesh1D; 
+    using LinOpBase1D<AutonomousCoeff>::apply; 
+    using LinOpBaseXD<AutonomousCoeff>::setMesh; 
+    using LinOpBaseXD<AutonomousCoeff>::apply; 
+
     void setMesh1D_impl(const SharedConstMesh1D& m)
     {
       CoeffOpMixIn<AutonomousCoeff,Callable>::fillDiagonal(m); 

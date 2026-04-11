@@ -33,7 +33,7 @@ class DirectionalNthDerivOp : public LinOpMixIn<DirectionalNthDerivOp<dir,orderN
     DirectionalNthDerivOp()=default; 
 
     // meshxd 
-    DirectionalNthDerivOp(const SharedConstMeshXD& m){this->setMeshXD(m);}
+    DirectionalNthDerivOp(const SharedConstMeshXD& m){this->setMesh(m);}
 
     // copy 
     DirectionalNthDerivOp(const DirectionalNthDerivOp& other)=default; 

@@ -23,15 +23,17 @@ class RandOp : public LinOpMixIn<RandOp>, public LinOpBase1D<RandOp>, public Lin
 
     // Constructors + Destructor ===========================
     RandOp()=default;
-    RandOp(const SharedConstMesh1D& m){ setMesh1D(m); }   
-    RandOp(const SharedConstMeshXD& m){ setMeshXD(m); }
+    RandOp(const SharedConstMesh1D& m){ setMesh(m); }   
+    RandOp(const SharedConstMeshXD& m){ setMesh(m); }
     RandOp(const RandOp& other)=default; 
     
     // destructor
     ~RandOp()=default;
 
     // Member Funcs ==========================================
+    using LinOpBase1D<RandOp>::setMesh; 
     using LinOpBase1D<RandOp>::apply; 
+    using LinOpBaseXD<RandOp>::setMesh; 
     using LinOpBaseXD<RandOp>::apply; 
 
     // matrix getters 

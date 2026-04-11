@@ -345,7 +345,7 @@ TEST(LinearOperatorSuite, ExpressionChaining)
   // just a messy expression 
   // auto my_expr = (2.0*(2.0*(2.0*(2.0*IOp())))).compose(50*IOp(my_mesh) + RandOp() + IOp() - RandOp(my_mesh).compose(IOp(my_mesh)));
   // not all lhs/rhs had a mesh in expression construction 
-  // my_expr.setMesh1D(my_mesh); 
+  // my_expr.setMesh(my_mesh); 
   // we should be able to make into eigen Matrix no matter what
   // Eigen::MatrixXd resulting_mat = my_expr.asMatrix(); 
 
@@ -366,19 +366,19 @@ TEST(LinearOperatorSuite, ExpressionChaining)
   linops::Vector1D disc = linops::make_Discretization(my_mesh, 1.0); 
 
   linops::Matrix M1 = my_expr.asMatrix(); 
-  my_expr2.setMesh1D(my_mesh);
+  my_expr2.setMesh(my_mesh);
   my_expr2.apply(disc);  
 
   linops::Matrix M2 = my_expr2.asMatrix(); 
-  my_expr2.setMesh1D(my_mesh);
+  my_expr2.setMesh(my_mesh);
   my_expr2.apply(disc);  
-  my_expr2.setMesh1D(my_mesh); 
+  my_expr2.setMesh(my_mesh); 
 }
 
 TEST(LinearOperatorSuite, Method_set_mesh_ExprHooking)
 {
-  // Calling setMesh1D on an expression E = L1 + L2 
-  // should pass the mesh to L1.setMesh1D() and L2.setMesh1D() 
+  // Calling setMesh on an expression E = L1 + L2 
+  // should pass the mesh to L1.setMesh() and L2.setMesh() 
    
   // construct without mesh ptrs 
   IOp I_lval;
@@ -386,7 +386,7 @@ TEST(LinearOperatorSuite, Method_set_mesh_ExprHooking)
 
   // make mesh and give it to expression
   auto my_mesh = make_Mesh1D();
-  Expr.setMesh1D(my_mesh); 
+  Expr.setMesh(my_mesh); 
 
   // both Lhs and Rhs should now have m_mesh_ptr == my_mesh
   ASSERT_EQ(I_lval.getMesh1D(), my_mesh);
@@ -397,8 +397,8 @@ TEST(LinearOperatorSuite, Method_set_mesh_ExprHooking)
   double c=2.0; 
   auto Expr2 = 2.0* I2_lval;
   auto Expr3 = c*IOp();
-  Expr2.setMesh1D(my_mesh); 
-  Expr3.setMesh1D(my_mesh); 
+  Expr2.setMesh(my_mesh); 
+  Expr3.setMesh(my_mesh); 
   // both Lhs and Rhs should now have m_mesh_ptr == my_mesh
   ASSERT_EQ(I2_lval.getMesh1D(), my_mesh);
   ASSERT_EQ(Expr2.getRhs().getMesh1D(), my_mesh);
@@ -409,8 +409,8 @@ TEST(LinearOperatorSuite, Method_set_mesh_ExprHooking)
   IOp I4_lval;
   auto Expr4 = I3_lval.compose(I3_lval); 
   auto Expr5 = Expr4.compose(IOp());
-  // Expr4.setMesh1D(my_mesh); 
-  Expr5.setMesh1D(my_mesh); 
+  // Expr4.setMesh(my_mesh); 
+  Expr5.setMesh(my_mesh); 
   // both Lhs and Rhs should now have m_mesh_ptr == my_mesh
   ASSERT_EQ(I3_lval.getMesh1D(), my_mesh);
   // ASSERT_EQ(Expr4.Rhs().getMesh1D(), my_mesh);
@@ -484,7 +484,7 @@ TEST(NthDerivOpSuite, NthDerivOpConstructible)
   // NthDerivOp<2> from_mesh(nullptr); 
 }
 
-// testing setMesh1D() completes with no errors. 
+// testing setMesh() completes with no errors. 
 TEST(NthDerivOpSuite, Method_set_mesh_completing)
 {
   auto my_mesh_01 = linops::make_Mesh1D(0.0,10.0,11);
@@ -498,13 +498,13 @@ TEST(NthDerivOpSuite, Method_set_mesh_completing)
   auto D4 = NthDerivOp<4>{}; 
 
   auto test_mesh_lam = [&](auto mesh_ptr){
-    D1.setMesh1D(mesh_ptr); 
+    D1.setMesh(mesh_ptr); 
     D1.asMatrix(); 
-    D2.setMesh1D(mesh_ptr); 
+    D2.setMesh(mesh_ptr); 
     D2.asMatrix(); 
-    D3.setMesh1D(mesh_ptr); 
+    D3.setMesh(mesh_ptr); 
     D3.asMatrix(); 
-    D4.setMesh1D(mesh_ptr);
+    D4.setMesh(mesh_ptr);
     D1.asMatrix(); 
   };
 

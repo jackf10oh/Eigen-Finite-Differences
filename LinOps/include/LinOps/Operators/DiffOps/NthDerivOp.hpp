@@ -30,7 +30,7 @@ class NthDerivOp : public LinOpMixIn<NthDerivOp<orderN>>, public LinOpBase1D<Nth
 
     // from mesh
     NthDerivOp(const linops::SharedConstMesh1D& m)
-    {this->setMesh1D(m);};
+    {this->setMesh(m);};
 
     // copy 
     NthDerivOp(const NthDerivOp& other)=default; 

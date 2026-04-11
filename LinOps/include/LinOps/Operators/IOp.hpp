@@ -21,14 +21,16 @@ class IOp : public LinOpMixIn<IOp>, public LinOpBase1D<IOp>, public LinOpBaseXD<
   public: 
     // Constructors + Destructor --------------------------
     IOp(std::size_t s_init=0) : m_size(s_init){} 
-    IOp(const SharedConstMesh1D& m){ setMesh1D(m); } 
-    IOp(const SharedConstMeshXD& m){ setMeshXD(m);} 
+    IOp(const SharedConstMesh1D& m){ setMesh(m); } 
+    IOp(const SharedConstMeshXD& m){ setMesh(m);} 
 
     // destructor 
     ~IOp()=default;
 
     // Member Funcs  ======================================================
+    using LinOpBase1D<IOp>::setMesh; 
     using LinOpBase1D<IOp>::apply; 
+    using LinOpBaseXD<IOp>::setMesh; 
     using LinOpBaseXD<IOp>::apply; 
 
     // matrix getters 

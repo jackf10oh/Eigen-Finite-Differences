@@ -35,7 +35,7 @@ class DirectionalRandOp: public LinOpMixIn<DirectionalRandOp>, public LinOpBaseX
     // mesh + direction 
     DirectionalRandOp(std::size_t dir_init, const SharedConstMeshXD& m) 
       : m_direction(dir_init) 
-    {setMeshXD(m);}; 
+    {setMesh(m);}; 
 
     // destructor
     ~DirectionalRandOp()=default; 

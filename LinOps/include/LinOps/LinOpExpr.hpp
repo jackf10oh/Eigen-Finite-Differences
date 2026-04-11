@@ -67,8 +67,8 @@ class LinOpExpr : public LinOpMixIn< LinOpExpr<L, R, BinaryOp> >, public LinOpBa
     // fixes ambiguous .apply() .set_mesh()? 
     using LinOpBase1D<LinOpExpr<L,R,BinaryOp> >::apply; 
     using LinOpBaseXD<LinOpExpr<L,R,BinaryOp> >::apply; 
-    using LinOpBase1D<LinOpExpr<L,R,BinaryOp>>::setMesh1D; 
-    using LinOpBaseXD<LinOpExpr<L,R,BinaryOp>>::setMeshXD; 
+    using LinOpBase1D<LinOpExpr<L,R,BinaryOp>>::setMesh; 
+    using LinOpBaseXD<LinOpExpr<L,R,BinaryOp>>::setMesh; 
 
     // Expr Only ==============================================================
 

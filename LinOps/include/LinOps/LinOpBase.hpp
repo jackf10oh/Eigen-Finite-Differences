@@ -48,13 +48,13 @@ class LinOpBase1D
     };
 
     // fit operator to a mesh of rectangular domain 
-    void setMesh1D(const SharedConstMesh1D& m) 
+    void setMesh(const SharedConstMesh1D& m) 
     {
       // if Derived is an expression 
       if constexpr(traits::is_expr_crtp<Derived>::value){
         auto& expr = static_cast<Derived&>(*this);  
-        if constexpr(traits::is_1dim_linop_crtp<typename Derived::LStorage>::value) expr.getLhs().setMesh1D(m); 
-        if constexpr(traits::is_1dim_linop_crtp<typename Derived::RStorage>::value) expr.getRhs().setMesh1D(m); 
+        if constexpr(traits::is_1dim_linop_crtp<typename Derived::LStorage>::value) expr.getLhs().setMesh(m); 
+        if constexpr(traits::is_1dim_linop_crtp<typename Derived::RStorage>::value) expr.getRhs().setMesh(m); 
       }
       // Non Expression case ... 
       else{
@@ -124,13 +124,13 @@ class LinOpBaseXD
     };
 
     // fit operator to a mesh of rectangular domain 
-    void setMeshXD(const SharedConstMeshXD& m) 
+    void setMesh(const SharedConstMeshXD& m) 
     {
       // if Derived is an expression 
       if constexpr(traits::is_expr_crtp<Derived>::value){
         auto& expr = static_cast<Derived&>(*this);  
-        if constexpr(traits::is_xdim_linop_crtp<typename Derived::LStorage_t>::value) expr.getLhs().setMeshXD(m); 
-        if constexpr(traits::is_xdim_linop_crtp<typename Derived::RStorage_t>::value) expr.getRhs().setMeshXD(m); 
+        if constexpr(traits::is_xdim_linop_crtp<typename Derived::LStorage_t>::value) expr.getLhs().setMesh(m); 
+        if constexpr(traits::is_xdim_linop_crtp<typename Derived::RStorage_t>::value) expr.getRhs().setMesh(m); 
       }
       // Non Expression case ... 
       else{
