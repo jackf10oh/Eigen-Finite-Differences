@@ -55,8 +55,8 @@ class origin_bump : public OSteps::OStepBaseXD<origin_bump>
 struct Wave2D_impl
 {
   // Utt 
-  using Lhs_t = TExprs::NthTimeDeriv;  
-  Lhs_t getLhs = TExprs::NthTimeDeriv(2);
+  using Lhs_t = texprs::NthTimeDeriv;  
+  Lhs_t getLhs = texprs::NthTimeDeriv(2);
   
   // = Uxx + Uyy 
   LinOps::DirectionalNthDerivOp Uxx = LinOps::DirectionalNthDerivOp(2,0);  

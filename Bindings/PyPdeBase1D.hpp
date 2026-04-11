@@ -29,7 +29,7 @@ it Binds the GenInterpolators lhs and rhs pointers
 to PDE_Base_Impl's lhs and rhs  
 */
 template<typename PDE_IMPL>
-class Concrete_PDE_1D : public PDE_IMPL, public TExprs::GenInterp
+class Concrete_PDE_1D : public PDE_IMPL, public texprs::GenInterp
 <
   typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetLhs())>::type, 
   typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetRhs())>::type, 
@@ -40,7 +40,7 @@ class Concrete_PDE_1D : public PDE_IMPL, public TExprs::GenInterp
 {
   private:
     // Type Defs -----------
-    using interp_base_t = typename TExprs::GenInterp<typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetLhs())>::type, typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetRhs())>::type, LinOps::SharedConstMesh1D, Fds::BcPtr_t, std::vector<Eigen::VectorXd>>; 
+    using interp_base_t = typename texprs::GenInterp<typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetLhs())>::type, typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetRhs())>::type, LinOps::SharedConstMesh1D, Fds::BcPtr_t, std::vector<Eigen::VectorXd>>; 
     // Member Data ------------
   public:
     Concrete_PDE_1D()
@@ -50,7 +50,7 @@ class Concrete_PDE_1D : public PDE_IMPL, public TExprs::GenInterp
 
 /* same ideas. just changes Mesh1D to XD, Bc to BcXD*/
 template<typename PDE_IMPL>
-class Concrete_PDE_XD : public PDE_IMPL, public TExprs::GenInterp
+class Concrete_PDE_XD : public PDE_IMPL, public texprs::GenInterp
 <
   typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetLhs())>::type, 
   typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetRhs())>::type, 
@@ -61,7 +61,7 @@ class Concrete_PDE_XD : public PDE_IMPL, public TExprs::GenInterp
 {
   private:
     // Type Defs -----------
-    using interp_base_t = typename TExprs::GenInterp<typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetLhs())>::type, typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetRhs())>::type, LinOps::SharedConstMeshXD, Fds::BcXDPtr_t, std::vector<Eigen::VectorXd>>; 
+    using interp_base_t = typename texprs::GenInterp<typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetLhs())>::type, typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetRhs())>::type, LinOps::SharedConstMeshXD, Fds::BcXDPtr_t, std::vector<Eigen::VectorXd>>; 
     // Member Data ------------
   public:
     Concrete_PDE_XD()
@@ -87,7 +87,7 @@ struct HeatPDE_impl : public PDE_Base_Impl<HeatPDE_impl>
   decltype(diffusion*Uxx + convection*Ux + reaction*U) rhs_expr = diffusion*Uxx + convection*Ux + reaction*U;  
   
   // lhs expr in time 
-  TExprs::NthTimeDeriv Ut = TExprs::NthTimeDeriv(1); 
+  texprs::NthTimeDeriv Ut = texprs::NthTimeDeriv(1); 
 
   auto& GetLhs(){ return Ut; } 
   auto& GetRhs(){ return rhs_expr; } 

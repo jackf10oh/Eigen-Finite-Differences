@@ -1,6 +1,6 @@
 // tests_texprs.cpp
 //
-// GTest suite for TExprs classes 
+// GTest suite for texprs classes 
 //
 // JAF 1/23/2026
 
@@ -18,9 +18,9 @@
 // DerivExpressionSuite ---------------------------------------------------------
 TEST(DerivExpressionSuite, NthTimeDeriv)
 {
-  TExprs::NthTimeDeriv order_1(1); 
-  TExprs::NthTimeDeriv order_2(2); 
-  TExprs::NthTimeDeriv order_3(3);
+  texprs::NthTimeDeriv order_1(1); 
+  texprs::NthTimeDeriv order_2(2); 
+  texprs::NthTimeDeriv order_3(3);
   
   // testing .Order() method 
   ASSERT_EQ(order_1.Order(), 1); 
@@ -45,14 +45,14 @@ TEST(DerivExpressionSuite, NthTimeDeriv)
 
 TEST(DerivExpressionSuite, CoeffMultExpr)
 {
-  TExprs::NthTimeDeriv order_1(1); 
-  TExprs::NthTimeDeriv order_2(2); 
+  texprs::NthTimeDeriv order_1(1); 
+  texprs::NthTimeDeriv order_2(2); 
 
   double coeff_01 = 2.0; 
   double coeff_02 = 5.0; 
 
-  TExprs::internal::CoeffMultExpr<decltype(coeff_01), decltype(order_1)> mult_01(coeff_01, order_1);
-  TExprs::internal::CoeffMultExpr<decltype(coeff_02), decltype(order_2)> mult_02(coeff_02, order_2); 
+  texprs::internal::CoeffMultExpr<decltype(coeff_01), decltype(order_1)> mult_01(coeff_01, order_1);
+  texprs::internal::CoeffMultExpr<decltype(coeff_02), decltype(order_2)> mult_02(coeff_02, order_2); 
   
   // testing .Order() method 
   ASSERT_EQ(mult_01.Order(), 1); 
@@ -78,10 +78,10 @@ TEST(DerivExpressionSuite, CoeffMultExpr)
 
 TEST(DerivExpressionSuite, SumExpr)
 {
-  TExprs::NthTimeDeriv order_1(1); 
-  TExprs::NthTimeDeriv order_2(2); 
+  texprs::NthTimeDeriv order_1(1); 
+  texprs::NthTimeDeriv order_2(2); 
 
-  TExprs::internal::SumExpr sum_01(std::tuple_cat(order_1.toTuple(), order_2.toTuple()), 67); 
+  texprs::internal::SumExpr sum_01(std::tuple_cat(order_1.toTuple(), order_2.toTuple()), 67); 
 
   // testing .Order() method 
   ASSERT_EQ(sum_01.Order(), 67); 
@@ -162,7 +162,7 @@ TEST(GenSolverSuite, UtilityMethods)
   my_vals.set_init(my_mesh, sin_lam); 
 
   // LHS time derivs ----------------------------------------------------------------
-  auto time_expr = TExprs::NthTimeDeriv(1); 
+  auto time_expr = texprs::NthTimeDeriv(1); 
 
   // building RHS expression -----------------------------------------------------
   using D = LinOps::NthDerivOp;
@@ -175,7 +175,7 @@ TEST(GenSolverSuite, UtilityMethods)
   auto bcs = std::make_shared<Fds::BCPair>(left,right); 
 
   // Solving --------------------------------------------------------------------- 
-  TExprs::GenSolverArgs args{
+  texprs::GenSolverArgs args{
     .domain_mesh_ptr = my_mesh,
     .time_mesh_ptr = time_mesh,
     .bcs = bcs, 
@@ -183,7 +183,7 @@ TEST(GenSolverSuite, UtilityMethods)
     .time_dep_flag = false 
   }; 
 
-  TExprs::GenSolver s(time_expr, space_expr); 
+  texprs::GenSolver s(time_expr, space_expr); 
   auto v1 = s.Calculate(args); 
   auto v2 = s.CalculateImp(args); 
 }
@@ -207,7 +207,7 @@ TEST(GenSolverSuite, UtilityMethods)
   my_vals.set_init(my_mesh, sin_lambda); 
 
   // LHS time derivs ----------------------------------------------------------------
-  auto time_expr = TExprs::NthTimeDeriv(2); 
+  auto time_expr = texprs::NthTimeDeriv(2); 
 
   // building RHS expression -----------------------------------------------------
   using D = Fds::DirectionalNthDerivOp;
@@ -222,7 +222,7 @@ TEST(GenSolverSuite, UtilityMethods)
   bcs->list.emplace_back(left,right); 
 
   // Solving --------------------------------------------------------------------- 
-  TExprs::GenSolverArgs args{
+  texprs::GenSolverArgs args{
     .domain_mesh_ptr = my_mesh,
     .time_mesh_ptr = time_mesh,
     .bcs = bcs, 
@@ -230,7 +230,7 @@ TEST(GenSolverSuite, UtilityMethods)
     .time_dep_flag = false 
   }; 
 
-  TExprs::GenSolver s(time_expr, space_expr); 
+  texprs::GenSolver s(time_expr, space_expr); 
   auto v1 = s.Calculate(args); 
   auto v2 = s.CalculateImp(args); 
 }
@@ -262,7 +262,7 @@ TEST(GenSolverSuite, UtilityMethods)
   my_vals.set_init(my_mesh, sin_lambda); 
 
   // LHS time derivs ----------------------------------------------------------------
-  auto time_expr = TExprs::NthTimeDeriv(2); 
+  auto time_expr = texprs::NthTimeDeriv(2); 
 
   // building RHS expression -----------------------------------------------------
   using D = Fds::DirectionalNthDerivOp;
@@ -277,7 +277,7 @@ TEST(GenSolverSuite, UtilityMethods)
   bcs->list.emplace_back(left,right); 
 
   // Solving --------------------------------------------------------------------- 
-  TExprs::GenSolverArgs args{
+  texprs::GenSolverArgs args{
     .domain_mesh_ptr = my_mesh,
     .time_mesh_ptr = time_mesh,
     .bcs = bcs, 
@@ -285,7 +285,7 @@ TEST(GenSolverSuite, UtilityMethods)
     .time_dep_flag = false 
   }; 
 
-  TExprs::GenInterp interp(time_expr, space_expr, args); 
+  texprs::GenInterp interp(time_expr, space_expr, args); 
 
   // t=0, x=1, y=1
   double val_01 = interp.SolAt(0.0,1.0,1.0); 
@@ -316,7 +316,7 @@ TEST(GenSolverSuite, UtilityMethods)
   my_vals.set_init(my_mesh, sin_lambda); 
 
   // LHS time derivs ----------------------------------------------------------------
-  auto time_expr = TExprs::NthTimeDeriv(1); 
+  auto time_expr = texprs::NthTimeDeriv(1); 
 
   // building RHS expression -----------------------------------------------------
   using D = Fds::NthDerivOp;
@@ -329,7 +329,7 @@ TEST(GenSolverSuite, UtilityMethods)
   auto bcs = std::make_shared<Fds::BCPair>(left,right);
 
   // Solving --------------------------------------------------------------------- 
-  TExprs::GenSolverArgs args{
+  texprs::GenSolverArgs args{
     .domain_mesh_ptr = my_mesh,
     .time_mesh_ptr = time_mesh,
     .bcs = bcs, 
@@ -337,7 +337,7 @@ TEST(GenSolverSuite, UtilityMethods)
     .time_dep_flag = false 
   }; 
 
-  TExprs::GenInterp interp(time_expr, space_expr, args); 
+  texprs::GenInterp interp(time_expr, space_expr, args); 
 
   // t=0, x=1
   double val_01 = interp.SolAt(0.0,1.0); 

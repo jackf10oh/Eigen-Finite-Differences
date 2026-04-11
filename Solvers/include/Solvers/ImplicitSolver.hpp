@@ -43,10 +43,10 @@ class ImplicitSolver
     template<typename M, typename WRITE_POLICY_T = FinalWrite, template<typename MAT_T> class EIGENSOLVER_T=Eigen::BiCGSTAB>
     auto Calculate(SolverArgs<M> args, WRITE_POLICY_T write_policy = {}) const 
     {
-      TExprs::TExprExecutor exec(m_lhs); 
-      EIGENSOLVER_T<TExprs::MatrixStorage_t> iterative_solver; // Eigen sparse iterative solver
+      texprs::TExprExecutor exec(m_lhs); 
+      EIGENSOLVER_T<texprs::MatrixStorage_t> iterative_solver; // Eigen sparse iterative solver
       iterative_solver.setMaxIterations(m_max_iters); 
-      TExprs::MatrixStorage_t Mat; 
+      texprs::MatrixStorage_t Mat; 
 
       exec.set_mesh(args.domain_mesh_ptr);
       m_rhs.set_mesh(args.domain_mesh_ptr); 
@@ -85,7 +85,7 @@ class ImplicitSolver
         }
         else{
           // INV_COEFF_T is a Matrix 
-          TExprs::MatrixStorage_t temp = -exec.inv_coeff() * Mat; 
+          texprs::MatrixStorage_t temp = -exec.inv_coeff() * Mat; 
           Mat = std::move(temp); 
         }
         for(std::size_t i=0; i<Mat.rows(); ++i) Mat.coeffRef(i,i) += 1.0; 

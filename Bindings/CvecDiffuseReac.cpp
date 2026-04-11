@@ -19,7 +19,7 @@ class ConvectionDiffusionAdvectionPDE
     LinOps::IOp U = LinOps::IOp();  
     Fds::NthDerivOp Ux = Fds::NthDerivOp(1);  
     Fds::NthDerivOp Uxx = Fds::NthDerivOp(2);     
-    TExprs::NthTimeDeriv Ut = TExprs::NthTimeDeriv(1); 
+    texprs::NthTimeDeriv Ut = texprs::NthTimeDeriv(1); 
 
     decltype(a*Uxx + b*Ux + c*U) m_assembled; 
 
@@ -29,7 +29,7 @@ class ConvectionDiffusionAdvectionPDE
     using domain_mesh_ptr_t = std::shared_ptr<const LinOps::Mesh1D>
     using bc_ptr_t = Fds::BcPtr_t; 
     using ic_cont_t = std::vector<Eigen::VectorXd>; 
-    using interp_t = TExprs::GenInterp<lhs_expr_t, rhs_expr_t, domain_mesh_ptr_t, bc_ptr_t, ic_cont_t>; 
+    using interp_t = texprs::GenInterp<lhs_expr_t, rhs_expr_t, domain_mesh_ptr_t, bc_ptr_t, ic_cont_t>; 
     using solver_args_t = GenSolverArgs<domain_mesh_ptr_t, bc_ptr_t, ic_cont_t>; 
     interp_t m_interpolator;  
 

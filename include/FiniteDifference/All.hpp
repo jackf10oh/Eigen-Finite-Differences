@@ -14,6 +14,7 @@
 
 #include "LinOps/All.hpp"
 #include "OutsideSteps/All.hpp"
+#include "TExprs/All.hpp"
 
 #endif
 

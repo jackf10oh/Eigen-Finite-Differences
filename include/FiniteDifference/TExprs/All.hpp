@@ -7,10 +7,11 @@
 #ifndef LHSEXPRALL_H
 #define LHSEXPRALL_H 
 
+#include "TExprTraits.hpp"
 #include "TimeDerivBase.hpp" 
 #include "NthTimeDeriv.hpp"
 #include "CoeffMultExpr.hpp"
 #include "SumExpr.hpp"
-#include "TExprExecutor.hpp"
+#include "Executor.hpp"
 
 #endif // All.hpp 

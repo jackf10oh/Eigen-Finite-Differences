@@ -48,7 +48,9 @@ class NthDerivOp : public LinOpMixIn<NthDerivOp<orderN>>, public LinOpBase1D<Nth
     // set the mesh domain the derivative operator works on 
     void setMesh1D_impl(const fdm::SharedConstMesh1D& m)
     {
-      if constexpr(order == 1){ 
+      if constexpr(order == 0){
+        auto s = m->size();  
+        m_stencil.resize(s, s);  
         m_stencil.setIdentity(); 
         return; 
       } 
@@ -128,4 +130,5 @@ class NthDerivOp : public LinOpMixIn<NthDerivOp<orderN>>, public LinOpBase1D<Nth
 
   } // end namespace linops 
 } // end namespace fdm  
+
 #endif // NthDerivOp.hpp

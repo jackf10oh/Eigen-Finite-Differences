@@ -44,8 +44,8 @@ class ExplicitSolver
     auto Calculate(SolverArgs<M> args, WRITE_POLICY_T write_policy = {}) const 
     {
 
-      TExprs::TExprExecutor exec(m_lhs); 
-      TExprs::MatrixStorage_t Mat; 
+      texprs::TExprExecutor exec(m_lhs); 
+      texprs::MatrixStorage_t Mat; 
 
       exec.set_mesh(args.domain_mesh_ptr);
       m_rhs.set_mesh(args.domain_mesh_ptr); 
@@ -82,7 +82,7 @@ class ExplicitSolver
         }
         else{
           // INV_COEFF_T is a Matrix 
-          TExprs::MatrixStorage_t temp = exec.inv_coeff() * Mat; 
+          texprs::MatrixStorage_t temp = exec.inv_coeff() * Mat; 
           Mat = std::move(temp); 
         }
 
