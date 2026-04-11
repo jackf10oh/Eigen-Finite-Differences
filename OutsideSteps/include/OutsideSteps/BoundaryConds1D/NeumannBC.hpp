@@ -27,7 +27,7 @@ class NeumannBC
     ~NeumannBC()=default; 
     // Member Funcs ----------------------------------------------
     // change first/last (left/right boundary) row of the fdm stencil matrix
-    void SetStencilL(double t, const Mesh1D_SPtr_t& mesh, MatrixStorage_t& Mat) const 
+    void SetStencilL(double t, const SharedConstMesh1D& mesh, MatrixStorage_t& Mat) const 
     {
       Mat.topRows(1) *= 0;
       // first order derivative approximation 
@@ -35,7 +35,7 @@ class NeumannBC
       Mat.coeffRef(0,0)= -1.0/h;
       Mat.coeffRef(0,1)=  1.0/h;
     }; 
-    void SetStencilR(double t, const Mesh1D_SPtr_t& mesh, MatrixStorage_t& Mat) const 
+    void SetStencilR(double t, const SharedConstMesh1D& mesh, MatrixStorage_t& Mat) const 
     {
       Mat.bottomRows(1) *= 0; 
       // first order derivative approximation 
@@ -44,13 +44,13 @@ class NeumannBC
       Mat.coeffRef(Mat.rows()-1, Mat.cols()-1)=  1.0/h;
     };
 
-    void SetImpSolL(double t, const Mesh1D_SPtr_t& mesh, StridedRef_t Sol) const 
+    void SetImpSolL(double t, const SharedConstMesh1D& mesh, StridedRef_t Sol) const 
     {Sol[0] = boundary_flux;};
-    void SetImpSolR(double t, const Mesh1D_SPtr_t& mesh, StridedRef_t Sol) const 
+    void SetImpSolR(double t, const SharedConstMesh1D& mesh, StridedRef_t Sol) const 
     {Sol[Sol.size()-1] = boundary_flux;};
     
     // change the first/last (left/right boundary) entry of a vector  
-    void SetSolL(double t, const Mesh1D_SPtr_t& mesh, StridedRef_t Sol) const 
+    void SetSolL(double t, const SharedConstMesh1D& mesh, StridedRef_t Sol) const 
     { 
       // if(Sol.size()<3 || mesh->size()<3) throw std::runtime_error("Discretization1D or Mesh1D size too small!(must be >= 3)"); 
 
@@ -71,7 +71,7 @@ class NeumannBC
       Sol[0] = target;  
       // void return type
     };
-    void SetSolR(double t, const Mesh1D_SPtr_t& mesh, StridedRef_t Sol) const 
+    void SetSolR(double t, const SharedConstMesh1D& mesh, StridedRef_t Sol) const 
     {
       // if(Sol.size()<3 || mesh->size()<3) throw std::runtime_error("Discretization1D or Mesh1D size too small!(must be >= 3)"); 
 

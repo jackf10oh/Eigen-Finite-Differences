@@ -17,7 +17,7 @@ class SetTimeOStep: public OStepBaseXD<>, public OStepBase1D<>
   public:
     // Calls setTime on any LinOps inside the expression
     template<typename TIME_ITER, typename LHS_EXECUTOR, typename RHS_EXPR, FDStep_Type Step>
-    void BeforeLinAlgebra(TIME_ITER& time_iter, Mesh1D_SPtr_t& mesh, LHS_EXECUTOR& exec, RHS_EXPR& rhs_expr) 
+    void BeforeLinAlgebra(TIME_ITER& time_iter, SharedConstMesh1D& mesh, LHS_EXECUTOR& exec, RHS_EXPR& rhs_expr) 
     {
       if constexpr(Step == FDStep_Type::EXPLICIT){
         exec.expr_SetTime(*time_iter); 
@@ -34,7 +34,7 @@ class SetTimeOStep: public OStepBaseXD<>, public OStepBase1D<>
     }
 
     template<typename TIME_ITER, typename LHS_EXECUTOR, typename RHS_EXPR, FDStep_Type Step>
-    void BeforeLinAlgebra(TIME_ITER& time_iter, MeshXD_SPtr_t& mesh, LHS_EXECUTOR& exec, RHS_EXPR& rhs_expr) 
+    void BeforeLinAlgebra(TIME_ITER& time_iter, SharedConstMeshXD& mesh, LHS_EXECUTOR& exec, RHS_EXPR& rhs_expr) 
     {
       if constexpr(Step == FDStep_Type::EXPLICIT){
         exec.expr_SetTime(*time_iter); 
@@ -53,17 +53,17 @@ class SetTimeOStep: public OStepBaseXD<>, public OStepBase1D<>
 
     // all of the other member functions don't change anything 
     template<FDStep_Type STEP = FDStep_Type::IMPLICIT>
-    void MatBeforeStep(double t, const LinOps::Mesh1D_SPtr_t& mesh, LinOps::MatrixStorage_t& Mat) const {}
+    void MatBeforeStep(double t, const LinOps::SharedConstMesh1D& mesh, LinOps::MatrixStorage_t& Mat) const {}
     template<FDStep_Type STEP = FDStep_Type::IMPLICIT>
-    void SolBeforeStep(double t, const LinOps::Mesh1D_SPtr_t& mesh, StridedRef_t Sol) const {}
+    void SolBeforeStep(double t, const LinOps::SharedConstMesh1D& mesh, StridedRef_t Sol) const {}
     template<FDStep_Type STEP = FDStep_Type::EXPLICIT>
-    void SolAfterStep(double t, const LinOps::Mesh1D_SPtr_t& mesh, StridedRef_t Sol) const {} 
+    void SolAfterStep(double t, const LinOps::SharedConstMesh1D& mesh, StridedRef_t Sol) const {} 
     template<FDStep_Type STEP = FDStep_Type::IMPLICIT>
-    void MatBeforeStep(double t, const LinOps::MeshXD_SPtr_t& mesh, LinOps::MatrixStorage_t& Mat) const {}
+    void MatBeforeStep(double t, const LinOps::SharedConstMeshXD& mesh, LinOps::MatrixStorage_t& Mat) const {}
     template<FDStep_Type STEP = FDStep_Type::IMPLICIT>
-    void SolBeforeStep(double t, const LinOps::MeshXD_SPtr_t& mesh, StridedRef_t Sol) const {}
+    void SolBeforeStep(double t, const LinOps::SharedConstMeshXD& mesh, StridedRef_t Sol) const {}
     template<FDStep_Type STEP = FDStep_Type::EXPLICIT>
-    void SolAfterStep(double t, const LinOps::MeshXD_SPtr_t& mesh, StridedRef_t Sol) const {} 
+    void SolAfterStep(double t, const LinOps::SharedConstMeshXD& mesh, StridedRef_t Sol) const {} 
 }
 
 } // end namespace OSteps

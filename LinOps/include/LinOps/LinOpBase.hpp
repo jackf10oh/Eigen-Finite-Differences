@@ -34,7 +34,7 @@ class LinOpBase1D
   
   private:
     // Member Data ---------------------------------------------------- 
-    Mesh1D_WPtr_t m_mesh_ptr; 
+    WeakConstMesh1D m_mesh_ptr; 
 
   public:
     // Member Funcs  ======================================================
@@ -48,7 +48,7 @@ class LinOpBase1D
     };
 
     // fit operator to a mesh of rectangular domain 
-    void setMesh1D(const Mesh1D_SPtr_t& m) 
+    void setMesh1D(const SharedConstMesh1D& m) 
     {
       // if Derived is an expression 
       if constexpr(traits::is_expr_crtp<Derived>::value){
@@ -66,7 +66,7 @@ class LinOpBase1D
        // store the mesh
         m_mesh_ptr = m;   
         // if the derived is also a 1D linop clear the mesh 
-        if constexpr(traits::is_1dim_linop_crtp<Derived>::value){
+        if constexpr(traits::is_xdim_linop_crtp<Derived>::value){
           static_cast<Derived*>(this)->clearMeshXD();
         }
         // // perform work on m 
@@ -74,13 +74,13 @@ class LinOpBase1D
       }
     };
     // Must implement! -------------------------
-    void setMesh1D_impl(const Mesh1D_SPtr_t& m)
+    void setMesh1D_impl(const SharedConstMesh1D& m)
     {
       static_cast<Derived*>(this)->setMesh1D_impl(m); 
     }
     
     // return Mesh1D pointed to
-    Mesh1D_SPtr_t getMesh1D() const 
+    SharedConstMesh1D getMesh1D() const 
     {
       // if Derived is an expression 
       if constexpr(traits::is_expr_crtp<Derived>::value){
@@ -97,7 +97,7 @@ class LinOpBase1D
 
   protected:
     // Unreachable except other base. 
-    void clearMesh1D(){ this->m_mesh_ptr = Mesh1D_SPtr_t{}; }
+    void clearMesh1D(){ this->m_mesh_ptr = SharedConstMesh1D{}; }
 }; // end LinOpBase1D<>  
 
 template<typename Derived>
@@ -110,7 +110,7 @@ class LinOpBaseXD
 
   private:
     // Member Data ------------------------------------------------- 
-    MeshXD_WPtr_t m_mesh_ptr; 
+    WeakConstMeshXD m_mesh_ptr; 
 
   public:
     // Member Funcs  ======================================================
@@ -124,7 +124,7 @@ class LinOpBaseXD
     };
 
     // fit operator to a mesh of rectangular domain 
-    void setMeshXD(const MeshXD_SPtr_t& m) 
+    void setMeshXD(const SharedConstMeshXD& m) 
     {
       // if Derived is an expression 
       if constexpr(traits::is_expr_crtp<Derived>::value){
@@ -151,13 +151,13 @@ class LinOpBaseXD
     };
 
     // must implement! 
-    void setMeshXD_impl(const MeshXD_SPtr_t& m)
+    void setMeshXD_impl(const SharedConstMeshXD& m)
     {
       static_cast<Derived*>(this)->setMeshXD_impl(m); 
     }
     
     // return Mesh1D pointed to
-    MeshXD_SPtr_t getMeshXD() const 
+    SharedConstMeshXD getMeshXD() const 
     {
       // if Derived is an expression 
       if constexpr(traits::is_expr_crtp<Derived>::value){
@@ -174,7 +174,7 @@ class LinOpBaseXD
     
   protected:
     // Unreachable except other base. 
-    void clearMeshXD(){ this->m_mesh_ptr = MeshXD_SPtr_t{}; }
+    void clearMeshXD(){ this->m_mesh_ptr = SharedConstMeshXD{}; }
 }; // end LinOpBaseXD<>  
 
 } // end namespace linops 

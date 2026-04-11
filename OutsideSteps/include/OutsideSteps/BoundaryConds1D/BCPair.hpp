@@ -33,7 +33,7 @@ class BCPair : public OStepBase1D<BCPair<LBC_T,RBC_T>>
     // Member Functions ==================================================================
     // Member Funcs ------------------------------------------------
     template<FDStep_Type STEP = FDStep_Type::IMPLICIT>
-    void MatBeforeStep(double t, const Mesh1D_SPtr_t& mesh, LinOps::MatrixStorage_t& Mat) const 
+    void MatBeforeStep(double t, const SharedConstMesh1D& mesh, LinOps::MatrixStorage_t& Mat) const 
     {
       if constexpr(STEP == FDStep_Type::IMPLICIT){
         m_left.SetStencilL(t, mesh, Mat); 
@@ -41,7 +41,7 @@ class BCPair : public OStepBase1D<BCPair<LBC_T,RBC_T>>
       }
     }
     template<FDStep_Type STEP = FDStep_Type::IMPLICIT>
-    void SolBeforeStep(double t, const Mesh1D_SPtr_t& mesh, StridedRef_t Sol) const 
+    void SolBeforeStep(double t, const SharedConstMesh1D& mesh, StridedRef_t Sol) const 
     {
       if constexpr(STEP == FDStep_Type::IMPLICIT){
         m_left.SetImpSolL(t, mesh, Sol); 
@@ -49,7 +49,7 @@ class BCPair : public OStepBase1D<BCPair<LBC_T,RBC_T>>
       }
     }
     template<FDStep_Type STEP = FDStep_Type::EXPLICIT>
-    void SolAfterStep(double t, const Mesh1D_SPtr_t& mesh, StridedRef_t Sol) const 
+    void SolAfterStep(double t, const SharedConstMesh1D& mesh, StridedRef_t Sol) const 
     {
       if constexpr(STEP == FDStep_Type::EXPLICIT){
         m_left.SetSolL(t, mesh, Sol); 

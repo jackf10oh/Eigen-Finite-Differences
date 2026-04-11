@@ -63,20 +63,20 @@ class CoeffOpMixIn : public LinOpMixIn<Derived>
     }
 
     // Must implement! 
-    void setMesh1D_impl(const Mesh1D_SPtr_t& m)
+    void setMesh1D_impl(const SharedConstMesh1D& m)
     {
       static_cast<DerivedT*>(this)->setMesh1D_impl(m); 
     }
   
     // Must implement! 
-    void setMeshXD_impl(const MeshXD_SPtr_t& m)
+    void setMeshXD_impl(const SharedConstMeshXD& m)
     {
       static_cast<DerivedT*>(this)->setMeshXD_impl(m); 
     }
     
     const Callable& callable() const { return m_callable; }
 
-    void fillDiagonal(const linops::Mesh1D_SPtr_t& m)
+    void fillDiagonal(const linops::SharedConstMesh1D& m)
     {
       constexpr std::size_t n = linops::traits::callable_traits<Callable>::num_args; 
       if constexpr(n==0){
@@ -95,21 +95,21 @@ class CoeffOpMixIn : public LinOpMixIn<Derived>
       }
     }
 
-    void fillDiagonal(const linops::MeshXD_SPtr_t& m)
+    void fillDiagonal(const linops::SharedConstMeshXD& m)
     {
       constexpr std::size_t n = linops::traits::callable_traits<Callable>::num_args; 
-      if(n > m->dims()) throw std::runtime_error("CoeffOpMixin error. fillDiagonal called on MeshXD when callale had num args > dims in mesh");
+      if(n > m->numDims()) throw std::runtime_error("CoeffOpMixin error. fillDiagonal called on MeshXD when callale had num args > numDims in mesh");
 
-      std::size_t end = m->sizes_middle_product(0,n); 
+      std::size_t end = m->sizesMiddleProduct(0,n); 
       m_diag.resize(end); 
-      m_prod_after = m->sizes_middle_product(n, m->dims());
+      m_prod_after = m->sizesMiddleProduct(n, m->numDims());
       
       std::array<double,n> coords; 
       std::array<std::size_t,n> prods_arr;
       std::size_t rolling = 1; // rolling product of Mesh1D sizes... 
       for(std::size_t ith_dim=0; ith_dim < n; ++ith_dim)
       {
-        rolling *= m->dim_size(ith_dim); 
+        rolling *= m->sizeOfDim(ith_dim); 
          prods_arr[ith_dim] = rolling; 
       }
       
@@ -117,7 +117,7 @@ class CoeffOpMixIn : public LinOpMixIn<Derived>
       {
         for(std::size_t ith_dim=0; ith_dim < n; ++ith_dim)
         {
-          coords[ith_dim] = (*(m->GetMesh(ith_dim)))[flat_idx % prods_arr[ith_dim]]; 
+          coords[ith_dim] = (*(m->getMesh1D(ith_dim)))[flat_idx % prods_arr[ith_dim]]; 
         }
         m_diag[flat_idx] = std::apply(m_callable, coords); 
       }

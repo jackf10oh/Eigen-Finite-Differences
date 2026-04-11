@@ -37,7 +37,7 @@ TEST(MeshXDSuite, MeshXDConstructible){
   auto mesh_1d_01 = linops::make_Mesh1D(); 
   auto mesh_1d_02 = linops::make_Mesh1D(-10.0,0.0,21); 
   auto mesh_1d_03 = linops::make_Mesh1D(0.0,10.0,101);
-  auto v = std::vector<linops::Mesh1D_SPtr_t>({mesh_1d_01,mesh_1d_02,mesh_1d_03}); 
+  auto v = std::vector<linops::SharedConstMesh1D>({mesh_1d_01,mesh_1d_02,mesh_1d_03}); 
   MeshXD from_vec(v); 
 
   // copy 
@@ -57,15 +57,15 @@ TEST(MeshXDSuite, MeshXDMesh1DGetters){
   MeshXD from_dims_only(X); 
   const MeshXD from_dims_only_const(X); 
 
-  auto resulting_mesh1d = from_dims_only.GetMesh(0);
+  auto resulting_mesh1d = from_dims_only.getMesh1D(0);
   // !!! not safe to index 
-  from_dims_only.GetMesh(X+5); 
-  EXPECT_ANY_THROW(resulting_mesh1d = from_dims_only.GetMeshAt(X+5));  
+  from_dims_only.getMesh1D(X+5); 
+  EXPECT_ANY_THROW(resulting_mesh1d = from_dims_only.getMesh1DSafe(X+5));  
 
  
-  resulting_mesh1d = from_dims_only.GetMeshAt(0); 
+  resulting_mesh1d = from_dims_only.getMesh1DSafe(0); 
   // safe to index 
-  EXPECT_ANY_THROW(from_dims_only.GetMeshAt(X+5));  
+  EXPECT_ANY_THROW(from_dims_only.getMesh1DSafe(X+5));  
 }; 
 
 // Testing all method that return sizes 
@@ -84,23 +84,23 @@ TEST(MeshXDSuite, MeshXDSizesGetters){
   MeshXD from_ends_list_steps_list02({{0.0,4.0},{-2.0,2.0},{-4.0,0.0}}, {X1,X2,X3});
 
   // returns # of dimensions 
-  ASSERT_EQ(from_dims_only.dims(), X); 
+  ASSERT_EQ(from_dims_only.numDims(), X); 
   
   // returns # of steps in a specific dimension 
-  ASSERT_EQ(from_ends_steps_dims.dim_size(0), n_steps);
-  ASSERT_EQ(from_ends_steps_dims.dim_size(1), n_steps);
-  EXPECT_ANY_THROW(from_ends_steps_dims.dim_size(10)); // 10 > # of dims 
+  ASSERT_EQ(from_ends_steps_dims.sizeOfDim(0), n_steps);
+  ASSERT_EQ(from_ends_steps_dims.sizeOfDim(1), n_steps);
+  EXPECT_ANY_THROW(from_ends_steps_dims.sizeOfDim(10)); // 10 > # of numDims 
 
   // returns product of (# of steps per dim)
-  ASSERT_EQ(from_ends_list_steps_list01.sizes_product(),X1); 
-  ASSERT_EQ(from_ends_list_steps_list02.sizes_product(),X1*X2*X3);
+  ASSERT_EQ(from_ends_list_steps_list01.sizesProduct(),X1); 
+  ASSERT_EQ(from_ends_list_steps_list02.sizesProduct(),X1*X2*X3);
   
   // returns product of (# of steps per dim) for dim [start,end)
-  ASSERT_EQ(from_ends_list_steps_list02.sizes_middle_product(0,3), X1*X2*X3); 
-  ASSERT_EQ(from_ends_list_steps_list02.sizes_middle_product(0,2), X1*X2); 
-  ASSERT_EQ(from_ends_list_steps_list02.sizes_middle_product(1,3), X2*X3); 
-  EXPECT_ANY_THROW(from_ends_list_steps_list02.sizes_middle_product(0,10)); // 10 > # of dims 
-  EXPECT_ANY_THROW(from_ends_list_steps_list02.sizes_middle_product(4,0)); // start > end  
+  ASSERT_EQ(from_ends_list_steps_list02.sizesMiddleProduct(0,3), X1*X2*X3); 
+  ASSERT_EQ(from_ends_list_steps_list02.sizesMiddleProduct(0,2), X1*X2); 
+  ASSERT_EQ(from_ends_list_steps_list02.sizesMiddleProduct(1,3), X2*X3); 
+  EXPECT_ANY_THROW(from_ends_list_steps_list02.sizesMiddleProduct(0,10)); // 10 > # of numDims 
+  EXPECT_ANY_THROW(from_ends_list_steps_list02.sizesMiddleProduct(4,0)); // start > end  
 }; 
 
 // VectorXD Suite ============================================= 
@@ -148,37 +148,37 @@ TEST(VectorXDSuite, VectorXDSizesGetters){
 
   // size getters should give same result across VectorXD / MeshXDPtr_t 
   // returns # of dimensions 
-  ASSERT_EQ(from_dims_only->dims(), \
-            VectorXD(from_dims_only).dims()); 
+  ASSERT_EQ(from_dims_only->numDims(), \
+            VectorXD(from_dims_only).numDims()); 
   
   // returns # of steps in a specific dimension 
-  ASSERT_EQ(from_ends_steps_dims->dim_size(0), \
-            linops::VectorXD(from_ends_steps_dims).dim_size(0)); 
+  ASSERT_EQ(from_ends_steps_dims->sizeOfDim(0), \
+            linops::VectorXD(from_ends_steps_dims).sizeOfDim(0)); 
             
-  ASSERT_EQ(from_ends_steps_dims->dim_size(1), \
-            linops::VectorXD(from_ends_steps_dims).dim_size(1));  
+  ASSERT_EQ(from_ends_steps_dims->sizeOfDim(1), \
+            linops::VectorXD(from_ends_steps_dims).sizeOfDim(1));  
 
-  EXPECT_ANY_THROW(linops::VectorXD(from_ends_steps_dims).dim_size(10)); // 10 > # of dims 
+  EXPECT_ANY_THROW(linops::VectorXD(from_ends_steps_dims).sizeOfDim(10)); // 10 > # of numDims 
 
   // // returns product of (# of steps per dim)
-  ASSERT_EQ(from_ends_list_steps_list01->sizes_product(), \
-            linops::VectorXD(from_ends_list_steps_list01).sizes_product());  
+  ASSERT_EQ(from_ends_list_steps_list01->sizesProduct(), \
+            linops::VectorXD(from_ends_list_steps_list01).sizesProduct());  
 
-  ASSERT_EQ(from_ends_list_steps_list02->sizes_product(), \
-            linops::VectorXD(from_ends_list_steps_list02).sizes_product());  
+  ASSERT_EQ(from_ends_list_steps_list02->sizesProduct(), \
+            linops::VectorXD(from_ends_list_steps_list02).sizesProduct());  
   
   // returns product of (# of steps per dim) for dim [start,end)
-  ASSERT_EQ(from_ends_list_steps_list02->sizes_middle_product(0,3), \
-            linops::VectorXD(from_ends_list_steps_list02).sizes_middle_product(0,3));  
+  ASSERT_EQ(from_ends_list_steps_list02->sizesMiddleProduct(0,3), \
+            linops::VectorXD(from_ends_list_steps_list02).sizesMiddleProduct(0,3));  
 
-  ASSERT_EQ(from_ends_list_steps_list02->sizes_middle_product(0,2), \
-            linops::VectorXD(from_ends_list_steps_list02).sizes_middle_product(0,2));
+  ASSERT_EQ(from_ends_list_steps_list02->sizesMiddleProduct(0,2), \
+            linops::VectorXD(from_ends_list_steps_list02).sizesMiddleProduct(0,2));
 
-  ASSERT_EQ(from_ends_list_steps_list02->sizes_middle_product(1,3), \
-            linops::VectorXD(from_ends_list_steps_list02).sizes_middle_product(1,3));
+  ASSERT_EQ(from_ends_list_steps_list02->sizesMiddleProduct(1,3), \
+            linops::VectorXD(from_ends_list_steps_list02).sizesMiddleProduct(1,3));
  
-  EXPECT_ANY_THROW(linops::VectorXD(from_ends_list_steps_list02).sizes_middle_product(0,10)); // 10 > # of dims 
-  EXPECT_ANY_THROW(linops::VectorXD(from_ends_list_steps_list02).sizes_middle_product(4,0)); // start > end 
+  EXPECT_ANY_THROW(linops::VectorXD(from_ends_list_steps_list02).sizesMiddleProduct(0,10)); // 10 > # of numDims 
+  EXPECT_ANY_THROW(linops::VectorXD(from_ends_list_steps_list02).sizesMiddleProduct(4,0)); // start > end 
 }
 
 // Testing set_init() for constant
@@ -210,8 +210,8 @@ TEST(VectorXDSuite, VectorXDSetByCallable){
 
   // set init 1D case 
   my_disc = linops::make_Discretization(my_mesh_1d, lam01); 
-  for(std::size_t i=0; i<my_disc.dim_size(0); i++){
-    double x = my_mesh_1d->GetMeshAt(0)->at(i); 
+  for(std::size_t i=0; i<my_disc.sizeOfDim(0); i++){
+    double x = my_mesh_1d->getMesh1DSafe(0)->at(i); 
     double lam_val = lam01(x); 
     double disc_val = my_disc.values()[i];  
 
@@ -220,17 +220,17 @@ TEST(VectorXDSuite, VectorXDSetByCallable){
 
   // set init 2D case 
   my_disc = linops::make_Discretization(my_mesh_2d, lam02); 
-  for(std::size_t i=0; i<my_disc.dim_size(0); i++){
+  for(std::size_t i=0; i<my_disc.sizeOfDim(0); i++){
 
-    double x = my_mesh_2d->GetMeshAt(0)->at(i); 
+    double x = my_mesh_2d->getMesh1DSafe(0)->at(i); 
 
-    for(std::size_t j=0; j<my_disc.dim_size(1); j++){
+    for(std::size_t j=0; j<my_disc.sizeOfDim(1); j++){
 
-      double y = my_mesh_2d->GetMeshAt(1)->at(j); 
+      double y = my_mesh_2d->getMesh1DSafe(1)->at(j); 
 
       double lam_val = lam02(x,y); 
 
-      std::size_t flat_idx = i + j*my_disc.sizes_middle_product(0,1); 
+      std::size_t flat_idx = i + j*my_disc.sizesMiddleProduct(0,1); 
       double disc_val = my_disc.values()[flat_idx];
 
       ASSERT_NEAR(disc_val, lam_val, 1e-4); 
@@ -240,21 +240,21 @@ TEST(VectorXDSuite, VectorXDSetByCallable){
 
   // set init 3D case 
   my_disc = linops::make_Discretization(my_mesh_3d, lam03); 
-  for(std::size_t i=0; i<my_disc.dim_size(0); i++){
+  for(std::size_t i=0; i<my_disc.sizeOfDim(0); i++){
 
-    double x = my_mesh_3d->GetMeshAt(0)->at(i); 
+    double x = my_mesh_3d->getMesh1DSafe(0)->at(i); 
 
-    for(std::size_t j=0; j<my_disc.dim_size(1); j++){
+    for(std::size_t j=0; j<my_disc.sizeOfDim(1); j++){
 
-      double y = my_mesh_3d->GetMeshAt(1)->at(j); 
+      double y = my_mesh_3d->getMesh1DSafe(1)->at(j); 
 
-      for(std::size_t k=0; k<my_disc.dim_size(1); k++){
+      for(std::size_t k=0; k<my_disc.sizeOfDim(1); k++){
 
-      double z = my_mesh_3d->GetMeshAt(2)->at(k); 
+      double z = my_mesh_3d->getMesh1DSafe(2)->at(k); 
 
       double lam_val = lam03(x,y,z); 
 
-      std::size_t flat_idx = i + j*my_disc.sizes_middle_product(0,1) + k*my_disc.sizes_middle_product(0,2); 
+      std::size_t flat_idx = i + j*my_disc.sizesMiddleProduct(0,1) + k*my_disc.sizesMiddleProduct(0,2); 
       double disc_val = my_disc.values()[flat_idx];
 
       ASSERT_NEAR(disc_val, lam_val, 1e-4); 
@@ -263,23 +263,23 @@ TEST(VectorXDSuite, VectorXDSetByCallable){
   }
 
   // last case: we can use lower dimensional function on higher dimension mesh
-  // i.e. lam02 takes 2 dims but my_mesh3d has 3 dims
+  // i.e. lam02 takes 2 numDims but my_mesh3d has 3 numDims
   my_disc = linops::make_Discretization(my_mesh_3d, lam02); 
-  for(std::size_t i=0; i<my_disc.dim_size(0); i++){
+  for(std::size_t i=0; i<my_disc.sizeOfDim(0); i++){
 
-    double x = my_mesh_3d->GetMeshAt(0)->at(i); 
+    double x = my_mesh_3d->getMesh1DSafe(0)->at(i); 
 
-    for(std::size_t j=0; j<my_disc.dim_size(1); j++){
+    for(std::size_t j=0; j<my_disc.sizeOfDim(1); j++){
 
-      double y = my_mesh_3d->GetMeshAt(1)->at(j); 
+      double y = my_mesh_3d->getMesh1DSafe(1)->at(j); 
 
-      for(std::size_t k=0; k<my_disc.dim_size(1); k++){
+      for(std::size_t k=0; k<my_disc.sizeOfDim(1); k++){
 
-      double z = my_mesh_3d->GetMeshAt(2)->at(k); 
+      double z = my_mesh_3d->getMesh1DSafe(2)->at(k); 
 
       double lam_val = lam02(x,y); 
 
-      std::size_t flat_idx = i + j*my_disc.sizes_middle_product(0,1) + k*my_disc.sizes_middle_product(0,2); 
+      std::size_t flat_idx = i + j*my_disc.sizesMiddleProduct(0,1) + k*my_disc.sizesMiddleProduct(0,2); 
       double disc_val = my_disc.values()[flat_idx];
 
       ASSERT_NEAR(disc_val, lam_val, 1e-4); 

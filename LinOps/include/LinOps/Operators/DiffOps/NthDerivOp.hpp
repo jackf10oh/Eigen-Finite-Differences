@@ -29,7 +29,7 @@ class NthDerivOp : public LinOpMixIn<NthDerivOp<orderN>>, public LinOpBase1D<Nth
     NthDerivOp()=default; 
 
     // from mesh
-    NthDerivOp(const linops::Mesh1D_SPtr_t& m)
+    NthDerivOp(const linops::SharedConstMesh1D& m)
     {this->setMesh1D(m);};
 
     // copy 
@@ -44,7 +44,7 @@ class NthDerivOp : public LinOpMixIn<NthDerivOp<orderN>>, public LinOpBase1D<Nth
     const Matrix& asMatrix() const { return m_stencil; };  
     
     // set the mesh domain the derivative operator works on 
-    void setMesh1D_impl(const Mesh1D_SPtr_t& m)
+    void setMesh1D_impl(const SharedConstMesh1D& m)
     {
       if constexpr(order == 1){ 
         m_stencil.setIdentity(); 
@@ -56,8 +56,8 @@ class NthDerivOp : public LinOpMixIn<NthDerivOp<orderN>>, public LinOpBase1D<Nth
       // resize matrix to fit
       m_stencil.resize(mesh_size,mesh_size);
       
-      constexpr std::size_t one_sided_skirt = order;  
-      constexpr std::size_t centered_skirt = (order+1)/2;  
+      constexpr int one_sided_skirt = order;  
+      constexpr int centered_skirt = (order+1)/2;  
 
       // allocate full list of coeff triples 
       typedef Eigen::Triplet<double> T;

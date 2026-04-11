@@ -9,16 +9,18 @@
 
 #include "Mesh1D.hpp"
 #include "Vector1D.hpp"
-#include "VectorXD.hpp"
 #include "MeshXD.hpp"
+#include "VectorXD.hpp"
 
 #include "LinOpTraits.hpp"
+#include "LinOpMixIn.hpp"
 #include "LinOpBase.hpp"
 #include "LinOpExpr.hpp"
 
 #include "Operators/IOp.hpp"
 #include "Operators/RandOp.hpp"
 #include "Operators/DirectionalRandOp.hpp"
+
 #include "Operators/DiffOps/NthDerivOp.hpp"
 #include "Operators/DiffOps/DirectionalNthDerivOp.hpp" 
 

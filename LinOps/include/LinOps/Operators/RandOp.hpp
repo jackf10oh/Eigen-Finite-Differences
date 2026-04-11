@@ -22,27 +22,33 @@ class RandOp : public LinOpMixIn<RandOp>, public LinOpBase1D<RandOp>, public Lin
   public: 
 
     // Constructors + Destructor ===========================
-    RandOp(const Mesh1D_SPtr_t& m){ setMesh1D(m); }   
-    RandOp(const MeshXD_SPtr_t& m){ setMeshXD(m); }
+    RandOp()=default;
+    RandOp(const SharedConstMesh1D& m){ setMesh1D(m); }   
+    RandOp(const SharedConstMeshXD& m){ setMeshXD(m); }
+    RandOp(const RandOp& other)=default; 
     
     // destructor
     ~RandOp()=default;
 
     // Member Funcs ==========================================
+    using LinOpBase1D<RandOp>::apply; 
+    using LinOpBaseXD<RandOp>::apply; 
 
     // matrix getters 
-    auto asMatrix() const { return m_mat; };
+    const auto& asMatrix() const { return m_mat; };
 
     // fit operator to a domain mesh 
-    void setMesh1D_impl(const Mesh1D_SPtr_t& m)
+    void setMesh1D_impl(const SharedConstMesh1D& m)
     {
-      m_mat = Eigen::MatrixXd::Random(m->size(), m->size()).sparseView(); 
+      auto s = m->size();       
+      m_mat = Eigen::MatrixXd::Random(s, s).sparseView(); 
     };
 
     // fit operator to a domain mesh 
-    void setMeshXD_impl(const MeshXD_SPtr_t& m)
+    void setMeshXD_impl(const SharedConstMeshXD& m)
     {
-      m_mat = Eigen::MatrixXd::Random(m->sizes_product(), m->sizes_product()).sparseView(); 
+      auto s = m->sizesProduct(); 
+      m_mat = Eigen::MatrixXd::Random(s, s).sparseView(); 
     };
 
 }; // end  RandOp

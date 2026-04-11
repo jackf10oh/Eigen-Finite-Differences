@@ -20,7 +20,7 @@ class TimeDepCoeff : public CoeffOpMixIn<TimeDepCoeff<Callable>, typename traits
     // convenience type
     using Binded = typename traits::callable_traits<Callable>::BindFirst_t; 
     // Member Data -------------------------- 
-    linops::MeshXD_SPtr_t m_owned_mesh; 
+    linops::SharedConstMeshXD m_owned_mesh; 
   public:
     // Constructors + Destructor ==========================================================
     // no default constructor
@@ -32,12 +32,12 @@ class TimeDepCoeff : public CoeffOpMixIn<TimeDepCoeff<Callable>, typename traits
     {}
 
     // from Mesh1D + callable 
-    TimeDepCoeff(const Mesh1D_SPtr_t m, Callable f)
+    TimeDepCoeff(const SharedConstMesh1D m, Callable f)
       : CoeffOpMixIn<TimeDepCoeff<Callable>, Binded>(Binded(f, 0.0)) 
     {this->setMesh1D(m);}
 
     // from Mesh1D + callable 
-    TimeDepCoeff(const MeshXD_SPtr_t m, Callable f)
+    TimeDepCoeff(const SharedConstMeshXD m, Callable f)
       : CoeffOpMixIn<TimeDepCoeff<Callable>, Binded>(Binded(f, 0.0)) 
     {this->setMeshXD(m);}
 
@@ -48,12 +48,12 @@ class TimeDepCoeff : public CoeffOpMixIn<TimeDepCoeff<Callable>, typename traits
     ~TimeDepCoeff()=default;
 
     // Member Funcs =============================================================
-    void setMesh1D_impl(const Mesh1D_SPtr_t& m)
+    void setMesh1D_impl(const SharedConstMesh1D& m)
     {
       m_owned_mesh = linops::make_MeshXD(m); 
     }
 
-    void setMeshXD_impl(const MeshXD_SPtr_t& m)
+    void setMeshXD_impl(const SharedConstMeshXD& m)
     {
       m_owned_mesh = linops::make_MeshXD(m); 
     }

@@ -22,7 +22,7 @@ class Vector1D
 {
   private:
     // Member Data --------------------------------------------------------------------
-    Mesh1D_WPtr_t m_mesh_ptr; // weak pointer to mesh the function "maps" into the reals
+    WeakConstMesh1D m_mesh_ptr; // weak pointer to mesh the function "maps" into the reals
     Eigen::VectorXd m_vals; // eigen array of functions vals at mesh points
   public:
     // Constructors / Destructors ==============================================================
@@ -31,7 +31,7 @@ class Vector1D
     Vector1D(std::size_t size_init=0): m_mesh_ptr(), m_vals(size_init){};
     // from mesh
     // from const shared_ptr<Mesh1D>
-    Vector1D(const Mesh1D_SPtr_t& mesh_init) : m_mesh_ptr(mesh_init), m_vals(mesh_init->size()){}
+    Vector1D(const SharedConstMesh1D& mesh_init) : m_mesh_ptr(mesh_init), m_vals(mesh_init->size()){}
     
     // Copy -----------------------------
     Vector1D(const Vector1D& other)
@@ -39,7 +39,7 @@ class Vector1D
     {};
     
     // copy from Eigen::VectorXd
-    Vector1D(const Eigen::VectorXd& other, Mesh1D_WPtr_t mesh_init = Mesh1D_WPtr_t{})
+    Vector1D(const Eigen::VectorXd& other, WeakConstMesh1D mesh_init = WeakConstMesh1D{})
       : m_mesh_ptr(mesh_init), m_vals(other)
     {}; 
     
@@ -49,7 +49,7 @@ class Vector1D
     {}; 
     
     // move from Eigen::VectorXD
-    Vector1D(Eigen::VectorXd&& other, Mesh1D_WPtr_t mesh_init = Mesh1D_WPtr_t{})
+    Vector1D(Eigen::VectorXd&& other, WeakConstMesh1D mesh_init = WeakConstMesh1D{})
       : m_mesh_ptr(mesh_init), m_vals(std::move(other))
     {}; 
     // destructors ----------------------------------
@@ -71,15 +71,15 @@ class Vector1D
 
     // get underlying mesh ------------------------------
     // const auto mesh(){return m_mesh_ptr.lock(); }; 
-    Mesh1D_SPtr_t get_mesh1d() const{return m_mesh_ptr.lock(); }
+    SharedConstMesh1D getMesh1D() const{return m_mesh_ptr.lock(); }
 
     // set the mesh the discretization is on -----------
-    auto& set_mesh(Mesh1D_WPtr_t m){ 
+    auto& setWeakConstMesh1D(WeakConstMesh1D m){ 
       m_mesh_ptr=m;
       return *this; 
     }
     // set vector to same size as mesh -----------------
-    Vector1D& resize(const Mesh1D_SPtr_t& m){
+    Vector1D& resize(const SharedConstMesh1D& m){
       m_mesh_ptr=m;
       m_vals.conservativeResize(m->size()); 
       return *this; 
@@ -106,7 +106,7 @@ class Vector1D
 }; // end Vector1D 
 
 // set vector to a constant -------------------------------------------------------------
-linops::Vector1D make_Discretization(const Mesh1D_SPtr_t& m, double val){
+linops::Vector1D make_Discretization(const SharedConstMesh1D& m, double val){
   linops::Vector1D result(m);
   result.values().setConstant(val); 
   return result; 
@@ -119,7 +119,7 @@ typename = std::enable_if_t<
   !std::is_arithmetic_v<std::remove_reference_t<std::remove_cv_t<F>>>
   >
 >
-linops::Vector1D make_Discretization(const Mesh1D_SPtr_t& m, F func)
+linops::Vector1D make_Discretization(const SharedConstMesh1D& m, F func)
 {
   static_assert(std::is_same<typename traits::callable_traits<F>::result_type, double>::value, "static assert error: callable type F must return a double"); 
   static_assert(traits::callable_traits<F>::num_args <= 1, "static assert error: callable type F must take <= args for Mesh1D"); 

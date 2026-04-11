@@ -20,7 +20,7 @@ template<typename LHS_EXPR,
           typename RHS_EXPR, 
           typename OSTEP_TUP, 
           template<typename L,typename R, typename O> SOLVER_T = Solvers::ImplicitSolver, 
-          typename M = LinOps::Mesh1D_SPtr_t
+          typename M = LinOps::SharedConstMesh1D
 >
 class Interpolator
 {
@@ -157,7 +157,7 @@ class Interpolator
       std::size_t cumulative_offset = 0
     )
     {
-      const auto& sub_dim_m = m->GetMeshAt(ith_dim); 
+      const auto& sub_dim_m = m->getMesh1DSafe(ith_dim); 
       auto bounding_interval = get_interval(*sub_dim_m, coords[ith_dim]);  
 
       if(ith_dim == 0)
@@ -170,7 +170,7 @@ class Interpolator
       }
       else
       {
-        std::size_t stride_size = m->sizes_middle_product(0,ith_dim); 
+        std::size_t stride_size = m->sizesMiddleProduct(0,ith_dim); 
         std::size_t interval_start_idx = std::distance(sub_dim_m->cbegin(), bounding_interval.first); 
         std::size_t offset_01 = cumulative_offset + stride_size * (interval_start_idx); 
         std::size_t offset_02 = cumulative_offset + stride_size * (interval_start_idx+1); 
@@ -269,7 +269,7 @@ return (x - x1) * (val2 - val1) / (x2 - x1)
 
 /*
 find pair [x1, x2] with x1 <= x <= x2 
-auto p = get_interval(*m->GetMeshAt( current_ith_dimension ) )
+auto p = get_interval(*m->getMesh1DSafe( current_ith_dimension ) )
 
 if this is first dimension 
 {
@@ -298,8 +298,8 @@ if this is an intermediate dimension
 // else if(ith_dim == (coords.size()-1)) // this is the outtermost dimension. 
 // {
 // // calculate new offset by incorporating this 
-// std::size_t cumulative_offset_01 = cumulative_offset + m->sizes_middle_product(0, ith_dim) * std::distance(sub_dim_m->cbegin(), internval_pair.first); 
-// std::size_t cumulative_offset_02 = cumulative_offset + m->sizes_middle_product(0, ith_dim) * std::distance(sub_dim_m->cbegin(), internval_pair.second); 
+// std::size_t cumulative_offset_01 = cumulative_offset + m->sizesMiddleProduct(0, ith_dim) * std::distance(sub_dim_m->cbegin(), internval_pair.first); 
+// std::size_t cumulative_offset_02 = cumulative_offset + m->sizesMiddleProduct(0, ith_dim) * std::distance(sub_dim_m->cbegin(), internval_pair.second); 
 
 // // get 2 pairs of linear interpolant along subdimension (ith_dim-1)
 // std::pair<double,double> val_pair_01 = LinearInterp_recursive_impl(coords, v, m, ith_dim-1, cumulative_offset_01);

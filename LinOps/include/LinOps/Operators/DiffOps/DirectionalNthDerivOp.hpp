@@ -33,7 +33,7 @@ class DirectionalNthDerivOp : public LinOpMixIn<DirectionalNthDerivOp<dir,orderN
     DirectionalNthDerivOp()=default; 
 
     // meshxd 
-    DirectionalNthDerivOp(const MeshXD_SPtr_t& m){this->setMeshXD(m);}
+    DirectionalNthDerivOp(const SharedConstMeshXD& m){this->setMeshXD(m);}
 
     // copy 
     DirectionalNthDerivOp(const DirectionalNthDerivOp& other)=default; 
@@ -48,11 +48,11 @@ class DirectionalNthDerivOp : public LinOpMixIn<DirectionalNthDerivOp<dir,orderN
     auto asMatrix() const { return make_HighDim(make_BlockDiag(  m_onedim_stencil.asMatrix(),m_prod_before),m_prod_after); }; 
 
     // set DIrectional Derivative to operate on a domain mesh 
-    void setMeshXD_impl(const MeshXD_SPtr_t& m)
+    void setMeshXD_impl(const SharedConstMeshXD& m)
     {
-      m_onedim_stencil.set_mesh(m->GetMeshAt(dir)); // checks the safety that # of dims >= Direction    
-      m_prod_before = m->sizes_middle_product(dir+1,m->dims()); // checks that m_dir < m->dims()
-      m_prod_after = m->sizes_middle_product(0,dir); 
+      m_onedim_stencil.set_mesh(m->getMesh1DSafe(dir)); // checks the safety that # of numDims >= Direction    
+      m_prod_before = m->sizesMiddleProduct(dir+1,m->numDims()); // checks that m_dir < m->numDims()
+      m_prod_after = m->sizesMiddleProduct(0,dir); 
     }
     
 }; // end class DirectionalNthDerivOp

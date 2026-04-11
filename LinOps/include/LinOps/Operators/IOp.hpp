@@ -7,8 +7,7 @@
 #ifndef IDENTITYOP_H
 #define IDENTITYOP_H
 
-#include<variant> 
-
+#include<Utilities/RowMajorIdentityExpr.hpp>
 #include "../LinOpMixin.hpp"
 #include "../LinOpBase.hpp"
 
@@ -18,35 +17,37 @@ class IOp : public LinOpMixIn<IOp>, public LinOpBase1D<IOp>, public LinOpBaseXD<
 {
   private:
     // Member Data ---------------------------- 
-    std::size_t m_size;
+    std::size_t m_size;     
   public: 
     // Constructors + Destructor --------------------------
     IOp(std::size_t s_init=0) : m_size(s_init){} 
-    IOp(const Mesh1D_SPtr_t& m){ setMesh1D(m); } 
-    IOp(const MeshXD_SPtr_t& m){ setMeshXD(m);} 
+    IOp(const SharedConstMesh1D& m){ setMesh1D(m); } 
+    IOp(const SharedConstMeshXD& m){ setMeshXD(m);} 
 
     // destructor 
     ~IOp()=default;
 
     // Member Funcs  ======================================================
+    using LinOpBase1D<IOp>::apply; 
+    using LinOpBaseXD<IOp>::apply; 
 
     // matrix getters 
-    auto asMatrix() const { return Eigen::MatrixXd::Identity(m_size,m_size).sparseView(); }
+    auto asMatrix() const { return make_RowMajorIdentity(m_size,m_size); }; 
 
     // Identity just returns inputs as outputs
     linops::Vector1D apply(const linops::Vector1D& d_arr) const { return d_arr; } 
     linops::VectorXD apply(const linops::VectorXD& d_arr) const { return d_arr; } 
 
     // fit operator to a domain mesh 
-    void setMesh1D_impl(const Mesh1D_SPtr_t& m) 
+    void setMesh1D_impl(const SharedConstMesh1D& m) 
     {
       m_size = m->size(); 
     };
 
     // fit operator to a domain mesh 
-    void setMeshXD_impl(const MeshXD_SPtr_t& m) 
+    void setMeshXD_impl(const SharedConstMeshXD& m) 
     {
-      m_size = m->sizes_product(); 
+      m_size = m->sizesProduct();
     };
 
 }; // End IOp 

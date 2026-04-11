@@ -53,16 +53,16 @@ class BCList : public OStepBaseXD<BCList<BCPairs_Ts...>>
 
     // Member Funcs ------------------------------------------------
     template<FDStep_Type STEP = FDStep_Type::IMPLICIT>
-    void MatBeforeStep(double t, const MeshXD_SPtr_t& mesh, LinOps::MatrixStorage_t& Mat) const 
+    void MatBeforeStep(double t, const SharedConstMeshXD& mesh, LinOps::MatrixStorage_t& Mat) const 
     {      
       // check args are compaitble 
-      if(mesh->dims() != sizeof...(BCPairs_Ts)) throw std::runtime_error("BCList SolAfterStep error: MeshXD.dims() != size of tuple / list of 1D BCs "); 
+      if(mesh->numDims() != sizeof...(BCPairs_Ts)) throw std::runtime_error("BCList SolAfterStep error: MeshXD.numDims() != size of tuple / list of 1D BCs "); 
 
       if constexpr(STEP == FDStep_Type::IMPLICIT)
       {
         // initializations ---------------------------------------------
-        // s1 = ith dims size, s2 = cumulative product of all dims < ith dim
-        std::size_t s1=mesh->dim_size(0); 
+        // s1 = ith numDims size, s2 = cumulative product of all numDims < ith dim
+        std::size_t s1=mesh->sizeOfDim(0); 
         std::size_t s2 = 1; 
 
         // lambda to give an NxN identity matrix 
@@ -77,19 +77,19 @@ class BCList : public OStepBaseXD<BCList<BCPairs_Ts...>>
           if(ith_dim == 0)
           {
             mask = MatrixStorage_t(s1,s1); 
-            bc_pair.template MatBeforeStep<FDStep_Type::IMPLICIT>(t,mesh->GetMesh(ith_dim), mask); 
+            bc_pair.template MatBeforeStep<FDStep_Type::IMPLICIT>(t,mesh->getMesh1D(ith_dim), mask); 
             s2 *= s1; 
             return; 
           }
           else
           {
-            s1=mesh->dim_size(ith_dim); 
+            s1=mesh->sizeOfDim(ith_dim); 
 
             // take previous mask to higher dimension 
             MatrixStorage_t mask_temp = Eigen::KroneckerProductSparse(I(s1), mask); 
             
             // fill new empty rows with ith bc_pair
-            MatrixStorage_t sp_diag = make_SparseDiag( flat_stencil(t, mesh->GetMesh(ith_dim), bc_pair) , s2); 
+            MatrixStorage_t sp_diag = make_SparseDiag( flat_stencil(t, mesh->getMesh1D(ith_dim), bc_pair) , s2); 
             fill_stencil(mask_temp, sp_diag); 
 
             // take ownership of higher dim temp with mask 
@@ -114,10 +114,10 @@ class BCList : public OStepBaseXD<BCList<BCPairs_Ts...>>
     } // end MatBeforeStep<>(t,m,Mat) 
 
     template<FDStep_Type STEP = FDStep_Type::IMPLICIT>
-    void SolBeforeStep(double t, const MeshXD_SPtr_t& mesh, StridedRef_t Sol) const 
+    void SolBeforeStep(double t, const SharedConstMeshXD& mesh, StridedRef_t Sol) const 
     {
       // check args are compaitble 
-      if(mesh->dims() != sizeof...(BCPairs_Ts)) throw std::runtime_error("BCList SolAfterStep error: MeshXD.dims() != size of tuple / list of 1D BCs "); 
+      if(mesh->numDims() != sizeof...(BCPairs_Ts)) throw std::runtime_error("BCList SolAfterStep error: MeshXD.numDims() != size of tuple / list of 1D BCs "); 
 
       if constexpr(STEP == FDStep_Type::IMPLICIT)
       {
@@ -126,16 +126,16 @@ class BCList : public OStepBaseXD<BCList<BCPairs_Ts...>>
 
         auto set_dim_boundaries_imp = [&](const auto& bc_pair, std::size_t dim){
           // Mesh1D that this bc_pair operates on  
-          const auto& mesh_1dim = mesh->GetMesh(dim); 
+          const auto& mesh_1dim = mesh->getMesh1D(dim); 
           // vector of eigen stride views that "look" like Discretization1Ds along mesh_1dim 
-          auto views = mesh->OneDim_views(Sol, dim); 
+          auto views = mesh->makeOneDimViews(Sol, dim); 
           // iterate through views that look like Mesh1D
           for(std::size_t i=0; i<views.size(); i++){
             // determine if it has been set by lower dimension 
             bool set_by_low_dim = false; 
             std::size_t s1 = 1; 
             for(int dim_i=0; dim_i<dim; dim_i++){
-              std::size_t s2 = mesh->dim_size(dim_i); 
+              std::size_t s2 = mesh->sizeOfDim(dim_i); 
               // in first group of values
               if((i/s1)%s2 == 0) set_by_low_dim = true;  
               // in last group of values
@@ -163,9 +163,9 @@ class BCList : public OStepBaseXD<BCList<BCPairs_Ts...>>
     } // end SolBeforeStep 
 
     template<FDStep_Type STEP = FDStep_Type::EXPLICIT>
-    void SolAfterStep(double t, const MeshXD_SPtr_t& mesh, StridedRef_t Sol) const 
+    void SolAfterStep(double t, const SharedConstMeshXD& mesh, StridedRef_t Sol) const 
     {
-      if(mesh->dims() != sizeof...(BCPairs_Ts)) throw std::runtime_error("BCList SolAfterStep error: MeshXD.dims() != size of tuple / list of 1D BCs "); 
+      if(mesh->numDims() != sizeof...(BCPairs_Ts)) throw std::runtime_error("BCList SolAfterStep error: MeshXD.numDims() != size of tuple / list of 1D BCs "); 
       
       if constexpr(STEP == FDStep_Type::EXPLICIT)
       {
@@ -174,9 +174,9 @@ class BCList : public OStepBaseXD<BCList<BCPairs_Ts...>>
 
         auto set_dim_boundaries = [&](const auto& bc_pair, std::size_t dim){
           // Mesh1D that this bc_pair operates on  
-          const auto& mesh_1dim = mesh->GetMesh(dim); 
+          const auto& mesh_1dim = mesh->getMesh1D(dim); 
           // vector of eigen stride views that "look" like Discretization1Ds along mesh_1dim 
-          auto views = mesh->OneDim_views(Sol,dim); 
+          auto views = mesh->makeOneDimViews(Sol,dim); 
 
           // iterate through views that look like Mesh1D
           for(std::size_t i=0; i<views.size(); i++){
@@ -184,7 +184,7 @@ class BCList : public OStepBaseXD<BCList<BCPairs_Ts...>>
             bool set_by_low_dim = false; 
             std::size_t s1 = 1; 
             for(int dim_i=0; dim_i<dim; dim_i++){
-              std::size_t s2 = mesh->dim_size(dim_i); 
+              std::size_t s2 = mesh->sizeOfDim(dim_i); 
               // in first group of values
               if((i/s1)%s2 == 0) set_by_low_dim = true;  
               // in last group of values
@@ -216,7 +216,7 @@ class BCList : public OStepBaseXD<BCList<BCPairs_Ts...>>
   private:
     // Unreachable =========================================================== 
     template<typename PAIR_T>
-    MatrixStorage_t flat_stencil(double t, const Mesh1D_SPtr_t& mesh, const PAIR_T& bc_pair) const 
+    MatrixStorage_t flat_stencil(double t, const SharedConstMesh1D& mesh, const PAIR_T& bc_pair) const 
     {
       // empty singuglar row of size == mesh size 
       MatrixStorage_t result(1, mesh->size()); 
@@ -253,12 +253,12 @@ class BCList : public OStepBaseXD<BCList<BCPairs_Ts...>>
   //   {
   //     // check args are compaitble ---------------------------------
   //     if(list.empty()) throw std::runtime_error("list must be non empty!"); 
-  //     if(list.size()!=mesh->dims()) throw std::invalid_argument("length of boundary condition list must be == to # of dims of MeshXD"); 
-  //     // if(list.size() > 2) throw std::runtime_error("BoundaryCondXD doesn't support dims >= 3 yet!"); 
+  //     if(list.size()!=mesh->numDims()) throw std::invalid_argument("length of boundary condition list must be == to # of numDims of MeshXD"); 
+  //     // if(list.size() > 2) throw std::runtime_error("BoundaryCondXD doesn't support numDims >= 3 yet!"); 
 
   //     // initializations ---------------------------------------------
-  //     // s1 = ith dims size, s2 = cumulative product of all dims < ith dim
-  //     std::size_t s1=mesh->dim_size(0), s2=1; 
+  //     // s1 = ith numDims size, s2 = cumulative product of all numDims < ith dim
+  //     std::size_t s1=mesh->sizeOfDim(0), s2=1; 
   //     // lambda to give an NxN identity matrix 
   //     MatrixStorage_t cap_mat; 
   //     auto I = [&cap_mat](std::size_t N) -> const MatrixStorage_t& {cap_mat.resize(N,N); cap_mat.setIdentity(); return cap_mat;}; 
@@ -267,17 +267,17 @@ class BCList : public OStepBaseXD<BCList<BCPairs_Ts...>>
       
   //     // base case: 
   //     // set stencil's first/last rows maually with BcPtr_t  
-  //     list[0].SetStencil(mask,mesh->GetMesh(0)); 
+  //     list[0].SetStencil(mask,mesh->getMesh1D(0)); 
 
   //     // recursive case: 
-  //     for(std::size_t ith_dim=1; ith_dim<mesh->dims(); ith_dim++)
+  //     for(std::size_t ith_dim=1; ith_dim<mesh->numDims(); ith_dim++)
   //     {
   //       // take previous mesh to higher dimension 
-  //       s1 = mesh->dim_size(ith_dim); 
+  //       s1 = mesh->sizeOfDim(ith_dim); 
   //       MatrixStorage_t mask_temp = Eigen::KroneckerProductSparse(I(s1), mask); 
         
   //       // fill new empty rows with ith BcPtr_t pair
-  //       MatrixStorage_t sp_diag = make_SparseDiag( flat_stencil(list[ith_dim],mesh->GetMesh(ith_dim)), s2 ); 
+  //       MatrixStorage_t sp_diag = make_SparseDiag( flat_stencil(list[ith_dim],mesh->getMesh1D(ith_dim)), s2 ); 
   //       MatrixStorage_t fill_rows = Eigen::KroneckerProductSparse(sp_diag, I(s1));
   //       fill_stencil(mask_temp, fill_rows); 
 

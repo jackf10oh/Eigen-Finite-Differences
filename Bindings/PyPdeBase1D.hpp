@@ -33,14 +33,14 @@ class Concrete_PDE_1D : public PDE_IMPL, public TExprs::GenInterp
 <
   typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetLhs())>::type, 
   typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetRhs())>::type, 
-  LinOps::Mesh1D_SPtr_t, 
+  LinOps::SharedConstMesh1D, 
   Fds::BcPtr_t, 
   std::vector<Eigen::VectorXd>
 >
 {
   private:
     // Type Defs -----------
-    using interp_base_t = typename TExprs::GenInterp<typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetLhs())>::type, typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetRhs())>::type, LinOps::Mesh1D_SPtr_t, Fds::BcPtr_t, std::vector<Eigen::VectorXd>>; 
+    using interp_base_t = typename TExprs::GenInterp<typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetLhs())>::type, typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetRhs())>::type, LinOps::SharedConstMesh1D, Fds::BcPtr_t, std::vector<Eigen::VectorXd>>; 
     // Member Data ------------
   public:
     Concrete_PDE_1D()
@@ -54,14 +54,14 @@ class Concrete_PDE_XD : public PDE_IMPL, public TExprs::GenInterp
 <
   typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetLhs())>::type, 
   typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetRhs())>::type, 
-  LinOps::MeshXD_SPtr_t, 
+  LinOps::SharedConstMeshXD, 
   Fds::BcXDPtr_t, 
   std::vector<Eigen::VectorXd>
 >
 {
   private:
     // Type Defs -----------
-    using interp_base_t = typename TExprs::GenInterp<typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetLhs())>::type, typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetRhs())>::type, LinOps::MeshXD_SPtr_t, Fds::BcXDPtr_t, std::vector<Eigen::VectorXd>>; 
+    using interp_base_t = typename TExprs::GenInterp<typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetLhs())>::type, typename std::remove_reference<decltype(std::declval<PDE_IMPL>().GetRhs())>::type, LinOps::SharedConstMeshXD, Fds::BcXDPtr_t, std::vector<Eigen::VectorXd>>; 
     // Member Data ------------
   public:
     Concrete_PDE_XD()

@@ -13,8 +13,8 @@
 namespace OSteps{
 using StridedRef_t = Eigen::Ref<Eigen::VectorXd, 0, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>;
 using LinOps::MatrixStorage_t; 
-using LinOps::Mesh1D_SPtr_t; 
-using LinOps::MeshXD_SPtr_t;
+using LinOps::SharedConstMesh1D; 
+using LinOps::SharedConstMeshXD;
 
 enum class FDStep_Type{
   EXPLICIT, 
@@ -33,7 +33,7 @@ class OStepBase
     // Type Defs + Compile time flags -----------------
     constexpr static StepDims_Flag dims_flag = DIMS_FLAG;
     // constexpr static bool is_time_dep_flag = false; // going to remove in favor of SetTime outside step ... 
-    using MESH_T = std::conditional_t<DIMS_FLAG == StepDims_Flag::OneDim, Mesh1D_SPtr_t, MeshXD_SPtr_t>; 
+    using MESH_T = std::conditional_t<DIMS_FLAG == StepDims_Flag::OneDim, SharedConstMesh1D, SharedConstMeshXD>; 
 
     // Member Funcs ------------------------------------------------
     template<typename TIME_ITER, typename LHS_EXECUTOR, typename RHS_EXPR, FDStep_Type Step>

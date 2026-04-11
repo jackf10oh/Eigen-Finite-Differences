@@ -6,8 +6,8 @@
 //
 // JAF 12/5/2025
 
-#ifndef MESH_H
-#define MESH_H
+#ifndef MESH1D_H
+#define MESH1D_H
 
 #include<cstdint>
 #include<vector>
@@ -18,8 +18,8 @@ namespace linops{
 
 // forward declaration -> aliases
 class Mesh1D; 
-using Mesh1D_SPtr_t = std::shared_ptr<const Mesh1D>;
-using Mesh1D_WPtr_t = std::weak_ptr<const Mesh1D>;
+using SharedConstMesh1D = std::shared_ptr<const Mesh1D>;
+using WeakConstMesh1D = std::weak_ptr<const Mesh1D>;
 
 class Mesh1D
 {

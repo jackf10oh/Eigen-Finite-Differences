@@ -9,8 +9,14 @@
 
 #include<type_traits>
 #include<Eigen/SparseCore>
+#include<Eigen/Sparse> 
 
 namespace linops{
+
+// conveniences - - - - - - - - - - - - -
+using StridedRef = typename Eigen::Ref<Eigen::VectorXd, 0, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>; 
+using Stride =  Eigen::Stride<0,Eigen::Dynamic>; 
+using StrideView =  Eigen::Map<Eigen::VectorXd, Eigen::Unaligned, Stride>; 
 
 // Forward Declarations - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -59,10 +59,6 @@ class LinOpExpr : public LinOpMixIn< LinOpExpr<L, R, BinaryOp> >, public LinOpBa
     // Member Funcs ======================================================================
 
     // returns combination bin_op(A,B) of 2 stored linops ----------------
-    decltype(auto) asMatrix()
-    {
-      return m_binop(m_lhs, m_rhs); 
-    };
     decltype(auto) asMatrix() const
     {
       return m_binop(m_lhs, m_rhs); 
@@ -121,11 +117,6 @@ class LinOpExpr<L, void, UnaryOp> : public LinOpMixIn< LinOpExpr<L, void, UnaryO
     // Member Funcs ======================================================================
 
     // returns Op( A ) of 1 stored linops --------------------------------------
-    decltype(auto) asMatrix()
-    {
-      // return m_binop(m_lhs, m_rhs); 
-      return m_unarop(m_lhs); 
-    };
     decltype(auto) asMatrix() const
     {
       // return m_binop(m_lhs, m_rhs); 

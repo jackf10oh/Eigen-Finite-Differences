@@ -1,4 +1,4 @@
-// make_diagonal.hpp
+// SparseDiagExpr.hpp
 //
 // takes a Eigen::SparseMatrix<double,Eigen::RowMajor> matrix of rows==1 and makes it into a diagonal matrix 
 // tightly based on eigen docs for make circulant
@@ -67,7 +67,6 @@ class SparseDiag : public Eigen::SparseMatrixBase< SparseDiag<ArgType,P> > {
     bool m_is_horizontal; 
   
 };
-
 
 // the evaluator =======================================================================
 namespace Eigen {
@@ -147,14 +146,14 @@ struct evaluator< SparseDiag<ArgType,P> > : evaluator_base< SparseDiag<ArgType,P
 }  // namespace Eigen
 
 // the entry point ======================================================================= 
-template<class ArgType, SparseDiagPattern P = SparseDiagPattern::REPEAT>
+template<SparseDiagPattern P = SparseDiagPattern::REPEAT, class ArgType>
 SparseDiag<ArgType,P> make_SparseDiag(const Eigen::SparseMatrixBase<ArgType>& arg, std::size_t num_repeats=1) {
   return SparseDiag<ArgType, P>(arg.derived(), num_repeats);
 }
 
-// template<class ArgType>
-// SparseDiag<ArgType> make_SparseDiag(const Eigen::SparseMatrixBase<ArgType>& arg, std::size_t num_repeats=1) {
-//   return SparseDiag<ArgType>(arg.derived(), num_repeats);
-// }
+template<SparseDiagPattern P = SparseDiagPattern::REPEAT, class ArgType>
+SparseDiag<ArgType,P> make_SparseDiag(const Eigen::MatrixBase<ArgType>& arg, std::size_t num_repeats=1) {
+  return SparseDiag<ArgType, P>(arg.derived(), num_repeats);
+}
 
 #endif // SparseDiagExpr.hpp

@@ -12,14 +12,14 @@
 
 namespace Solvers{ 
 
-template<typename ANYMESH_SHAREDPTR_T = LinOps::Mesh1D_SPtr_t>
+template<typename ANYMESH_SHAREDPTR_T = LinOps::SharedConstMesh1D>
 struct SolverArgs
 {
   // shared_ptr to const Mesh1D or const MeshXD 
   ANYMESH_SHAREDPTR_T domain_mesh_ptr; 
 
   // shared_ptr to const Mesh1D 
-  LinOps::Mesh1D_SPtr_t time_mesh_ptr; 
+  LinOps::SharedConstMesh1D time_mesh_ptr; 
   
   // List of underlying Eigen::VectorXd from Discretization1D (XD)  
   std::vector<Eigen::VectorXd> ICs;
@@ -27,7 +27,7 @@ struct SolverArgs
 
 // CTAD guideline ... 
 template<typename M>
-SolverArgs(M,LinOps::Mesh1D_SPtr_t, std::vector<Eigen::VectorXd>)
+SolverArgs(M,LinOps::SharedConstMesh1D, std::vector<Eigen::VectorXd>)
   ->SolverArgs<M>; 
 
 } // end namespace Solvers 
