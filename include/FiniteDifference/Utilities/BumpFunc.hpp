@@ -7,6 +7,9 @@
 #ifndef BUMPFUNC_H
 #define BUMPFUNC_H 
 
+namespace fdm{
+  namespace utils{
+
 struct BumpFunc
 {
     double L = 0.0;
@@ -46,5 +49,8 @@ struct BumpFunc
       }
     }
 };
+
+  } // end namespace utils 
+} // end namespace fdm 
 
 #endif // BumpFunc.hpp

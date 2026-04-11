@@ -42,7 +42,7 @@ class DirectionalRandOp: public LinOpMixIn<DirectionalRandOp>, public LinOpBaseX
     // Member Funcs ============================================== 
     
     // matrix getters
-    auto asMatrix() const { return make_HighDim(make_BlockDiag(m_mat,m_prod_before),m_prod_after); }; 
+    auto asMatrix() const { return fdm::utils::make_HighDim(fdm::utils::make_BlockDiag(m_mat,m_prod_before),m_prod_after); }; 
 
   protected: 
     // Unreachable ------------------------------------------------------------

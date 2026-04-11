@@ -11,6 +11,9 @@
 #include<iostream>
 #include<Eigen/Core> 
 
+namespace fdm{
+  namespace utils{
+
 // from container with .begin() .end() 
 template<typename Cont>
 void print_vec(const Cont& v, std::string comment="", bool new_line=true){
@@ -76,5 +79,8 @@ void print_mat(const Cont2D& A, std::string comment="")
   // closing brace 
   std::cout << "]\n\n";
 }
+
+  } // end namespace utils 
+} // end namespace fdm 
 
 #endif // PrintVec.hpp

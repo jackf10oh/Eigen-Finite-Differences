@@ -13,6 +13,9 @@
 #include<iostream> 
 #include<Eigen/Dense> // Eigen::Map 
 
+namespace fdm{
+  namespace utils{
+
 // stateful Fornberg weight calculator. only allocate memory at creation 
 class FornCalc
 {
@@ -138,5 +141,8 @@ class FornCalc
       
     } // end Calculate ------------
 };
+
+  } // end namespace utils 
+} // end namespace fdm 
 
 #endif // FornbergCalc.hpp

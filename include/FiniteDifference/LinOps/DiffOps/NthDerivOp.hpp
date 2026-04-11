@@ -69,7 +69,7 @@ class NthDerivOp : public LinOpMixIn<NthDerivOp<orderN>>, public LinOpBase1D<Nth
       // #pragma omp parallel 
       {
         // instantiate stateful fornberg calculator. one per thread 
-        FornCalc weight_calc(1+2*((orderN+1)/2),orderN);
+        fdm::utils::FornCalc weight_calc(1+2*((orderN+1)/2),orderN);
         // first rows with forward stencil
         // #pragma omp for nowait 
         for(std::size_t i=0; i<centered_skirt; i++)

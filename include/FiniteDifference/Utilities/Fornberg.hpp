@@ -12,6 +12,9 @@
 #include<string> 
 #include<iostream> 
 
+namespace fdm{
+  namespace utils{
+
 // ------------------------------------------------------------------------
 template<template<typename T,typename TAlloc> class Container, typename Real, typename RealAlloc>
 std::vector<Real> LagrangeWeights(Real x_bar, const Container<Real,RealAlloc> nodes)
@@ -150,5 +153,8 @@ std::vector<Real> FornWeights(Real x_bar, int order, const Container<Real,RealAl
   // nodes a0, a1, ..., an evaluated at x_bar
   return Weights[order]; 
 }
+
+  } // end namespace utils 
+} // end namespace fdm 
 
 #endif 

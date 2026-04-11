@@ -12,14 +12,21 @@
 #include<Eigen/Sparse>
 
 // Forward declarations ---------------------------------------------
+namespace fdm{
+  namespace utils{
+
 template<typename ArgTpe>
 class BlockDiag;
+
+  }
+}
+
 
 // type traits =======================================================================
 namespace Eigen {
 namespace internal {
 template<class ArgType>
-struct traits<BlockDiag<ArgType> > {
+struct traits<fdm::utils::BlockDiag<ArgType> > {
   typedef Eigen::Sparse StorageKind;
   typedef Eigen::MatrixXpr XprKind;
   typedef typename ArgType::StorageIndex StorageIndex;
@@ -36,6 +43,9 @@ struct traits<BlockDiag<ArgType> > {
 }  // namespace Eigen
 
 // expression class ======================================================================= 
+namespace fdm{
+  namespace utils{
+
 template<class ArgType>
 class BlockDiag : public Eigen::SparseMatrixBase< BlockDiag<ArgType> > {
   public:
@@ -61,14 +71,17 @@ class BlockDiag : public Eigen::SparseMatrixBase< BlockDiag<ArgType> > {
   
 };
 
+  } // end namespace utils 
+} // end namespace fdm 
+
 // the evaluator =======================================================================
 namespace Eigen {
 namespace internal {
 template<typename ArgType>
-struct evaluator< BlockDiag<ArgType> > : evaluator_base< BlockDiag<ArgType> > {
+struct evaluator< fdm::utils::BlockDiag<ArgType> > : evaluator_base< fdm::utils::BlockDiag<ArgType> > {
 
   // typedefs -------------------------------------------------- 
-  typedef BlockDiag<ArgType> XprType;
+  typedef fdm::utils::BlockDiag<ArgType> XprType;
   typedef typename nested_eval<ArgType, XprType::ColsAtCompileTime>::type ArgTypeNested;
   typedef typename remove_all<ArgTypeNested>::type ArgTypeNestedCleaned;
   typedef typename XprType::CoeffReturnType CoeffReturnType;
@@ -123,10 +136,16 @@ struct evaluator< BlockDiag<ArgType> > : evaluator_base< BlockDiag<ArgType> > {
 }  // namespace Eigen
 
 // the entry point ======================================================================= 
+namespace fdm{
+  namespace utils{
+
 template<class ArgType>
 BlockDiag<ArgType> make_BlockDiag(const Eigen::SparseMatrixBase<ArgType>& arg, std::size_t num_repeats=1) {
   return BlockDiag<ArgType>(arg.derived(), num_repeats);
 }
+
+  } // end namespace utils 
+} // end namespace fdm 
 
 #endif // BlockDiagExpr.hpp 
 

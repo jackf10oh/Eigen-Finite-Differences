@@ -13,13 +13,17 @@
 #include<Eigen/Sparse>
 
 // Enum + Forward declarations ---------------------------------------------
-class RowMajorIdentity; 
+namespace fdm{
+  namespace utils{
+    class RowMajorIdentity; 
+  }
+}
 
 // type traits =======================================================================
 namespace Eigen {
 namespace internal {
 template<>
-struct traits<RowMajorIdentity> {
+struct traits<fdm::utils::RowMajorIdentity> {
   typedef Eigen::Sparse StorageKind;
   typedef Eigen::MatrixXpr XprKind;
   typedef typename Eigen::Index StorageIndex;
@@ -36,11 +40,14 @@ struct traits<RowMajorIdentity> {
 }  // namespace Eigen
 
 // expression class ======================================================================= 
+namespace fdm{
+  namespace utils{
+
 class RowMajorIdentity : public Eigen::SparseMatrixBase< RowMajorIdentity > {
   public:
     // typedefs 
     // typedefs 
-    typedef typename Eigen::internal::ref_selector<RowMajorIdentity>::type Nested;
+    typedef typename Eigen::internal::ref_selector<fdm::utils::RowMajorIdentity>::type Nested;
     typedef Eigen::Index Index;
     
     // constructors 
@@ -55,14 +62,17 @@ class RowMajorIdentity : public Eigen::SparseMatrixBase< RowMajorIdentity > {
     std::size_t m_cols;   
 };
 
+  } // end namespace utils 
+} // end namespace fdm 
+
 // the evaluator =======================================================================
 namespace Eigen {
 namespace internal {
 template<>
-struct evaluator< RowMajorIdentity > : evaluator_base< RowMajorIdentity > {
+struct evaluator< fdm::utils::RowMajorIdentity > : evaluator_base< fdm::utils::RowMajorIdentity > {
 
   // typedefs -------------------------------------------------- 
-  typedef RowMajorIdentity XprType;
+  typedef fdm::utils::RowMajorIdentity XprType;
   // typedef typename nested_eval<XprType::ColsAtCompileTime>::type ArgTypeNested;
   // typedef typename remove_all<ArgTypeNested>::type ArgTypeNestedCleaned;
   typedef typename XprType::CoeffReturnType CoeffReturnType;
@@ -111,8 +121,13 @@ struct evaluator< RowMajorIdentity > : evaluator_base< RowMajorIdentity > {
 }  // namespace Eigen
 
 // the entry point ======================================================================= 
-RowMajorIdentity make_RowMajorIdentity(std::size_t m, std::size_t n) {
-  return RowMajorIdentity(m,n); 
+namespace fdm{
+  namespace utils{
+    RowMajorIdentity make_RowMajorIdentity(std::size_t m, std::size_t n) {
+      return RowMajorIdentity(m,n); 
+    }
+  }
 }
+
 
 #endif // SparseDiagExpr.hpp

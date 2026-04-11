@@ -9,6 +9,9 @@
 
 #include<Eigen/Sparse> 
 
+namespace fdm{
+  namespace utils{
+
 template<typename Scalar, typename Index> 
 void fill_stencil(Eigen::SparseMatrix<Scalar,Eigen::RowMajor,Index>& A, const Eigen::SparseMatrix<Scalar,Eigen::RowMajor,Index>& mask)
 {
@@ -66,5 +69,8 @@ void overwrite_stencil(Eigen::SparseMatrix<Scalar,Eigen::RowMajor,Index>& A, con
     }
   }
 };
+
+  } // end namespace utils 
+} // end namespace fdm 
 
 #endif // FillStencil.hpp

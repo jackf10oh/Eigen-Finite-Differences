@@ -34,7 +34,7 @@ class IOp : public LinOpMixIn<IOp>, public LinOpBase1D<IOp>, public LinOpBaseXD<
     using LinOpBaseXD<IOp>::apply; 
 
     // matrix getters 
-    auto asMatrix() const { return make_RowMajorIdentity(m_size,m_size); }; 
+    auto asMatrix() const { return fdm::utils::make_RowMajorIdentity(m_size,m_size); }; 
 
     // Identity just returns inputs as outputs
     fdm::Vector1D apply(const fdm::Vector1D& d_arr) const { return d_arr; } 

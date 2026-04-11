@@ -13,6 +13,9 @@
 #include<Eigen/Core>
 #include<Eigen/Sparse>
 
+namespace fdm{
+  namespace utils{
+
 // Enum + Forward declarations ---------------------------------------------
 enum class SparseDiagPattern { REPEAT, CYCLE }; 
 template<typename ArgTpe, SparseDiagPattern P>
@@ -155,5 +158,8 @@ template<SparseDiagPattern P = SparseDiagPattern::REPEAT, class ArgType>
 SparseDiag<ArgType,P> make_SparseDiag(const Eigen::MatrixBase<ArgType>& arg, std::size_t num_repeats=1) {
   return SparseDiag<ArgType, P>(arg.derived(), num_repeats);
 }
+
+  } // end namespace utils 
+} // end namespace fdm 
 
 #endif // SparseDiagExpr.hpp

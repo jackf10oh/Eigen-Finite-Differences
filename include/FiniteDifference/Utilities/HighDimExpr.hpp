@@ -11,15 +11,22 @@
 
 #include<Eigen/Sparse>
 
+namespace fdm{
+  namespace utils{
+
 // Forward declarations ---------------------------------------------
 template<typename ArgTpe>
 class HighDim;
 
+  } // end namespace utils 
+} // end namespace fdm 
+
 // type traits =======================================================================
 namespace Eigen {
 namespace internal {
+
 template<class ArgType>
-struct traits<HighDim<ArgType> > {
+struct traits<fdm::utils::HighDim<ArgType> > {
   typedef Eigen::Sparse StorageKind;
   typedef Eigen::MatrixXpr XprKind;
   typedef typename ArgType::StorageIndex StorageIndex;
@@ -36,6 +43,9 @@ struct traits<HighDim<ArgType> > {
 }  // namespace Eigen
 
 // expression class ======================================================================= 
+namespace fdm{
+  namespace utils{
+
 template<class ArgType>
 class HighDim : public Eigen::SparseMatrixBase< HighDim<ArgType> > {
   public:
@@ -61,14 +71,17 @@ class HighDim : public Eigen::SparseMatrixBase< HighDim<ArgType> > {
   
 };
 
+  } // end namespace utils 
+} // end namespace fdm 
+
 // the evaluator =======================================================================
 namespace Eigen {
 namespace internal {
 template<typename ArgType>
-struct evaluator< HighDim<ArgType> > : evaluator_base< HighDim<ArgType> > {
+struct evaluator< fdm::utils::HighDim<ArgType> > : evaluator_base< fdm::utils::HighDim<ArgType> > {
 
   // typedefs -------------------------------------------------- 
-  typedef HighDim<ArgType> XprType;
+  typedef fdm::utils::HighDim<ArgType> XprType;
   typedef typename nested_eval<ArgType, XprType::ColsAtCompileTime>::type ArgTypeNested;
   typedef typename remove_all<ArgTypeNested>::type ArgTypeNestedCleaned;
   typedef typename XprType::CoeffReturnType CoeffReturnType;
@@ -123,10 +136,16 @@ struct evaluator< HighDim<ArgType> > : evaluator_base< HighDim<ArgType> > {
 }  // namespace Eigen
 
 // the entry point ======================================================================= 
+namespace fdm{
+  namespace utils{ 
+    
 template<class ArgType>
 HighDim<ArgType> make_HighDim(const Eigen::SparseMatrixBase<ArgType>& arg, std::size_t num_repeats=1) {
   return HighDim<ArgType>(arg.derived(), num_repeats);
 }
+
+  } // end namespace utils 
+} // end namespace fdm 
 
 #endif // HighDimExpr.hpp 
 
