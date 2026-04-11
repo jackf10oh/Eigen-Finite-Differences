@@ -10,8 +10,8 @@
 #include<cstdint>
 #include<Utilities/FornbergCalc.hpp>
 
-#include "../../LinOpMixIn.hpp"
-#include "../../LinOpBase.hpp" 
+#include "../LinOpMixIn.hpp"
+#include "../LinOpBase.hpp" 
 
 namespace linops{
 

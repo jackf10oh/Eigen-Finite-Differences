@@ -1,9 +1,9 @@
-// CoeffOpMixIn.hpp
+// CoeffMixIn.hpp
 //
 // going to need some way to model equations like 
 // Ut = c(t,x) * Uxx + c(t,x) * Ux
 //
-// CoeffOpMixIn.hpp
+// CoeffMixIn.hpp
 
 #ifndef COEFFOP_H
 #define COEFFOP_H 
@@ -16,7 +16,7 @@
 namespace linops{
 
 template<typename Derived, typename Callable>
-class CoeffOpMixIn : public LinOpMixIn<Derived>
+class CoeffMixIn : public LinOpMixIn<Derived>
 {
 
   public:
@@ -33,18 +33,18 @@ class CoeffOpMixIn : public LinOpMixIn<Derived>
   public:
     // Constructors + Destructor ========================================================= 
     // default 
-    CoeffOpMixIn()=delete;
+    CoeffMixIn()=delete;
     
     // from callable function f 
-    CoeffOpMixIn(Callable f) 
+    CoeffMixIn(Callable f) 
       : m_callable(std::move(f)), m_diag(), m_prod_after() 
     {}
 
     // copy 
-    CoeffOpMixIn(const CoeffOpMixIn& other)=default; 
+    CoeffMixIn(const CoeffMixIn& other)=default; 
 
     // destructor 
-    ~CoeffOpMixIn()=default; 
+    ~CoeffMixIn()=default; 
 
     // Member Functions ============================================================
     auto asMatrix() const 
@@ -146,4 +146,4 @@ class CoeffOpMixIn : public LinOpMixIn<Derived>
 
 } // end namespace linops 
 
-#endif // CoeffOpMixIn.hpp 
+#endif // CoeffMixIn.hpp 

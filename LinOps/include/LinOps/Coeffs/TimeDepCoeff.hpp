@@ -7,14 +7,14 @@
 #ifndef TIMEDEPCOEFF_H
 #define TIMEDEPCOEFF_H
 
-#include "../../CoeffOpMixIn.hpp" 
-#include "../../LinOpBase.hpp" 
-#include "../../LinOpTraits.hpp" // callable traits -> bind_first
+#include "../CoeffMixIn.hpp" 
+#include "../LinOpBase.hpp" 
+#include "../LinOpTraits.hpp" // callable traits -> bind_first
 
 namespace linops{
 
 template<typename Callable>
-class TimeDepCoeff : public CoeffOpMixIn<TimeDepCoeff<Callable>, typename traits::callable_traits<Callable>::BindFirst_t>, public LinOpBase1D<TimeDepCoeff<Callable>>, public LinOpBaseXD<TimeDepCoeff<Callable>>
+class TimeDepCoeff : public CoeffMixIn<TimeDepCoeff<Callable>, typename traits::callable_traits<Callable>::BindFirst_t>, public LinOpBase1D<TimeDepCoeff<Callable>>, public LinOpBaseXD<TimeDepCoeff<Callable>>
 {
   private:
     // convenience type
@@ -28,17 +28,17 @@ class TimeDepCoeff : public CoeffOpMixIn<TimeDepCoeff<Callable>, typename traits
 
     // from callable 
     TimeDepCoeff(Callable f)
-      : CoeffOpMixIn<TimeDepCoeff<Callable>, Binded>(Binded(f, 0.0)) 
+      : CoeffMixIn<TimeDepCoeff<Callable>, Binded>(Binded(f, 0.0)) 
     {}
 
     // from Mesh1D + callable 
-    TimeDepCoeff(const SharedConstMesh1D m, Callable f)
-      : CoeffOpMixIn<TimeDepCoeff<Callable>, Binded>(Binded(f, 0.0)) 
+    TimeDepCoeff(Callable f, const SharedConstMesh1D& m)
+      : CoeffMixIn<TimeDepCoeff<Callable>, Binded>(Binded(f, 0.0)) 
     {this->setMesh(m);}
 
     // from Mesh1D + callable 
-    TimeDepCoeff(const SharedConstMeshXD m, Callable f)
-      : CoeffOpMixIn<TimeDepCoeff<Callable>, Binded>(Binded(f, 0.0)) 
+    TimeDepCoeff(Callable f, const SharedConstMeshXD& m)
+      : CoeffMixIn<TimeDepCoeff<Callable>, Binded>(Binded(f, 0.0)) 
     {this->setMesh(m);}
 
     // copy constructor

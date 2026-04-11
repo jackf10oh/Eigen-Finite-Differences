@@ -10,7 +10,7 @@
 #include<Utilities/BlockDiagExpr.hpp> 
 #include<Utilities/HighDimExpr.hpp> 
 
-#include "../../LinOpBase.hpp" 
+#include "../LinOpBase.hpp" 
 #include "NthDerivOp.hpp" 
 
 namespace linops{

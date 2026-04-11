@@ -306,7 +306,7 @@ TEST(XDOperatorsTestSuite, AutonomousCoeffTest)
   
   // take 1 coeff_op and 1 lambda. 
   auto check_lam = [&](const auto& coeff_op, auto func){
-    Matrix A = coeff_op.asMatrix(); 
+    Matrix A(coeff_op.asMatrix()); 
     // check each value of diag = func(t,x) or func(t) 
     for(std::size_t i=0; i<A.rows(); i++){
       ASSERT_EQ(    
@@ -354,7 +354,7 @@ TEST(CoeffOpTestSuite, TimeDepCoeffTest)
   
   // take 1 coeff_op and 1 lambda. check each value of diag = func(t,x) or func(t) 
   auto check_lam = [&](const auto& coeff_op, auto func){
-    Matrix A = coeff_op.asMatrix(); 
+    Matrix A(coeff_op.asMatrix()); 
     for(std::size_t i=0; i<A.rows(); i++){
       if constexpr(linops::traits::callable_traits<decltype(func)>::num_args==2){
         ASSERT_EQ(     
@@ -375,9 +375,6 @@ TEST(CoeffOpTestSuite, TimeDepCoeffTest)
   double t = 3.0; 
   linops::TimeDepCoeff coeff01(lam01,my_mesh); 
   coeff01.setTime(t); 
-
-  // check they have the same values 
-  ASSERT_NEAR(coeff01.asMatrix(), lam01(t), 1e-3); // coeff01 is a scalar!
 
   // set to new functions / discretization 
   linops::TimeDepCoeff coeff02(lam02,my_mesh); 

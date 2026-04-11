@@ -21,11 +21,11 @@
 #include "Operators/RandOp.hpp"
 #include "Operators/DirectionalRandOp.hpp"
 
-#include "Operators/DiffOps/NthDerivOp.hpp"
-#include "Operators/DiffOps/DirectionalNthDerivOp.hpp" 
+#include "DiffOps/NthDerivOp.hpp"
+#include "DiffOps/DirectionalNthDerivOp.hpp" 
 
-#include "CoeffOpMixIn.hpp"
-#include "Operators/CoeffOps/AutonomousCoeff.hpp"
-#include "Operators/CoeffOps/TimeDepCoeff.hpp"
+#include "CoeffMixIn.hpp"
+#include "Coeffs/AutonomousCoeff.hpp"
+#include "Coeffs/TimeDepCoeff.hpp"
 
 #endif // All.hpp
