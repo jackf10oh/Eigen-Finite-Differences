@@ -25,6 +25,10 @@ class MeshXD;
 using SharedConstMeshXD = std::shared_ptr<const MeshXD>;
 using WeakConstMeshXD = std::weak_ptr<const MeshXD>;
 
+// conveniences - - - - - - - - - - - - -
+using StridedRef = typename Eigen::Ref<Eigen::VectorXd, 0, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>; 
+using Stride =  Eigen::Stride<0,Eigen::Dynamic>; 
+using StrideView =  Eigen::Map<Eigen::VectorXd, Eigen::Unaligned, Stride>;
 using Matrix = Eigen::SparseMatrix<double,Eigen::RowMajor>; 
 
 } // end namespace fdm 
@@ -42,12 +46,7 @@ template<typename Derived>
 class LinOpBaseXD;
 
 template<typename Lhs_t, typename Rhs_t, typename BinaryOp_t>
-class LinOpExpr; 
-
-// conveniences - - - - - - - - - - - - -
-using StridedRef = typename Eigen::Ref<Eigen::VectorXd, 0, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>; 
-using Stride =  Eigen::Stride<0,Eigen::Dynamic>; 
-using StrideView =  Eigen::Map<Eigen::VectorXd, Eigen::Unaligned, Stride>; 
+class LinOpExpr;  
 
 // Structs for binary operations f(L1,L2) to get matrix of expression - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 namespace internal{ 

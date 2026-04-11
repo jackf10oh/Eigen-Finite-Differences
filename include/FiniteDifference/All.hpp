@@ -13,6 +13,7 @@
 #include "VectorXD.hpp"
 
 #include "LinOps/All.hpp"
+#include "OutsideSteps/All.hpp"
 
 #endif
 

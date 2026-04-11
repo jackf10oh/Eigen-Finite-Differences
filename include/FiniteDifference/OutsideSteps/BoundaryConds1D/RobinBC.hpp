@@ -8,10 +8,11 @@
 #ifndef ROBINBCS_H
 #define ROBINBCS_H 
 
-#include<Utilities/FornbergCalc.hpp>
+#include "../../Utilities/FornbergCalc.hpp"
 #include "BCPair.hpp"
 
-namespace OSteps{
+namespace fdm{
+  namespace osteps{
 
 class RobinBC
 {
@@ -34,7 +35,7 @@ class RobinBC
 
     // Member Funcs ----------------------------------------------
     // change first/last (left/right boundary) row of the fdm stencil matrix
-    void SetStencilL(double t, const SharedConstMesh1D& mesh, MatrixStorage_t& Mat) const 
+    void SetStencilL(double t, const SharedConstMesh1D& mesh, fdm::Matrix& Mat) const 
     {
       Mat.topRows(1) *= 0;
       // first order derivative approximation 
@@ -42,7 +43,7 @@ class RobinBC
       Mat.coeffRef(0,0)=  val_coeff + deriv_coeff*(-1.0/h);
       Mat.coeffRef(0,1)=  deriv_coeff*(1.0/h);
     }; 
-    void SetStencilR(double t, const SharedConstMesh1D& mesh, MatrixStorage_t& Mat) const 
+    void SetStencilR(double t, const SharedConstMesh1D& mesh, fdm::Matrix& Mat) const 
     {
       Mat.bottomRows(1) *= 0; 
       // first order derivative approximation 
@@ -51,18 +52,18 @@ class RobinBC
       Mat.coeffRef(Mat.rows()-1, Mat.cols()-1)=  val_coeff + deriv_coeff*(1.0/h);
     };
 
-    void SetImpSolL(double t, const SharedConstMesh1D& mesh, StridedRef_t Sol) const 
+    void SetImpSolL(double t, const SharedConstMesh1D& mesh, fdm::StridedRef Sol) const 
     {Sol[0] = boundary_target;};
-    void SetImpSolR(double t, const SharedConstMesh1D& mesh, StridedRef_t Sol) const 
+    void SetImpSolR(double t, const SharedConstMesh1D& mesh, fdm::StridedRef Sol) const 
     {Sol[Sol.size()-1] = boundary_target;};
     
     // change the first/last (left/right boundary) entry of a vector  
-    void SetSolL(double t, const SharedConstMesh1D& mesh, StridedRef_t Sol) const 
+    void SetSolL(double t, const SharedConstMesh1D& mesh, fdm::StridedRef Sol) const 
     { 
       // if(Sol.size()<3 || mesh->size()<3) throw std::runtime_error("Discretization1D or Mesh1D size too small!(must be >= 3)"); 
 
       // up to 3 nodes, up to 1st order deriv
-      FornCalc calc(3,1);
+      fdm::utils::FornCalc calc(3,1);
 
       // get forward finite difference weights for Sol[0], Sol[1], Sol[2] 
       auto weights = calc.GetWeights((*mesh)[0], mesh->cbegin(), mesh->cbegin()+3, 1); 
@@ -78,12 +79,12 @@ class RobinBC
       Sol[0] = target;  
       // void return type
     };
-    void SetSolR(double t, const SharedConstMesh1D& mesh, StridedRef_t Sol) const  
+    void SetSolR(double t, const SharedConstMesh1D& mesh, fdm::StridedRef Sol) const  
     {
       // if(Sol.size()<3 || mesh->size()<3) throw std::runtime_error("Discretization1D or Mesh1D size too small!(must be >= 3)"); 
 
       // up to 3 nodes, up to 1st order deriv
-      FornCalc calc(3,1);
+      fdm::utils::FornCalc calc(3,1);
 
       // get forward finite difference weights for Sol[0], Sol[1], Sol[2] 
       auto weights = calc.GetWeights((*mesh)[mesh->size()-1], mesh->cend()-3, mesh->cend(), 1); 
@@ -101,6 +102,7 @@ class RobinBC
     };
 };
 
-} // end namespace OSteps 
+  } // end namespace osteps
+} // end namespace fdm 
 
 #endif // RobinBC.hpp
