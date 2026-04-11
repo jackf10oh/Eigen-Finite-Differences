@@ -7,9 +7,8 @@
 #ifndef DIRECTIONALNTHDERIVOP_H
 #define DIRECTIONALNTHDERIVOP_H 
 
-#include<Utilities/BlockDiagExpr.hpp> 
-#include<Utilities/HighDimExpr.hpp> 
-
+#include "../../Utilities/BlockDiagExpr.hpp"
+#include "../../Utilities/HighDimExpr.hpp" 
 #include "../LinOpBase.hpp" 
 #include "NthDerivOp.hpp" 
 
@@ -33,10 +32,10 @@ class DirectionalNthDerivOp : public LinOpMixIn<DirectionalNthDerivOp<dir,orderN
     DirectionalNthDerivOp()=default; 
 
     // meshxd 
-    DirectionalNthDerivOp(const SharedConstMeshXD& m){this->setMesh(m);}
+    DirectionalNthDerivOp(const fdm::SharedConstMeshXD& m){this->setMesh(m);}
 
     // copy 
-    DirectionalNthDerivOp(const DirectionalNthDerivOp& other)=default; 
+    DirectionalNthDerivOp(const linops::DirectionalNthDerivOp<dir,orderN>& other)=default; 
 
     // destructor 
     ~DirectionalNthDerivOp()=default; 
@@ -49,7 +48,7 @@ class DirectionalNthDerivOp : public LinOpMixIn<DirectionalNthDerivOp<dir,orderN
   protected: 
     // Unreachable ------------------------------------------------------------
     // set DIrectional Derivative to operate on a domain mesh 
-    void setMeshXD_impl(const SharedConstMeshXD& m)
+    void setMeshXD_impl(const fdm::SharedConstMeshXD& m)
     {
       m_onedim_stencil.set_mesh(m->getMesh1DSafe(dir)); // checks the safety that # of numDims >= Direction    
       m_prod_before = m->sizesMiddleProduct(dir+1,m->numDims()); // checks that m_dir < m->numDims()

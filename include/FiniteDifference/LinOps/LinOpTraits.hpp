@@ -10,17 +10,26 @@
 #include<type_traits>
 #include<Eigen/SparseCore>
 #include<Eigen/Sparse> 
-
-namespace linops{
-
-// conveniences - - - - - - - - - - - - -
-using StridedRef = typename Eigen::Ref<Eigen::VectorXd, 0, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>; 
-using Stride =  Eigen::Stride<0,Eigen::Dynamic>; 
-using StrideView =  Eigen::Map<Eigen::VectorXd, Eigen::Unaligned, Stride>; 
-
+  
 // Forward Declarations - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+namespace fdm{
+
+class Vector1D; 
+class VectorXD; 
+
+class Mesh1D; 
+using SharedConstMesh1D = std::shared_ptr<const Mesh1D>;
+using WeakConstMesh1D = std::weak_ptr<const Mesh1D>;
+
+class MeshXD; 
+using SharedConstMeshXD = std::shared_ptr<const MeshXD>;
+using WeakConstMeshXD = std::weak_ptr<const MeshXD>;
 
 using Matrix = Eigen::SparseMatrix<double,Eigen::RowMajor>; 
+
+} // end namespace fdm 
+
+namespace linops{
 
 template<typename Derived>
 class LinOpMixIn;
@@ -33,6 +42,11 @@ class LinOpBaseXD;
 
 template<typename Lhs_t, typename Rhs_t, typename BinaryOp_t>
 class LinOpExpr; 
+
+// conveniences - - - - - - - - - - - - -
+using StridedRef = typename Eigen::Ref<Eigen::VectorXd, 0, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>; 
+using Stride =  Eigen::Stride<0,Eigen::Dynamic>; 
+using StrideView =  Eigen::Map<Eigen::VectorXd, Eigen::Unaligned, Stride>; 
 
 // Structs for binary operations f(L1,L2) to get matrix of expression - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 namespace internal{ 

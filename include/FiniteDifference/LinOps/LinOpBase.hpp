@@ -12,14 +12,14 @@
 #include<Eigen/Core>
 #include<Eigen/SparseCore>
 
-#include "Mesh1D.hpp"
-#include "MeshXD.hpp"
-#include "Vector1D.hpp"
-#include "VectorXD.hpp"
+#include "LinOpTraits.hpp"
+
+#include "../Mesh1D.hpp"
+#include "../Vector1D.hpp"
+#include "../MeshXD.hpp"
+#include "../VectorXD.hpp"
 
 namespace linops{
-
-using Matrix = Eigen::SparseMatrix<double,Eigen::RowMajor>; 
 
 // forward declaration 
 template<typename T> class LinOpBaseXD; 
@@ -34,21 +34,21 @@ class LinOpBase1D
   
   private:
     // Member Data ---------------------------------------------------- 
-    WeakConstMesh1D m_mesh_ptr; 
+    fdm::WeakConstMesh1D m_mesh_ptr; 
 
   public:
     // Member Funcs  ======================================================
 
     // multiply the underlying expression with linops::Vector1D's underlying Eigen::VectorXd
-    linops::Vector1D apply(const linops::Vector1D& d) const 
+    fdm::Vector1D apply(const fdm::Vector1D& d) const 
     {
       Eigen::VectorXd v = static_cast<const Derived*>(this)->asMatrix() * d.values();  // calculate A*b
-      linops::Vector1D result(std::move(v), this->m_mesh_ptr); // move A*b into result's values
+      fdm::Vector1D result(std::move(v), this->m_mesh_ptr); // move A*b into result's values
       return result;
     };
 
     // fit operator to a mesh of rectangular domain 
-    void setMesh(const SharedConstMesh1D& m) 
+    void setMesh(const fdm::SharedConstMesh1D& m) 
     {
       // if Derived is an expression 
       if constexpr(traits::is_expr_crtp<Derived>::value){
@@ -75,7 +75,7 @@ class LinOpBase1D
     };
     
     // return Mesh1D pointed to
-    SharedConstMesh1D getMesh1D() const 
+    fdm::SharedConstMesh1D getMesh1D() const 
     {
       // if Derived is an expression 
       if constexpr(traits::is_expr_crtp<Derived>::value){
@@ -92,10 +92,10 @@ class LinOpBase1D
 
   protected:
     // Unreachable except by other base. 
-    void clearMesh1D(){ this->m_mesh_ptr = SharedConstMesh1D{}; }
+    void clearMesh1D(){ this->m_mesh_ptr = fdm::SharedConstMesh1D{}; }
 
     // Must implement! -------------------------
-    void setMesh1D_impl(const SharedConstMesh1D& m)
+    void setMesh1D_impl(const fdm::SharedConstMesh1D& m)
     {
       // static_cast<Derived*>(this)->setMesh1D_impl(m);
       Accessor::call_setMesh1D_impl(*this, m);  
@@ -103,7 +103,7 @@ class LinOpBase1D
 
     struct Accessor : public Derived
     {
-      static void call_setMesh1D_impl(LinOpBase1D& self, const SharedConstMesh1D& m){ static_cast<Accessor&>(self).setMesh1D_impl(m); }
+      static void call_setMesh1D_impl(LinOpBase1D& self, const fdm::SharedConstMesh1D& m){ static_cast<Accessor&>(self).setMesh1D_impl(m); }
     }; 
 
 }; // end LinOpBase1D<>  
@@ -118,21 +118,21 @@ class LinOpBaseXD
 
   private:
     // Member Data ------------------------------------------------- 
-    WeakConstMeshXD m_mesh_ptr; 
+    fdm::WeakConstMeshXD m_mesh_ptr; 
 
   public:
     // Member Funcs  ======================================================
 
     // multiply the underlying expression with linops::VectorXD's underlying Eigen::VectorXd
-    linops::VectorXD apply(const linops::VectorXD& d) const 
+    fdm::VectorXD apply(const fdm::VectorXD& d) const 
     {
       Eigen::VectorXd v = static_cast<const Derived*>(this)->asMatrix() * d.values();  // calculate A*b
-      linops::VectorXD result(std::move(v), this->m_mesh_ptr); // move A*b into result's values
+      fdm::VectorXD result(std::move(v), this->m_mesh_ptr); // move A*b into result's values
       return result;
     };
 
     // fit operator to a mesh of rectangular domain 
-    void setMesh(const SharedConstMeshXD& m) 
+    void setMesh(const fdm::SharedConstMeshXD& m) 
     {
       // if Derived is an expression 
       if constexpr(traits::is_expr_crtp<Derived>::value){
@@ -160,7 +160,7 @@ class LinOpBaseXD
     };
     
     // return Mesh1D pointed to
-    SharedConstMeshXD getMeshXD() const 
+    fdm::SharedConstMeshXD getMeshXD() const 
     {
       // if Derived is an expression 
       if constexpr(traits::is_expr_crtp<Derived>::value){
@@ -177,10 +177,10 @@ class LinOpBaseXD
     
   protected:
     // Unreachable except other base. 
-    void clearMeshXD(){ this->m_mesh_ptr = SharedConstMeshXD{}; }
+    void clearMeshXD(){ this->m_mesh_ptr = fdm::SharedConstMeshXD{}; }
 
     // must implement! 
-    void setMeshXD_impl(const SharedConstMeshXD& m)
+    void setMeshXD_impl(const fdm::SharedConstMeshXD& m)
     {
       // static_cast<Derived*>(this)->setMeshXD_impl(m); 
       Accessor::call_setMeshXD_impl(*this, m); 
@@ -188,7 +188,7 @@ class LinOpBaseXD
 
     struct Accessor : public Derived
     {
-      static void call_setMeshXD_impl(LinOpBaseXD& self, const SharedConstMeshXD& m){ static_cast<Accessor&>(self).setMeshXD_impl(m); }
+      static void call_setMeshXD_impl(LinOpBaseXD& self, const fdm::SharedConstMeshXD& m){ static_cast<Accessor&>(self).setMeshXD_impl(m); }
     }; 
 
 }; // end LinOpBaseXD<>  

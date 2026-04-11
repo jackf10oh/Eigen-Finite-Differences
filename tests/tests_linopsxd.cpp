@@ -11,9 +11,11 @@
 #include<gtest/gtest.h>
 #include<gmock/gmock.h>
 
-#include<LinOps/All.hpp>
+#include<FiniteDifference/LinOps/All.hpp>
 
+using namespace fdm; 
 using namespace linops; 
+using namespace linops::internal; 
 
 // Mesh Suite ==================================================== 
 // Test all constructors 
@@ -34,10 +36,10 @@ TEST(MeshXDSuite, MeshXDConstructible){
 
   // from std::vector<> of std::shared_ptr<Mesh1D> 
   // const!  
-  auto mesh_1d_01 = linops::make_Mesh1D(); 
-  auto mesh_1d_02 = linops::make_Mesh1D(-10.0,0.0,21); 
-  auto mesh_1d_03 = linops::make_Mesh1D(0.0,10.0,101);
-  auto v = std::vector<linops::SharedConstMesh1D>({mesh_1d_01,mesh_1d_02,mesh_1d_03}); 
+  auto mesh_1d_01 = fdm::make_Mesh1D(); 
+  auto mesh_1d_02 = fdm::make_Mesh1D(-10.0,0.0,21); 
+  auto mesh_1d_03 = fdm::make_Mesh1D(0.0,10.0,101);
+  auto v = std::vector<fdm::SharedConstMesh1D>({mesh_1d_01,mesh_1d_02,mesh_1d_03}); 
   MeshXD from_vec(v); 
 
   // copy 
@@ -107,20 +109,20 @@ TEST(MeshXDSuite, MeshXDSizesGetters){
 // Test all constructors 
 TEST(VectorXDSuite, VectorXDConstructible){
   // default constructor leaves m_vals, m_dims, m_mesh_ptr all empty 
-  linops::VectorXD empty_disc; 
+  fdm::VectorXD empty_disc; 
 
   // 1 dim from single size
   std::size_t N=67; 
-  linops::VectorXD from_size_1d(N); 
+  fdm::VectorXD from_size_1d(N); 
 
   // from X dimensional MeshXDPtr_t
   auto meshes_1d = std::make_shared<MeshXD>(std::size_t{1}); 
   auto meshes_3d = std::make_shared<MeshXD>(std::size_t{3}); 
-  linops::VectorXD from_meshes_1d(meshes_1d); 
-  linops::VectorXD from_meshes_3d(meshes_3d); 
+  fdm::VectorXD from_meshes_1d(meshes_1d); 
+  fdm::VectorXD from_meshes_3d(meshes_3d); 
 
   // copy 
-  linops::VectorXD from_other(from_meshes_1d); 
+  fdm::VectorXD from_other(from_meshes_1d); 
 
 }
 
@@ -153,32 +155,32 @@ TEST(VectorXDSuite, VectorXDSizesGetters){
   
   // returns # of steps in a specific dimension 
   ASSERT_EQ(from_ends_steps_dims->sizeOfDim(0), \
-            linops::VectorXD(from_ends_steps_dims).sizeOfDim(0)); 
+            fdm::VectorXD(from_ends_steps_dims).sizeOfDim(0)); 
             
   ASSERT_EQ(from_ends_steps_dims->sizeOfDim(1), \
-            linops::VectorXD(from_ends_steps_dims).sizeOfDim(1));  
+            fdm::VectorXD(from_ends_steps_dims).sizeOfDim(1));  
 
-  EXPECT_ANY_THROW(linops::VectorXD(from_ends_steps_dims).sizeOfDim(10)); // 10 > # of numDims 
+  EXPECT_ANY_THROW(fdm::VectorXD(from_ends_steps_dims).sizeOfDim(10)); // 10 > # of numDims 
 
   // // returns product of (# of steps per dim)
   ASSERT_EQ(from_ends_list_steps_list01->sizesProduct(), \
-            linops::VectorXD(from_ends_list_steps_list01).sizesProduct());  
+            fdm::VectorXD(from_ends_list_steps_list01).sizesProduct());  
 
   ASSERT_EQ(from_ends_list_steps_list02->sizesProduct(), \
-            linops::VectorXD(from_ends_list_steps_list02).sizesProduct());  
+            fdm::VectorXD(from_ends_list_steps_list02).sizesProduct());  
   
   // returns product of (# of steps per dim) for dim [start,end)
   ASSERT_EQ(from_ends_list_steps_list02->sizesMiddleProduct(0,3), \
-            linops::VectorXD(from_ends_list_steps_list02).sizesMiddleProduct(0,3));  
+            fdm::VectorXD(from_ends_list_steps_list02).sizesMiddleProduct(0,3));  
 
   ASSERT_EQ(from_ends_list_steps_list02->sizesMiddleProduct(0,2), \
-            linops::VectorXD(from_ends_list_steps_list02).sizesMiddleProduct(0,2));
+            fdm::VectorXD(from_ends_list_steps_list02).sizesMiddleProduct(0,2));
 
   ASSERT_EQ(from_ends_list_steps_list02->sizesMiddleProduct(1,3), \
-            linops::VectorXD(from_ends_list_steps_list02).sizesMiddleProduct(1,3));
+            fdm::VectorXD(from_ends_list_steps_list02).sizesMiddleProduct(1,3));
  
-  EXPECT_ANY_THROW(linops::VectorXD(from_ends_list_steps_list02).sizesMiddleProduct(0,10)); // 10 > # of numDims 
-  EXPECT_ANY_THROW(linops::VectorXD(from_ends_list_steps_list02).sizesMiddleProduct(4,0)); // start > end 
+  EXPECT_ANY_THROW(fdm::VectorXD(from_ends_list_steps_list02).sizesMiddleProduct(0,10)); // 10 > # of numDims 
+  EXPECT_ANY_THROW(fdm::VectorXD(from_ends_list_steps_list02).sizesMiddleProduct(4,0)); // start > end 
 }
 
 // Testing set_init() for constant
@@ -187,7 +189,7 @@ TEST(VectorXDSuite, VectorXDSetByConstant){
   auto my_meshes = make_MeshXD(); 
   
   double val_init = 6.7; 
-  auto my_disc = linops::make_Discretization(my_meshes, val_init); 
+  auto my_disc = fdm::make_Discretization(my_meshes, val_init); 
 
   for(auto& val : my_disc.values()){
     ASSERT_EQ(val, val_init); 
@@ -206,10 +208,10 @@ TEST(VectorXDSuite, VectorXDSetByCallable){
   auto my_mesh_2d = make_MeshXD(0.0,10.0,21, 2); 
   auto my_mesh_3d = make_MeshXD(0.0,10.0,21, 3); 
 
-  linops::VectorXD my_disc; 
+  fdm::VectorXD my_disc; 
 
   // set init 1D case 
-  my_disc = linops::make_Discretization(my_mesh_1d, lam01); 
+  my_disc = fdm::make_Discretization(my_mesh_1d, lam01); 
   for(std::size_t i=0; i<my_disc.sizeOfDim(0); i++){
     double x = my_mesh_1d->getMesh1DSafe(0)->at(i); 
     double lam_val = lam01(x); 
@@ -219,7 +221,7 @@ TEST(VectorXDSuite, VectorXDSetByCallable){
   }
 
   // set init 2D case 
-  my_disc = linops::make_Discretization(my_mesh_2d, lam02); 
+  my_disc = fdm::make_Discretization(my_mesh_2d, lam02); 
   for(std::size_t i=0; i<my_disc.sizeOfDim(0); i++){
 
     double x = my_mesh_2d->getMesh1DSafe(0)->at(i); 
@@ -239,7 +241,7 @@ TEST(VectorXDSuite, VectorXDSetByCallable){
   }
 
   // set init 3D case 
-  my_disc = linops::make_Discretization(my_mesh_3d, lam03); 
+  my_disc = fdm::make_Discretization(my_mesh_3d, lam03); 
   for(std::size_t i=0; i<my_disc.sizeOfDim(0); i++){
 
     double x = my_mesh_3d->getMesh1DSafe(0)->at(i); 
@@ -264,7 +266,7 @@ TEST(VectorXDSuite, VectorXDSetByCallable){
 
   // last case: we can use lower dimensional function on higher dimension mesh
   // i.e. lam02 takes 2 numDims but my_mesh3d has 3 numDims
-  my_disc = linops::make_Discretization(my_mesh_3d, lam02); 
+  my_disc = fdm::make_Discretization(my_mesh_3d, lam02); 
   for(std::size_t i=0; i<my_disc.sizeOfDim(0); i++){
 
     double x = my_mesh_3d->getMesh1DSafe(0)->at(i); 
@@ -296,7 +298,7 @@ TEST(VectorXDSuite, VectorXDSetByCallable){
 TEST(XDOperatorsTestSuite, AutonomousCoeffTest)
 {
   // make a mesh 
-  auto my_mesh = linops::make_Mesh1D(0.0,4.0,5); 
+  auto my_mesh = fdm::make_Mesh1D(0.0,4.0,5); 
 
   // some lambdas to test out 
   auto lam01 = [](double x){return x*x;}; // x^2
@@ -345,7 +347,7 @@ TEST(XDOperatorsTestSuite, AutonomousCoeffTest)
 TEST(CoeffOpTestSuite, TimeDepCoeffTest)
 {
   // make a mesh 
-  auto my_mesh = linops::make_Mesh1D(0.0,4.0,5); 
+  auto my_mesh = fdm::make_Mesh1D(0.0,4.0,5); 
 
   // some lambdas to test out 
   auto lam01 = [](double t){return t*t;}; // t^2

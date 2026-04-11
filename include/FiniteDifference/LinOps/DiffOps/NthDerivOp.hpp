@@ -8,8 +8,7 @@
 #define NTHDERIVOP_H
 
 #include<cstdint>
-#include<Utilities/FornbergCalc.hpp>
-
+#include "../../Utilities/FornbergCalc.hpp"
 #include "../LinOpMixIn.hpp"
 #include "../LinOpBase.hpp" 
 
@@ -20,7 +19,7 @@ class NthDerivOp : public LinOpMixIn<NthDerivOp<orderN>>, public LinOpBase1D<Nth
 {
   private:
     // member data ----------------------------------------------------------- 
-    linops::Matrix m_stencil; 
+    fdm::Matrix m_stencil; 
   public:
     static constexpr std::size_t order = orderN; 
 
@@ -29,7 +28,7 @@ class NthDerivOp : public LinOpMixIn<NthDerivOp<orderN>>, public LinOpBase1D<Nth
     NthDerivOp()=default; 
 
     // from mesh
-    NthDerivOp(const linops::SharedConstMesh1D& m)
+    NthDerivOp(const fdm::SharedConstMesh1D& m)
     {this->setMesh(m);};
 
     // copy 
@@ -41,12 +40,12 @@ class NthDerivOp : public LinOpMixIn<NthDerivOp<orderN>>, public LinOpBase1D<Nth
     // Member Funcs =====================================================
 
     // Matrix Getters 
-    const Matrix& asMatrix() const { return m_stencil; };  
+    const fdm::Matrix& asMatrix() const { return m_stencil; };  
     
   protected: 
     // Unreachable ------------------------------------------------------------
     // set the mesh domain the derivative operator works on 
-    void setMesh1D_impl(const SharedConstMesh1D& m)
+    void setMesh1D_impl(const fdm::SharedConstMesh1D& m)
     {
       if constexpr(order == 1){ 
         m_stencil.setIdentity(); 

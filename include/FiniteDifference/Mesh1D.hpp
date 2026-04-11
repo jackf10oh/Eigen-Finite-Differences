@@ -14,7 +14,7 @@
 #include<memory> 
 #include<type_traits>
 
-namespace linops{
+namespace fdm{
 
 // forward declaration -> aliases
 class Mesh1D; 
@@ -81,6 +81,6 @@ auto make_Mesh1D(Args... args)
   return std::make_shared<const Mesh1D>(args...); 
 }
 
-} // end namespace linops 
+} // end namespace fdm 
 
 #endif // Mesh1D.hpp

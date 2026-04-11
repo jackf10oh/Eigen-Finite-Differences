@@ -12,9 +12,10 @@
 #include<memory>
 #include<algorithm>
 #include<numeric>
-#include<LinOps/Mesh1D.hpp>
 
-namespace linops{
+#include "Mesh1D.hpp"
+
+namespace fdm{
 
 // forward declaration -> aliases
 class MeshXD; 
@@ -24,6 +25,11 @@ using WeakConstMeshXD = std::weak_ptr<const MeshXD>;
 class MeshXD
 {
   private:
+    // Types -----------------
+    using StridedRef = typename Eigen::Ref<Eigen::VectorXd, 0, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>; 
+    using Stride =  Eigen::Stride<0,Eigen::Dynamic>; 
+    using StrideView =  Eigen::Map<Eigen::VectorXd, Eigen::Unaligned, Stride>; 
+
     // member data --------------------------------------------------------------------------
     std::vector<SharedConstMesh1D> m_mesh_vec; // dynamic array of meshes. 
 
@@ -35,7 +41,7 @@ class MeshXD
       : m_mesh_vec(n_dims_init)
     {
       for(std::size_t dim_i=0; dim_i<n_dims_init; dim_i++){
-        m_mesh_vec[dim_i] = linops::make_Mesh1D(0.0, 1.0, 5); 
+        m_mesh_vec[dim_i] = fdm::make_Mesh1D(0.0, 1.0, 5); 
       }; 
     };
     
@@ -43,7 +49,7 @@ class MeshXD
     MeshXD(double left=0.0, double right=1.0, std::size_t n_steps=11,std::size_t n_dims=1)
       : m_mesh_vec(n_dims)
     {
-      auto original_ptr = linops::make_Mesh1D(left,right,n_steps); 
+      auto original_ptr = fdm::make_Mesh1D(left,right,n_steps); 
       for(auto& ptr : m_mesh_vec) ptr=original_ptr;  
     }
     
@@ -55,7 +61,7 @@ class MeshXD
       auto nstep_it = nsteps_vec.begin();
       auto axes_it=axes_vec.begin();
       for(auto write=m_mesh_vec.begin(); write!=m_mesh_vec.end(); write++){
-        *write = linops::make_Mesh1D(axes_it->first, axes_it->second, *nstep_it); 
+        *write = fdm::make_Mesh1D(axes_it->first, axes_it->second, *nstep_it); 
         axes_it++; 
         nstep_it++; 
       }
@@ -155,6 +161,6 @@ const auto& make_MeshXD(const std::shared_ptr<const MeshXD>& other)
   return other; 
 }
 
-} // end namespace linops 
+} // end namespace fdm 
 
 #endif // MeshXD.hpp

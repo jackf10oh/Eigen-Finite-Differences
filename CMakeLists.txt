@@ -24,67 +24,67 @@ endif()
 # adding Eigenlib to compiler
 find_package(Eigen3 REQUIRED)
 
-# header only libraries ===============================
-# Utilities ------------- 
-add_library(Utilities INTERFACE) 
-target_include_directories(Utilities 
-  INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/include 
+# header only library ===============================
+add_library(FiniteDifference INTERFACE) 
+target_include_directories(FiniteDifference 
+  INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-target_link_libraries(Utilities 
+target_link_libraries(FiniteDifference
   INTERFACE Eigen3::Eigen
 )
 
 
-# LinOps ------------- 
-add_library(LinOps INTERFACE)
-target_include_directories(LinOps
-  INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/LinOps/include
-)
-target_link_libraries(LinOps  
-  INTERFACE Eigen3::Eigen
-  INTERFACE Utilities 
-)
+# # LinOps ------------- 
+# add_library(LinOps INTERFACE)
+# target_include_directories(LinOps
+#   INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/LinOps/include
+# )
+# target_link_libraries(LinOps  
+#   INTERFACE Eigen3::Eigen
+#   INTERFACE Utilities 
+# )
 
-# OutsideSteps ------------- 
-add_library(OutsideSteps INTERFACE)
-target_include_directories(OutsideSteps
-  INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/OutsideSteps/include
-)
-target_link_libraries(OutsideSteps 
-  INTERFACE LinOps
-  INTERFACE Utilities
-)
+# # OutsideSteps ------------- 
+# add_library(OutsideSteps INTERFACE)
+# target_include_directories(OutsideSteps
+#   INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/OutsideSteps/include
+# )
+# target_link_libraries(OutsideSteps 
+#   INTERFACE LinOps
+#   INTERFACE Utilities
+# )
 
-# TExprs --------------------------
-add_library(TExprs INTERFACE)
-target_include_directories(TExprs
-  INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/TExprs/include
-)
-target_link_libraries(TExprs
-  INTERFACE LinOps 
-  INTERFACE OutsideSteps
-  INTERFACE Utilities
-)
+# # TExprs --------------------------
+# add_library(TExprs INTERFACE)
+# target_include_directories(TExprs
+#   INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/TExprs/include
+# )
+# target_link_libraries(TExprs
+#   INTERFACE LinOps 
+#   INTERFACE OutsideSteps
+#   INTERFACE Utilities
+# )
 
-# Solvers ------------------------------------- 
-add_library(Solvers INTERFACE)
-target_include_directories(Solvers
-  INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/Solvers/include
-)
-target_link_libraries(Solvers
-  INTERFACE LinOps 
-  INTERFACE OutsideSteps
-  INTERFACE Utilities
-  INTERFACE TExprs
-)
+# # Solvers ------------------------------------- 
+# add_library(Solvers INTERFACE)
+# target_include_directories(Solvers
+#   INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/Solvers/include
+# )
+# target_link_libraries(Solvers
+#   INTERFACE LinOps 
+#   INTERFACE OutsideSteps
+#   INTERFACE Utilities
+#   INTERFACE TExprs
+# )
 
 # Tie all sub directories into main library ============================================== 
 target_link_libraries(FdmStencilExprs
-  INTERFACE LinOps 
-  INTERFACE OutsideSteps
-  INTERFACE TExprs 
-  INTERFACE Utilities
-  INTERFACE Solvers
+  INTERFACE FiniteDifference
+  # INTERFACE LinOps 
+  # INTERFACE OutsideSteps
+  # INTERFACE TExprs 
+  # INTERFACE Utilities
+  # INTERFACE Solvers
 )
 
 # adding google test

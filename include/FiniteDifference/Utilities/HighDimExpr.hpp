@@ -9,6 +9,8 @@
 #ifndef HIGHDIMEXPR_H
 #define HIGHDIMEXPR_H
 
+#include<Eigen/Sparse>
+
 // Forward declarations ---------------------------------------------
 template<typename ArgTpe>
 class HighDim;

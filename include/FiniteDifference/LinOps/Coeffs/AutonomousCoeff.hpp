@@ -26,12 +26,12 @@ class AutonomousCoeff : public CoeffMixIn<AutonomousCoeff<Callable>, Callable>, 
     {}
 
     // from Mesh1D + callable 
-    AutonomousCoeff(Callable f, const SharedConstMesh1D& m)
+    AutonomousCoeff(Callable f, const fdm::SharedConstMesh1D& m)
       : CoeffMixIn<AutonomousCoeff<Callable>, Callable>(f) 
     {this->setMesh(m);}
 
     // from Mesh1D + callable 
-    AutonomousCoeff(Callable f, const SharedConstMeshXD& m)
+    AutonomousCoeff(Callable f, const fdm::SharedConstMeshXD& m)
       : CoeffMixIn<AutonomousCoeff<Callable>, Callable>(f) 
     {this->setMesh(m);}
 
@@ -49,12 +49,12 @@ class AutonomousCoeff : public CoeffMixIn<AutonomousCoeff<Callable>, Callable>, 
 
   protected: 
     // Unreachable ------------------------------------------------------------
-    void setMesh1D_impl(const SharedConstMesh1D& m)
+    void setMesh1D_impl(const fdm::SharedConstMesh1D& m)
     {
       CoeffMixIn<AutonomousCoeff,Callable>::fillDiagonal(m); 
     }
 
-    void setMeshXD_impl(const SharedConstMeshXD& m)
+    void setMeshXD_impl(const fdm::SharedConstMeshXD& m)
     {
       CoeffMixIn<AutonomousCoeff,Callable>::fillDiagonal(m); 
     }

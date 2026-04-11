@@ -7,19 +7,14 @@
 #ifndef LINOP_ALL_H
 #define LINOP_ALL_H
 
-#include "Mesh1D.hpp"
-#include "Vector1D.hpp"
-#include "MeshXD.hpp"
-#include "VectorXD.hpp"
-
 #include "LinOpTraits.hpp"
 #include "LinOpMixIn.hpp"
 #include "LinOpBase.hpp"
 #include "LinOpExpr.hpp"
 
-#include "Operators/IOp.hpp"
-#include "Operators/RandOp.hpp"
-#include "Operators/DirectionalRandOp.hpp"
+#include "IOp.hpp"
+#include "RandOp.hpp"
+#include "DirectionalRandOp.hpp"
 
 #include "DiffOps/NthDerivOp.hpp"
 #include "DiffOps/DirectionalNthDerivOp.hpp" 

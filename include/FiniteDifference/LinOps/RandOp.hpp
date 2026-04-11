@@ -8,9 +8,8 @@
 #define RANDLINOP_H
 
 #include<Eigen/Core>
-
-#include "../LinOpBase.hpp"
-#include "../LinOpMixin.hpp" 
+#include "LinOpBase.hpp"
+#include "LinOpMixin.hpp" 
 
 namespace linops{
 
@@ -18,13 +17,13 @@ class RandOp : public LinOpMixIn<RandOp>, public LinOpBase1D<RandOp>, public Lin
 {
   private:
     // Member Data -------------------------------  
-    linops::Matrix m_mat; 
+    fdm::Matrix m_mat; 
   public: 
 
     // Constructors + Destructor ===========================
     RandOp()=default;
-    RandOp(const SharedConstMesh1D& m){ setMesh(m); }   
-    RandOp(const SharedConstMeshXD& m){ setMesh(m); }
+    RandOp(const fdm::SharedConstMesh1D& m){ setMesh(m); }   
+    RandOp(const fdm::SharedConstMeshXD& m){ setMesh(m); }
     RandOp(const RandOp& other)=default; 
     
     // destructor
@@ -42,14 +41,14 @@ class RandOp : public LinOpMixIn<RandOp>, public LinOpBase1D<RandOp>, public Lin
   protected: 
     // Unreachable ------------------------------------------------------------
     // fit operator to a domain mesh 
-    void setMesh1D_impl(const SharedConstMesh1D& m)
+    void setMesh1D_impl(const fdm::SharedConstMesh1D& m)
     {
       auto s = m->size();       
       m_mat = Eigen::MatrixXd::Random(s, s).sparseView(); 
     };
 
     // fit operator to a domain mesh 
-    void setMeshXD_impl(const SharedConstMeshXD& m)
+    void setMeshXD_impl(const fdm::SharedConstMeshXD& m)
     {
       auto s = m->sizesProduct(); 
       m_mat = Eigen::MatrixXd::Random(s, s).sparseView(); 

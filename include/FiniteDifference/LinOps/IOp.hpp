@@ -7,9 +7,9 @@
 #ifndef IDENTITYOP_H
 #define IDENTITYOP_H
 
-#include<Utilities/RowMajorIdentityExpr.hpp>
-#include "../LinOpMixin.hpp"
-#include "../LinOpBase.hpp"
+#include "../Utilities/RowMajorIdentityExpr.hpp"
+#include "LinOpMixin.hpp"
+#include "LinOpBase.hpp"
 
 namespace linops{
 
@@ -21,8 +21,8 @@ class IOp : public LinOpMixIn<IOp>, public LinOpBase1D<IOp>, public LinOpBaseXD<
   public: 
     // Constructors + Destructor --------------------------
     IOp(std::size_t s_init=0) : m_size(s_init){} 
-    IOp(const SharedConstMesh1D& m){ setMesh(m); } 
-    IOp(const SharedConstMeshXD& m){ setMesh(m);} 
+    IOp(const fdm::SharedConstMesh1D& m){ setMesh(m); } 
+    IOp(const fdm::SharedConstMeshXD& m){ setMesh(m);} 
 
     // destructor 
     ~IOp()=default;
@@ -37,19 +37,19 @@ class IOp : public LinOpMixIn<IOp>, public LinOpBase1D<IOp>, public LinOpBaseXD<
     auto asMatrix() const { return make_RowMajorIdentity(m_size,m_size); }; 
 
     // Identity just returns inputs as outputs
-    linops::Vector1D apply(const linops::Vector1D& d_arr) const { return d_arr; } 
-    linops::VectorXD apply(const linops::VectorXD& d_arr) const { return d_arr; } 
+    fdm::Vector1D apply(const fdm::Vector1D& d_arr) const { return d_arr; } 
+    fdm::VectorXD apply(const fdm::VectorXD& d_arr) const { return d_arr; } 
 
   protected: 
     // Unreachable ------------------------------------------------------------
     // fit operator to a domain mesh 
-    void setMesh1D_impl(const SharedConstMesh1D& m) 
+    void setMesh1D_impl(const fdm::SharedConstMesh1D& m) 
     {
       m_size = m->size(); 
     };
 
     // fit operator to a domain mesh 
-    void setMeshXD_impl(const SharedConstMeshXD& m) 
+    void setMeshXD_impl(const fdm::SharedConstMeshXD& m) 
     {
       m_size = m->sizesProduct();
     };

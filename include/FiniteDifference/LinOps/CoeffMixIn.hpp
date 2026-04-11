@@ -63,20 +63,20 @@ class CoeffMixIn : public LinOpMixIn<Derived>
     }
 
     // Must implement! 
-    void setMesh1D_impl(const SharedConstMesh1D& m)
+    void setMesh1D_impl(const fdm::SharedConstMesh1D& m)
     {
       static_cast<DerivedT*>(this)->setMesh1D_impl(m); 
     }
   
     // Must implement! 
-    void setMeshXD_impl(const SharedConstMeshXD& m)
+    void setMeshXD_impl(const fdm::SharedConstMeshXD& m)
     {
       static_cast<DerivedT*>(this)->setMeshXD_impl(m); 
     }
     
     const Callable& callable() const { return m_callable; }
 
-    void fillDiagonal(const linops::SharedConstMesh1D& m)
+    void fillDiagonal(const fdm::SharedConstMesh1D& m)
     {
       constexpr std::size_t n = linops::traits::callable_traits<Callable>::num_args; 
       if constexpr(n==0){
@@ -95,7 +95,7 @@ class CoeffMixIn : public LinOpMixIn<Derived>
       }
     }
 
-    void fillDiagonal(const linops::SharedConstMeshXD& m)
+    void fillDiagonal(const fdm::SharedConstMeshXD& m)
     {
       constexpr std::size_t n = linops::traits::callable_traits<Callable>::num_args; 
       if(n > m->numDims()) throw std::runtime_error("CoeffOpMixin error. fillDiagonal called on MeshXD when callale had num args > numDims in mesh");

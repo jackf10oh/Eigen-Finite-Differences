@@ -10,9 +10,9 @@
 #include<vector>
 #include<Eigen/Core>
 #include "MeshXD.hpp"
-#include<LinOps/LinOpTraits.hpp> // callable_traits<T> 
+#include "LinOps/LinOpTraits.hpp" // callable_traits<T> 
 
-namespace linops{
+namespace fdm{
 
 class VectorXD
 {
@@ -64,7 +64,7 @@ class VectorXD
     const Eigen::VectorXd& values() const {return m_vals; } 
 
     // Give a list of Eigen::Map<>. each Map looks like a Vector1D on a Mesh1d  
-    std::vector<StrideView> getOneDimViews(std::size_t ith_dim=0)
+    auto getOneDimViews(std::size_t ith_dim=0)
     {
       return m_mesh_ptr.lock()->makeOneDimViews(m_vals, ith_dim); 
     }
@@ -106,8 +106,8 @@ class VectorXD
 }; 
 
 // set vector to match a mesh size and set it constant 
-linops::VectorXD make_Discretization(const SharedConstMeshXD& m, double val){ 
-  linops::VectorXD result(m);
+fdm::VectorXD make_Discretization(const SharedConstMeshXD& m, double val){ 
+  fdm::VectorXD result(m);
   result.values().setConstant(val); 
   return result;
 } 
@@ -119,19 +119,19 @@ typename = std::enable_if_t<
   !std::is_arithmetic_v<std::remove_reference_t<std::remove_cv_t<F>>>
   >
 >
-linops::VectorXD make_Discretization(const SharedConstMeshXD& m, F func)
+fdm::VectorXD make_Discretization(const SharedConstMeshXD& m, F func)
 {
   // assert func returns double 
-  static_assert(std::is_same<typename traits::callable_traits<F>::result_type, double>::value, "static assert error: callable type F must return a double"); 
+  static_assert(std::is_same<typename linops::traits::callable_traits<F>::result_type, double>::value, "static assert error: callable type F must return a double"); 
   
   // check there are enough dimensions to use callable type F
-  static constexpr std::size_t num_args = traits::callable_traits<F>::num_args; 
+  static constexpr std::size_t num_args = linops::traits::callable_traits<F>::num_args; 
   if(m->numDims() < num_args) 
     throw std::invalid_argument(
       "# numDims of SharedConstMeshXD must be >= # args in callable F"); 
   
   // result returns by make_Discretization() 
-  linops::VectorXD result(m); 
+  fdm::VectorXD result(m); 
 
   if constexpr(num_args == 0){
     result.values().setConstant( func() );
@@ -172,6 +172,6 @@ linops::VectorXD make_Discretization(const SharedConstMeshXD& m, F func)
   return result;
 }
 
-} // end namespace linops 
+} // end namespace fdm 
 
 #endif // VectorXD.hpp

@@ -9,6 +9,8 @@
 #ifndef BLOCKDIAGEXPR_H
 #define BLOCKDIAGEXPR_H
 
+#include<Eigen/Sparse>
+
 // Forward declarations ---------------------------------------------
 template<typename ArgTpe>
 class BlockDiag;

@@ -11,8 +11,9 @@
 #include<gtest/gtest.h>
 #include<gmock/gmock.h>
 
-#include<LinOps/All.hpp>
+#include<FiniteDifference/LinOps/All.hpp>
 
+using namespace fdm; 
 using namespace linops; 
 using namespace linops::internal; 
 
@@ -77,15 +78,15 @@ TEST(MeshSuite1D, Mesh1DIterators){
 // Vector Suite ---------------------------------------- 
 TEST(VectorSuite1d, Disc1DConstructible)
 {
-  linops::Vector1D my_vals; 
+  fdm::Vector1D my_vals; 
 }
 
 TEST(VectorSuite1d, Disc1DMovable)
 {
   int n_steps=11; 
   auto my_mesh = make_Mesh1D(0.0,10.0,n_steps); 
-  linops::Vector1D moved_from(my_mesh);
-  linops::Vector1D moved_to(std::move(moved_from));  
+  Vector1D moved_from(my_mesh);
+  Vector1D moved_to(std::move(moved_from));  
   // ASSERT_TRUE(moved_from.getMesh1D().expired()); // no longer altering mesh in moved_from 
   ASSERT_EQ(moved_from.values().data(),nullptr); // moved from now has invalid eigen::vectorxd 
   ASSERT_EQ(moved_to.size(), n_steps); 
@@ -95,9 +96,9 @@ TEST(VectorSuite1d, Disc1DMovable)
 TEST(VectorSuite1d, Disc1DSetMesh)
 {
   auto my_mesh = make_Mesh1D(); 
-  linops::Vector1D my_vals; 
+  fdm::Vector1D my_vals; 
   ASSERT_FALSE(my_vals.getMesh1D()); 
-  linops::Vector1D discretization_w_stored_mesh(my_mesh); 
+  fdm::Vector1D discretization_w_stored_mesh(my_mesh); 
   ASSERT_TRUE(discretization_w_stored_mesh.getMesh1D());
 }
 
@@ -106,7 +107,7 @@ TEST(VectorSuite1d, Disc1DSetCosntant)
   auto my_mesh = make_Mesh1D(); 
   double val_set = 0.0; 
 
-  linops::Vector1D my_vals = linops::make_Discretization(my_mesh, val_set); 
+  fdm::Vector1D my_vals = fdm::make_Discretization(my_mesh, val_set); 
   
   ASSERT_EQ(my_vals.at(0), val_set); 
   ASSERT_EQ(my_vals.at(my_vals.size()-1), val_set); 
@@ -126,13 +127,13 @@ TEST(VectorSuite1d, Disc1DSetByCallable)
   auto my_mesh = make_Mesh1D(left,right,n_steps); 
 
   // with lambda 
-  linops::Vector1D my_vals = linops::make_Discretization(my_mesh,my_lambda); 
+  fdm::Vector1D my_vals = fdm::make_Discretization(my_mesh,my_lambda); 
 
   ASSERT_EQ(my_vals.at(0), my_lambda(my_mesh->at(0))); 
   ASSERT_EQ(my_vals.at(n_steps/2), my_lambda(my_mesh->at(n_steps/2))); 
   ASSERT_EQ(my_vals.at(n_steps-1), my_lambda(my_mesh->at(n_steps-1))); 
 
-  my_vals = linops::make_Discretization(my_mesh,my_callable);
+  my_vals = fdm::make_Discretization(my_mesh,my_callable);
 
   ASSERT_EQ(my_vals.at(0), my_callable(my_mesh->at(0))); 
   ASSERT_EQ(my_vals.at(n_steps/2), my_callable(my_mesh->at(n_steps/2))); 
@@ -146,7 +147,7 @@ TEST(VectorSuite1d, Disc1DIterators)
   int n_steps = 11;
   auto my_mesh = make_Mesh1D(0.0,10.0,n_steps);
 
-  linops::Vector1D my_vals(my_mesh); 
+  fdm::Vector1D my_vals(my_mesh); 
 
   // give all iterators as std::vec 
   my_vals.begin(); 
@@ -182,7 +183,7 @@ TEST(LinearOperatorSuite, IdentityConstructible)
 
   // Check that entries on diag are 1
   int s = my_mesh->size()-1; 
-  linops::Matrix M02 = Identity02.asMatrix(); 
+  fdm::Matrix M02 = Identity02.asMatrix(); 
   ASSERT_EQ(M02.coeff(0,0),1); 
   ASSERT_EQ(M02.coeff(s,s),1); 
   ASSERT_EQ(M02.coeff(s/2,s/2),1);
@@ -221,15 +222,15 @@ TEST(LinearOperatorSuite, RandOpApply)
   auto my_mesh = make_Mesh1D(); 
   auto func = [](double x){return x*x;}; // x^2 
 
-  linops::Vector1D my_vals = linops::make_Discretization(my_mesh, func);
+  fdm::Vector1D my_vals = fdm::make_Discretization(my_mesh, func);
 
   // get a random linear operator 
   RandOp Rand01(my_mesh);
   // get its underlying matrix representation 
-  linops::Matrix matrix_rep = Rand01.asMatrix();
+  fdm::Matrix matrix_rep = Rand01.asMatrix();
 
   // make sure .apply() gives the same as A*v 
-  linops::Vector1D apply_method_result = Rand01.apply(my_vals); 
+  fdm::Vector1D apply_method_result = Rand01.apply(my_vals); 
   Eigen::VectorXd manual_linalg_result = matrix_rep * my_vals.values(); 
   for(std::size_t i=0; i<apply_method_result.size(); i++){
     ASSERT_EQ(apply_method_result[i], manual_linalg_result[i]); 
@@ -252,7 +253,7 @@ TEST(LinearOperatorSuite, BasicAddition)
   // lambda to check 4 corners + middle of a matrix expr
   auto check_lambda = [s = my_mesh->size()-1](const auto& expr) -> void
   {
-    linops::Matrix Mat = expr.asMatrix(); 
+    fdm::Matrix Mat = expr.asMatrix(); 
     // Check that entries on diag are 2
     ASSERT_EQ(Mat.coeff(0,0),2); 
     ASSERT_EQ(Mat.coeff(s,s),2); 
@@ -310,7 +311,7 @@ TEST(LinearOperatorSuite, Composition)
   auto my_mesh = make_Mesh1D(); 
 
   // vector of [1,1,...,1]
-  linops::Vector1D my_vals = linops::make_Discretization(my_mesh, 1.0); 
+  fdm::Vector1D my_vals = fdm::make_Discretization(my_mesh, 1.0); 
 
   // construct without ptr arg
   RandOp L1(my_mesh), L2(my_mesh);
@@ -363,13 +364,13 @@ TEST(LinearOperatorSuite, ExpressionChaining)
   auto my_expr2 = rhs4; // all temporaries still alive
 
   // test the expression still has a .apply() method 
-  linops::Vector1D disc = linops::make_Discretization(my_mesh, 1.0); 
+  fdm::Vector1D disc = fdm::make_Discretization(my_mesh, 1.0); 
 
-  linops::Matrix M1 = my_expr.asMatrix(); 
+  fdm::Matrix M1 = my_expr.asMatrix(); 
   my_expr2.setMesh(my_mesh);
   my_expr2.apply(disc);  
 
-  linops::Matrix M2 = my_expr2.asMatrix(); 
+  fdm::Matrix M2 = my_expr2.asMatrix(); 
   my_expr2.setMesh(my_mesh);
   my_expr2.apply(disc);  
   my_expr2.setMesh(my_mesh); 
@@ -487,10 +488,10 @@ TEST(NthDerivOpSuite, NthDerivOpConstructible)
 // testing setMesh() completes with no errors. 
 TEST(NthDerivOpSuite, Method_set_mesh_completing)
 {
-  auto my_mesh_01 = linops::make_Mesh1D(0.0,10.0,11);
-  auto my_mesh_02 = linops::make_Mesh1D(0.0,10.0,101);
-  auto my_mesh_03 = linops::make_Mesh1D(0.0,10.0,1001);
-  auto my_mesh_04 = linops::make_Mesh1D(0.0,10.0,10001);
+  auto my_mesh_01 = make_Mesh1D(0.0,10.0,11);
+  auto my_mesh_02 = make_Mesh1D(0.0,10.0,101);
+  auto my_mesh_03 = make_Mesh1D(0.0,10.0,1001);
+  auto my_mesh_04 = make_Mesh1D(0.0,10.0,10001);
 
   auto D1 = NthDerivOp<1>{}; 
   auto D2 = NthDerivOp<2>{}; 

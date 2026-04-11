@@ -14,9 +14,9 @@
 #include <type_traits>
 
 #include "Mesh1D.hpp"
-#include "LinOpTraits.hpp"
+#include "LinOps/LinOpTraits.hpp"
 
-namespace linops{
+namespace fdm{
 
 class Vector1D
 {
@@ -106,8 +106,8 @@ class Vector1D
 }; // end Vector1D 
 
 // set vector to a constant -------------------------------------------------------------
-linops::Vector1D make_Discretization(const SharedConstMesh1D& m, double val){
-  linops::Vector1D result(m);
+fdm::Vector1D make_Discretization(const SharedConstMesh1D& m, double val){
+  fdm::Vector1D result(m);
   result.values().setConstant(val); 
   return result; 
 }
@@ -119,14 +119,14 @@ typename = std::enable_if_t<
   !std::is_arithmetic_v<std::remove_reference_t<std::remove_cv_t<F>>>
   >
 >
-linops::Vector1D make_Discretization(const SharedConstMesh1D& m, F func)
+fdm::Vector1D make_Discretization(const SharedConstMesh1D& m, F func)
 {
-  static_assert(std::is_same<typename traits::callable_traits<F>::result_type, double>::value, "static assert error: callable type F must return a double"); 
-  static_assert(traits::callable_traits<F>::num_args <= 1, "static assert error: callable type F must take <= args for Mesh1D"); 
+  static_assert(std::is_same<typename linops::traits::callable_traits<F>::result_type, double>::value, "static assert error: callable type F must return a double"); 
+  static_assert(linops::traits::callable_traits<F>::num_args <= 1, "static assert error: callable type F must take <= args for Mesh1D"); 
 
-  linops::Vector1D result(m); 
+  fdm::Vector1D result(m); 
 
-  constexpr std::size_t N = traits::callable_traits<F>::num_args; 
+  constexpr std::size_t N = linops::traits::callable_traits<F>::num_args; 
   if constexpr(N == 1){
     std::transform(m->cbegin(), m->cend(), result.begin(), func); 
   }
@@ -136,6 +136,6 @@ linops::Vector1D make_Discretization(const SharedConstMesh1D& m, F func)
   return result; 
 }
 
-} // end namespace linops 
+} // end namespace fdm 
 
 #endif // Vector1D.hpp
