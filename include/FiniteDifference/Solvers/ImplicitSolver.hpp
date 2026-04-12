@@ -9,128 +9,147 @@
 #ifndef IMPLICITSOLVER_H
 #define IMPLICITSOLVER_H 
 
+#include<Eigen/IterativeLinearSolvers> // BiCGSTAB sparse iterative solver  
 #include "../LinOps/LinOpTraits.hpp" // check RHS is 1D or XD LinOp + fdm::Matrix 
 #include "../TExprs/TExprTraits.hpp" // check LHS is time derivatives 
 #include "../TExprs/Executor.hpp" // marches through time 
 #include "../OutsideSteps/StepContexts.hpp"  // feed to outside steps tuple 
 #include "../OutsideSteps/OStepBase.hpp" // StepType scoped enumeration 
 #include "SolverArgs.hpp"
-#include "WritePolicies.hpp"
+#include "SavePolicies.hpp"
 
 namespace fdm{
   namespace solvers{ 
 
-template<typename LHS_EXPR, typename RHS_EXPR, typename OSTEP_TUP>
+// template<typename LhsExpression, typename RhsExpression, typename OutsideStepsTuple>
+template<typename LhsExpression, typename RhsExpression, typename OutsideStepsTuple>
 class ImplicitSolver
 {
   private:
     // Member Data -------------------------------------
-    LHS_EXPR& m_lhs; // expression of time derivatives 
-    RHS_EXPR& m_rhs; // expression of spatial derivatives 
-    typename std::remove_reference<OSTEP_TUP>::type m_ostep_tup; 
+    LhsExpression& m_lhs; // expression of time derivatives 
+    RhsExpression& m_rhs; // expression of spatial derivatives 
+    using TupleCleaned = typename std::remove_reference<OutsideStepsTuple>::type; 
+    TupleCleaned m_osteps; // std::tuple<> of outside steps 
     std::size_t m_max_iters; // max number of iterations between time steps for iterative linear solver. 
+
   public:
     // Constructors + Destructor ===========================
     ImplicitSolver()=delete; 
-    ImplicitSolver(LHS_EXPR& l_init, RHS_EXPR& r_init, OSTEP_TUP ostep_init)
-      : m_lhs(l_init), m_rhs(r_init), m_ostep_tup(ostep_init), m_max_iters(20)
+    ImplicitSolver(LhsExpression& l_init, RhsExpression& r_init, OutsideStepsTuple ostep_init)
+      : m_lhs(l_init), m_rhs(r_init), m_osteps(ostep_init), m_max_iters(20)
     {}
     ImplicitSolver(const ImplicitSolver& other)=delete; 
     ~ImplicitSolver()=default; 
 
     // Member Functions 
-    void SetMaxIterations(std::size_t i){ m_max_iters = i; } 
-    void MaxIterations(std::size_t i){ m_max_iters = i; } 
+    void setMaxIterations(std::size_t i){ m_max_iters = i; } 
+    auto getMaxIterations() const { return m_max_iters; } 
 
-    template<typename M, typename WRITE_POLICY_T = LastSaver, template<typename MAT_T> class EIGENSOLVER_T=Eigen::BiCGSTAB>
-    auto Calculate(SolverArgs<M> args, WRITE_POLICY_T save_policy = {}) const 
+    template<typename M, typename C, typename Pred = LastSaver, template<typename Matrix> class SparseIterativeSolver=Eigen::BiCGSTAB>
+    auto calculate(
+      SolverArgs<M,C> args, 
+      Pred save_policy = {}, 
+      SparseIterativeSolver<fdm::Matrix> iterative_solver = {}
+    ) const 
     {
-      texprs::TExprExecutor exec(m_lhs); 
-      EIGENSOLVER_T<texprs::MatrixStorage_t> iterative_solver; // Eigen sparse iterative solver
-      iterative_solver.setMaxIterations(m_max_iters); 
-      texprs::MatrixStorage_t Mat; 
+      // setup time context 
+      auto it = std::next(args.times->cbegin(), args.initialConditions.size()-1); 
+      auto time_ctx = fdm::osteps::make_time(*it, 0.0, std::move(args.times));
+      ++it; 
 
-      exec.set_mesh(args.domain_mesh_ptr);
-      m_rhs.set_mesh(args.domain_mesh_ptr); 
+      // setup executor 
+      auto executor = fdm::texprs::make_Executor(m_lhs); 
+      executor.pushSolutionRange(args.initialConditions.begin(), args.initialConditions.end()); 
+      executor.pushTimeRange(time_ctx.container->cbegin(), it); 
 
-      auto it = std::next(args.time_mesh_ptr->cbegin(), args.ICs.size() - 1); 
-      auto end = std::prev(args.time_mesh_ptr->cend());
+      // set up operators. 
+      fdm::linops::IOp identity; 
+      m_rhs.setMesh(args.mesh); 
+      executor.setMesh(args.mesh); 
 
-      exec.ConsumeSolutionList(args.ICs.cbegin(), args.ICs.cend()); 
-      exec.ConsumeTimeList(args.time_mesh_ptr->cbegin(), std::next(it)); 
+      // set up context 
+      auto ctx = fdm::osteps::make_context(std::move(args.mesh), &executor, &m_rhs, this); 
 
-      double t = *it; 
-      while(it!= end)
-      {
+      // store allocated memory between steps in solver hot loop  
+      fdm::Matrix stencil; 
+      Eigen::VectorXd rhs_vector;  
+      Eigen::VectorXd solution_u;  
+
+      // hot loop through times
+      auto end = time_ctx.container->cend();
+      for(; it!= end; ++it)
+      { 
+        time_ctx.next = *it; 
+
+        if constexpr(m_rhs.isTimeDep){
+          // set the operator to the right side of the step [t(n), t(n+1)] for implicit steps 
+          m_rhs.setTime(time_ctx.next); 
+          // should build an autonomous solver for these linops, since it evaluate the 
+          // expression at every step. but still save a little time
+          // we also can't check that outside steps won't change the mesh we operate on.  
+        }
+
+        // again using left side of [t(n), t(n+1)] time step 
+        executor.pushTime(time_ctx.next); 
+        executor.calculate(time_ctx.next); 
+
         // outside steps before any type of linear algebra is performed... 
         std::apply(
-          [&](auto&... lam_args){ ((lam_args.template BeforeLinAlgebra<decltype(it),decltype(exec),decltype(m_rhs),OSteps::StepType::Implicit>(it, args.domain_mesh_ptr, exec, m_rhs)), ...); }, 
-          m_ostep_tup
+          [&](auto&... lam_args){ 
+            ((lam_args.template BeforeLinAlgebra<fdm::osteps::StepType::Implicit>(time_ctx, ctx)), ...); 
+          }, 
+          m_osteps
         ); 
-
-        // working on right end of [t(n-1), t(n)]
-        ++it;
-        t = *it; 
-
-        // moved into an ostep that sets time + mesh of lhs executor / rhs expression 
-        // m_rhs.setTime(t);
-        // exec.setTime(t); 
-
-        exec.BuildNextTime(t); 
         
-        // Mat = I - inv_coeff * FDStencil ; 
-        Mat = m_rhs.getMat(); 
-        // scale Mat according to 1 / dt ... 
-        if constexpr(std::is_same<decltype(exec.inv_coeff()), const double&>::value){
-          // INV_COEFF_T is a scalar
-          Mat  *= -exec.inv_coeff(); 
-        }
-        else{
-          // INV_COEFF_T is a Matrix 
-          texprs::MatrixStorage_t temp = -exec.inv_coeff() * Mat; 
-          Mat = std::move(temp); 
-        }
-        for(std::size_t i=0; i<Mat.rows(); ++i) Mat.coeffRef(i,i) += 1.0; 
-
-        // outside steps matrix before step(Mat) 
+        // store the matrix into stencil 
+        decltype(auto) xpr = m_rhs.asMatrix(); // could be expensive if rhs just gives a matrix
+        std::size_t s = xpr.rows(); 
+        identity.resize(s,s); 
+        stencil = identity.asMatrix() - executor.getInvCoeff() * xpr;
+        
+        // outside steps matrix before step
         std::apply(
-          [&](const auto&... lam_args){ ((lam_args.template MatBeforeStep<OSteps::StepType::Implicit>(t, args.domain_mesh_ptr, Mat)), ...); }, 
-          m_ostep_tup
+          [&](const auto&... lam_args){ ((lam_args.template MatBeforeStep<fdm::osteps::StepType::Implicit>(stencil, time_ctx, ctx)), ...); }, 
+          m_osteps
         ); 
 
-        Eigen::VectorXd rhs = std::move(exec.RhsVector()); 
-        // outside steps solution before step (rhs) 
+        // store the expression into a vector 
+        rhs_vector = executor.getRhsExpression(); 
+
+        // outside steps vector before step 
         std::apply(
-          [&](const auto&... lam_args){ ((lam_args.template SolBeforeStep<OSteps::StepType::Implicit>(t, args.domain_mesh_ptr, rhs)), ...); }, 
-          m_ostep_tup
+          [&](const auto&... lam_args){ ((lam_args.template VecBeforeStep<fdm::osteps::StepType::Implicit>(rhs_vector, time_ctx, ctx)), ...); }, 
+          m_osteps
         ); 
 
-        // Explicit Step ( U(n+1) = D*U(n) + U(n) )
         // Implicit Step (I - D(t+1))*U(n+1) = rhs 
-        iterative_solver.compute(Mat); 
-        Eigen::VectorXd next_sol = iterative_solver.solveWithGuess(rhs,rhs); 
+        iterative_solver.setMaxIterations(m_max_iters); 
+        iterative_solver.compute(stencil); 
+        Eigen::VectorXd solution_u = iterative_solver.solveWithGuess(rhs_vector,rhs_vector);
         
-        // ourside steps solution after step(next_sol) 
+        // outside steps vector after step(next_sol) 
         std::apply(
-          [&](const auto&... lam_args){ ((lam_args.template SolAfterStep<OSteps::StepType::Implicit>(t, args.domain_mesh_ptr, next_sol)), ...); }, 
-          m_ostep_tup
-        ); 
+          [&](const auto&... lam_args){ ((lam_args.template VecAfterStep<fdm::osteps::StepType::Implicit>(solution_u, time_ctx, ctx)), ...); }, 
+          m_osteps
+        );
 
-        // give expiring solution to WRITE_POLICY_T
-        save_policy.saveSolution(std::move(exec.ExpiringSol())); 
+        // save oldest solution before it goes 
+        save_policy.saveSolution(executor.getExpiringSolution()); 
 
-        // push Solution, time to executor 
-        exec.ConsumeSolution(next_sol);
-        exec.ConsumeTime(t); 
-      }    
+        // push solution into executor
+        executor.pushSolution(std::move(solution_u));
 
-      // Write remaining solutions to save_policy 
-      for(auto i=0; i<exec.StoredSols().size()-1; i++) save_policy.saveSolution( std::move(exec.StoredSols()[i])); 
+        // advance time_ctx 1 step in time 
+        time_ctx.now = time_ctx.next; 
+      }        
+      // Give remaining solutions to save_policy 
+      for(auto i=0; i < executor.numStoredSols-1; ++i) save_policy.saveSolution( std::move(executor.getStoredSolutions()[i])); 
 
-      // write policy also determines return type / how to handle last solution
-      return save_policy.saveLastSolution(std::move( exec.MostRecentSol() )); 
-    } // end .CalculateImp(args, save_policy) 
-
+      // save_policy also determines return type / how to handle last solution
+      return save_policy.saveLastSolution(std::move( executor.getCurrentSolution() )); 
+    } 
+  
 }; 
 
   } // end namespace solvers

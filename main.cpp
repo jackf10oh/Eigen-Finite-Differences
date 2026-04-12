@@ -47,7 +47,8 @@ int main()
   auto bcs = osteps::BCPair(osteps::DirichletBC(0.0),osteps::DirichletBC(0.0)); 
 
   // Solving ...
-  solvers::ExplicitSolver my_solver(Ut,expr,std::tie(bcs)); 
+  // solvers::ExplicitSolver my_solver(Ut,expr,std::tie(bcs)); 
+  solvers::ImplicitSolver my_solver(Ut,expr,std::tie(bcs)); 
 
   // utils::print_vec(args.initialConditions[0],"ICs"); 
   // auto sol = my_solver.calculate(args, solvers::LastSaver{}); 

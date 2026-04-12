@@ -7,7 +7,7 @@
 #include "SolverArgs.hpp"
 #include "SavePolicies.hpp"
 #include "ExplicitSolver.hpp" 
-// #include "ImplicitSolver.hpp" 
+#include "ImplicitSolver.hpp" 
 // #include "Interpolator.hpp"
 
 // All.hpp (Solvers)
