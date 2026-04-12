@@ -10,52 +10,58 @@
 #include<vector>
 #include<tuple>
 #include<Eigen/Dense>
+#include<FiniteDifference/All.hpp> 
 
-#include<LinOps/All.hpp> 
-#include<OutsideSteps/All.hpp> 
-#include<OutsideSteps/BoundaryCondsXD/BCList.hpp> 
-#include<TExprs/All.hpp> 
-#include<Solvers/All.hpp> 
+#include<FiniteDifference/Utilities/PrintVec.hpp> 
+#include<FiniteDifference/Utilities/BumpFunc.hpp> 
 
-#include<Utilities/PrintVec.hpp>
-#include<Utilities/BumpFunc.hpp>
+#include<FiniteDifference/Solvers/CrankNicolsonSolver.hpp> 
 
 using std::cout, std::endl;
+
+using namespace fdm; 
 
 int main()
 {
   // iomanip 
   std::cout << std::setprecision(3); 
 
-  // Defining Meshes + ICs 
-  Solvers::SolverArgs args{
-    .domain_mesh_ptr = LinOps::make_mesh(0.0, 10.0, 31), // start, end, nsteps 
-    .time_mesh_ptr = LinOps::make_mesh(0.0,4.0, 21), 
-    .ICs = {} 
+  fdm::solvers::SolverArgs args{
+    .mesh = make_Mesh1D(0.0,10.0,40), 
+    .times = make_Mesh1D(0.0, 4.0, 8)
   }; 
-  // bump on [3,5] with maximum at (4, 3)
-  BumpFunc f{.L = 3.0, .R = 5.0, .c=4.0, .h=10};
-  args.ICs = { make_Discretization(args.domain_mesh_ptr, f).values() }; 
+
+  // Initial Conditions  
+  utils::BumpFunc b{.L = 4.0, .R=6.0, .c=5.0,  .h=1.0}; 
+  auto v = make_Discretization(args.mesh, b).values(); 
+  args.initialConditions = { v }; 
+
+  // LHS in time 
+  auto Ut = texprs::NthTimeDeriv<1>{}; 
+
+  // RHS in space 
+  auto expr = 0.2 * linops::NthDerivOp<2>{} - 0.5 * linops::NthDerivOp<1>{}; 
+
+  // Boundary Conditions 
+  auto bcs = osteps::BCPair(osteps::DirichletBC(0.0),osteps::DirichletBC(0.0)); 
+
+  // Solving ...
+  // solvers::ExplicitSolver my_solver(Ut,expr,std::tie(bcs)); 
+  // solvers::ImplicitSolver my_solver(Ut,expr,std::tie(bcs)); 
+  solvers::CrankNicolsonSolver my_solver(Ut,expr,std::tie(bcs)); 
+
+  // utils::print_vec(args.initialConditions[0],"ICs"); 
+  // auto sol = my_solver.calculate(args, solvers::LastSaver{}); 
+  // utils::print_vec(sol, "Sol"); 
+
+  my_solver.calculate(args, solvers::PrintSaver{}); 
   
-  // LHS time derivs ----------------------------------------------------------------
-  auto time_expr = TExprs::NthTimeDeriv(1); 
+  // auto time_taken = my_solver.calculate(args, solvers::TimerSaver{}); 
+  // cout << "milliseconds: " << time_taken.count() << endl;  
 
-  // building RHS expression -----------------------------------------------------
-  using D = LinOps::NthDerivOp;
-  auto space_expr = 0.2 * D(2) - 1.0 * D(1); 
+  // std::size_t N = 40; 
+  // double sum = 0; 
+  // for(auto i=0; i<N; ++i) sum += my_solver.calculate(args, solvers::TimerSaver{}).count(); 
+  // cout << "Average time: " << (sum/N) << " ms" << endl; 
 
-  // Boundary Conditions + --------------------------------------------------------------------- 
-  auto left = OSteps::DirichletBC(0.0); 
-  auto right = OSteps::DirichletBC(0.0); 
-  auto bcs = OSteps::BCPair(left,right); 
-
-  // Solving --------------------------------------------------------------------- 
-  Solvers::ImplicitSolver my_solver(time_expr, space_expr, std::tie(bcs));
-  my_solver.Calculate(args, Solvers::PrintWrite{} ); 
-
-  // Interpolating ---------------------------------------------------------
-  Solvers::Interpolator my_interp(time_expr, space_expr, std::tie(bcs), args); 
-  my_interp.FillVals(); 
-  print_mat(my_interp.StoredData(), "Solutions through time");
-  // std::cout << "solution at (t,x) :" << interp.SolAt(t,x) << std::endl; 
 };

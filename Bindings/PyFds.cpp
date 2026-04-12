@@ -52,18 +52,18 @@ PYBIND11_MODULE(PyFds, m)
     .def(py::init<std::vector<std::shared_ptr<const LinOps::Mesh1D>>>(),
            py::arg("mesh1d_list")
     )
-    .def("GetMesh", 
-           [](LinOps::MeshXD& self, std::size_t i){ return self.GetMeshAt(i); },
+    .def("getMesh1D", 
+           [](LinOps::MeshXD& self, std::size_t i){ return self.getMesh1DSafe(i); },
            py::arg("dim")=1)
-    .def("dims", 
-           &LinOps::MeshXD::dims)
-    .def("dim_size", 
-           &LinOps::MeshXD::dim_size,
+    .def("numDims", 
+           &LinOps::MeshXD::numDims)
+    .def("sizeOfDim", 
+           &LinOps::MeshXD::sizeOfDim,
            py::arg("dim")=1)
-    .def("sizes_product", 
-           &LinOps::MeshXD::sizes_product)
-    .def("sizes_middle_product", 
-           &LinOps::MeshXD::sizes_middle_product,
+    .def("sizesProduct", 
+           &LinOps::MeshXD::sizesProduct)
+    .def("sizesMiddleProduct", 
+           &LinOps::MeshXD::sizesMiddleProduct,
            py::arg("start"),
            py::arg("stop"));
   
@@ -112,21 +112,21 @@ PYBIND11_MODULE(PyFds, m)
             [](const LinOps::VectorXD& self){return self.values();}, 
             py::return_value_policy::reference_internal
     )
-    .def("sizes_product", 
-            &LinOps::VectorXD::sizes_product, 
+    .def("sizesProduct", 
+            &LinOps::VectorXD::sizesProduct, 
             "product of each dimensions size"
     )
-    .def("dims", 
-            &LinOps::VectorXD::dims, 
+    .def("numDims", 
+            &LinOps::VectorXD::numDims, 
             "number of dimensions in VectorXD"
     )
-    .def("dim_size", 
-            &LinOps::VectorXD::dim_size,
+    .def("sizeOfDim", 
+            &LinOps::VectorXD::sizeOfDim,
             py::arg("dim")=0, 
             "size of specific dimension in VectorXD"
     )
-    .def("sizes_middle_product", 
-            &LinOps::VectorXD::sizes_middle_product,
+    .def("sizesMiddleProduct", 
+            &LinOps::VectorXD::sizesMiddleProduct,
             py::arg("start"), 
             py::arg("stop"), 
             "product of sizes of dimensions in [start,stop)" 
@@ -139,16 +139,16 @@ PYBIND11_MODULE(PyFds, m)
   // Wave2D ================================================================================ 
   py::class_<Wave2D>(m, "Wave2D")
     .def(py::init<>())
-    .def("SetDomain", [](Wave2D& self, LinOps::MeshXD_SPtr_t m) -> Wave2D& 
-      {auto a = self.Args(); a.domain_mesh_ptr=m; self.SetArgs(std::move(a)); return self; }, py::arg("mesh"), "Sets a new domain mesh inside of solver") 
-    .def("SetTime", [](Wave2D& self, LinOps::Mesh1D_SPtr_t m) -> Wave2D& 
+    .def("SetDomain", [](Wave2D& self, LinOps::SharedConstMeshXD m) -> Wave2D& 
+      {auto a = self.Args(); a.domain_mesh_ptr=m; self.SetArgs(std::move(a)); return self; }, py::arg("mesh"), "Sets a new mesh mesh inside of solver") 
+    .def("SetTime", [](Wave2D& self, LinOps::SharedConstMesh1D m) -> Wave2D& 
       {auto a = self.Args(); a.time_mesh_ptr=m; self.SetArgs(std::move(a)); return self; }, py::arg("mesh"), "Sets a new time mesh inside of solver") 
     .def("SetIC", [](Wave2D& self, std::vector<Eigen::VectorXd> v) -> Wave2D& 
       {auto a = self.Args(); a.ICs=std::move(v); self.SetArgs(std::move(a)); return self; }, py::arg("mesh"), "Sets a new initial condition inside of solver") 
     .def("SetHeight",[](Wave2D& self, double h) -> Wave2D& 
       { self.set_bump_height(h); self.Reset(); return self;}, py::arg("h")=1.0, "Sets new height for oscilation force term at origin")
     .def("SetDamping", [](Wave2D& self, double d) -> Wave2D& 
-      {self.set_damping(d); self.Reset(); return self;}, py::arg("d")=2.0, "Sets a new damping rate at boundaries of the domain")
+      {self.set_damping(d); self.Reset(); return self;}, py::arg("d")=2.0, "Sets a new damping rate at boundaries of the mesh")
     .def("StoredData", &Wave2D::StoredData, "returns a vector of solutions. solutions are flattened in dimensional order")
     .def("Compute", &Wave2D::FillVals, py::arg("max_iters")=20, "Computes solution at each entry in time. available in StoredData")
     .def("SolAt", [](Wave2D& self, double t, double x, double y){ return self.SolAt(t,x,y); }, py::arg("t"), py::arg("x"), py::arg("y"), "Returns value of solution at time t at coords (x,y)");    

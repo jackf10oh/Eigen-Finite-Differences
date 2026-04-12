@@ -1,6 +1,6 @@
 // tests_linops.cpp
 //
-// LinOps Test suite with GTest
+// linops Test suite with GTest
 //
 // JAF 12/5/2025
 
@@ -11,10 +11,11 @@
 #include<gtest/gtest.h>
 #include<gmock/gmock.h>
 
-#include<LinOps/All.hpp>
+#include<FiniteDifference/LinOps/All.hpp>
 
-using namespace LinOps; 
-using namespace LinOps::internal; 
+using namespace fdm; 
+using namespace linops; 
+using namespace linops::internal; 
 
 // Mesh Suite ---------------------------------------- 
 TEST(MeshSuite1D, Mesh1DConstructible){
@@ -77,36 +78,36 @@ TEST(MeshSuite1D, Mesh1DIterators){
 // Vector Suite ---------------------------------------- 
 TEST(VectorSuite1d, Disc1DConstructible)
 {
-  LinOps::Vector1D my_vals; 
+  fdm::Vector1D my_vals; 
 }
 
 TEST(VectorSuite1d, Disc1DMovable)
 {
   int n_steps=11; 
-  auto my_mesh = make_mesh(0.0,10.0,n_steps); 
-  LinOps::Vector1D moved_from(my_mesh);
-  LinOps::Vector1D moved_to(std::move(moved_from));  
-  // ASSERT_TRUE(moved_from.get_mesh1d().expired()); // no longer altering mesh in moved_from 
+  auto my_mesh = make_Mesh1D(0.0,10.0,n_steps); 
+  Vector1D moved_from(my_mesh);
+  Vector1D moved_to(std::move(moved_from));  
+  // ASSERT_TRUE(moved_from.getMesh1D().expired()); // no longer altering mesh in moved_from 
   ASSERT_EQ(moved_from.values().data(),nullptr); // moved from now has invalid eigen::vectorxd 
   ASSERT_EQ(moved_to.size(), n_steps); 
-  ASSERT_EQ(moved_to.get_mesh1d(), my_mesh); 
+  ASSERT_EQ(moved_to.getMesh1D(), my_mesh); 
 }
 
 TEST(VectorSuite1d, Disc1DSetMesh)
 {
-  auto my_mesh = make_mesh(); 
-  LinOps::Vector1D my_vals; 
-  ASSERT_FALSE(my_vals.get_mesh1d()); 
-  LinOps::Vector1D discretization_w_stored_mesh(my_mesh); 
-  ASSERT_TRUE(discretization_w_stored_mesh.get_mesh1d());
+  auto my_mesh = make_Mesh1D(); 
+  fdm::Vector1D my_vals; 
+  ASSERT_FALSE(my_vals.getMesh1D()); 
+  fdm::Vector1D discretization_w_stored_mesh(my_mesh); 
+  ASSERT_TRUE(discretization_w_stored_mesh.getMesh1D());
 }
 
 TEST(VectorSuite1d, Disc1DSetCosntant)
 {
-  auto my_mesh = make_mesh(); 
+  auto my_mesh = make_Mesh1D(); 
   double val_set = 0.0; 
 
-  LinOps::Vector1D my_vals = LinOps::make_Discretization(my_mesh, val_set); 
+  fdm::Vector1D my_vals = fdm::make_Discretization(my_mesh, val_set); 
   
   ASSERT_EQ(my_vals.at(0), val_set); 
   ASSERT_EQ(my_vals.at(my_vals.size()-1), val_set); 
@@ -123,16 +124,16 @@ TEST(VectorSuite1d, Disc1DSetByCallable)
 
   int n_steps = 101; 
   double left=0, right=100; 
-  auto my_mesh = make_mesh(left,right,n_steps); 
+  auto my_mesh = make_Mesh1D(left,right,n_steps); 
 
   // with lambda 
-  LinOps::Vector1D my_vals = LinOps::make_Discretization(my_mesh,my_lambda); 
+  fdm::Vector1D my_vals = fdm::make_Discretization(my_mesh,my_lambda); 
 
   ASSERT_EQ(my_vals.at(0), my_lambda(my_mesh->at(0))); 
   ASSERT_EQ(my_vals.at(n_steps/2), my_lambda(my_mesh->at(n_steps/2))); 
   ASSERT_EQ(my_vals.at(n_steps-1), my_lambda(my_mesh->at(n_steps-1))); 
 
-  my_vals = LinOps::make_Discretization(my_mesh,my_callable);
+  my_vals = fdm::make_Discretization(my_mesh,my_callable);
 
   ASSERT_EQ(my_vals.at(0), my_callable(my_mesh->at(0))); 
   ASSERT_EQ(my_vals.at(n_steps/2), my_callable(my_mesh->at(n_steps/2))); 
@@ -144,9 +145,9 @@ TEST(VectorSuite1d, Disc1DIterators)
 {
     // simply make a mesh and do nothing with it
   int n_steps = 11;
-  auto my_mesh = make_mesh(0.0,10.0,n_steps);
+  auto my_mesh = make_Mesh1D(0.0,10.0,n_steps);
 
-  LinOps::Vector1D my_vals(my_mesh); 
+  fdm::Vector1D my_vals(my_mesh); 
 
   // give all iterators as std::vec 
   my_vals.begin(); 
@@ -173,62 +174,63 @@ TEST(LinearOperatorSuite, IdentityConstructible)
 {
   // default construct uses nullptr
   IOp Identity01;
-  ASSERT_EQ(Identity01.get_mesh1d(),nullptr);
+  ASSERT_EQ(Identity01.getMesh1D(),nullptr);
 
   // construct with ptr arg
-  auto my_mesh = make_mesh(); 
+  auto my_mesh = make_Mesh1D(); 
   IOp Identity02(my_mesh);
-  ASSERT_EQ(Identity02.get_mesh1d(), my_mesh);   
+  ASSERT_EQ(Identity02.getMesh1D(), my_mesh);   
 
   // Check that entries on diag are 1
   int s = my_mesh->size()-1; 
-  ASSERT_EQ(Identity02.GetMat().coeff(0,0),1); 
-  ASSERT_EQ(Identity02.GetMat().coeff(s,s),1); 
-  ASSERT_EQ(Identity02.GetMat().coeff(s/2,s/2),1);
+  fdm::Matrix M02 = Identity02.asMatrix(); 
+  ASSERT_EQ(M02.coeff(0,0),1); 
+  ASSERT_EQ(M02.coeff(s,s),1); 
+  ASSERT_EQ(M02.coeff(s/2,s/2),1);
 
   // of diag are zero
-  ASSERT_EQ(Identity02.GetMat().coeff(0,s),0); 
-  ASSERT_EQ(Identity02.GetMat().coeff(s,0),0); 
+  ASSERT_EQ(M02.coeff(0,s),0); 
+  ASSERT_EQ(M02.coeff(s,0),0); 
 };
 
-TEST(LinearOperatorSuite, RandLinOpConstructible)
+TEST(LinearOperatorSuite, RandOpConstructible)
 {
   // default construct uses nullptr
-  RandLinOp Rand01;
-  ASSERT_EQ(Rand01.get_mesh1d(),nullptr);
+  RandOp Rand01;
+  ASSERT_EQ(Rand01.getMesh1D(),nullptr);
 
   // construct with ptr arg
-  auto my_mesh = make_mesh(); 
-  RandLinOp Rand02(my_mesh);
-  ASSERT_EQ(Rand02.get_mesh1d(), my_mesh);   
+  auto my_mesh = make_Mesh1D(); 
+  RandOp Rand02(my_mesh);
+  ASSERT_EQ(Rand02.getMesh1D(), my_mesh);   
 };
 
-TEST(LinearOperatorSuite, RandLinOpGetMat)
+TEST(LinearOperatorSuite, RandOp_asMat)
 {
   // construct with ptr arg
-  auto my_mesh = make_mesh(); 
-  RandLinOp Rand01(my_mesh);
+  auto my_mesh = make_Mesh1D(); 
+  RandOp Rand01(my_mesh);
 
-  ASSERT_EQ(Rand01.get_mesh1d(), my_mesh);   
+  ASSERT_EQ(Rand01.getMesh1D(), my_mesh);   
 
-  Eigen::MatrixXd result = Rand01.GetMat(); 
+  Eigen::MatrixXd result = RandOp().asMatrix(); 
 };
 
-TEST(LinearOperatorSuite, RandLinOpApply)
+TEST(LinearOperatorSuite, RandOpApply)
 {
   // setup mesh + discretization 
-  auto my_mesh = make_mesh(); 
+  auto my_mesh = make_Mesh1D(); 
   auto func = [](double x){return x*x;}; // x^2 
 
-  LinOps::Vector1D my_vals = LinOps::make_Discretization(my_mesh, func);
+  fdm::Vector1D my_vals = fdm::make_Discretization(my_mesh, func);
 
   // get a random linear operator 
-  RandLinOp Rand01(my_mesh);
+  RandOp Rand01(my_mesh);
   // get its underlying matrix representation 
-  Eigen::MatrixXd matrix_rep = Rand01.GetMat(); 
+  fdm::Matrix matrix_rep = Rand01.asMatrix();
 
   // make sure .apply() gives the same as A*v 
-  LinOps::Vector1D apply_method_result = Rand01.apply(my_vals); 
+  fdm::Vector1D apply_method_result = Rand01.apply(my_vals); 
   Eigen::VectorXd manual_linalg_result = matrix_rep * my_vals.values(); 
   for(std::size_t i=0; i<apply_method_result.size(); i++){
     ASSERT_EQ(apply_method_result[i], manual_linalg_result[i]); 
@@ -238,7 +240,7 @@ TEST(LinearOperatorSuite, RandLinOpApply)
 // Using LinOpExpr. 
 TEST(LinearOperatorSuite, BasicAddition)
 {
-  auto my_mesh = make_mesh(); 
+  auto my_mesh = make_Mesh1D(); 
   // construct without ptr arg
   auto make_I_rval = [my_mesh](){return IOp(my_mesh);}; 
   IOp I_lval(my_mesh);
@@ -251,7 +253,7 @@ TEST(LinearOperatorSuite, BasicAddition)
   // lambda to check 4 corners + middle of a matrix expr
   auto check_lambda = [s = my_mesh->size()-1](const auto& expr) -> void
   {
-    LinOps::MatrixStorage_t Mat = expr.GetMat(); 
+    fdm::Matrix Mat = expr.asMatrix(); 
     // Check that entries on diag are 2
     ASSERT_EQ(Mat.coeff(0,0),2); 
     ASSERT_EQ(Mat.coeff(s,s),2); 
@@ -270,7 +272,7 @@ TEST(LinearOperatorSuite, BasicAddition)
   // eigen sparse matrices have no operator==() .... 
   auto to_dense = [](auto expr) -> Eigen::MatrixXd {
     Eigen::MatrixXd result;
-    result = expr.GetMat();
+    result = expr.asMatrix();
     return result; 
   };
 
@@ -282,11 +284,11 @@ TEST(LinearOperatorSuite, BasicAddition)
 
 TEST(LinearOperatorSuite, ScalarMultiplication)
 {
-  auto my_mesh = make_mesh(); 
-  RandLinOp L1(my_mesh);
+  auto my_mesh = make_Mesh1D(); 
+  RandOp L1(my_mesh);
 
   // test multiplication with rvals
-  2.0* RandLinOp(my_mesh);
+  2.0* RandOp(my_mesh);
 
   // multiply by scalar 
   double c = 3.0; 
@@ -295,7 +297,7 @@ TEST(LinearOperatorSuite, ScalarMultiplication)
   // evalues the expression object to a dense matrix
   auto to_dense = [](auto& expr) -> Eigen::MatrixXd {
     Eigen::MatrixXd result;
-    result = expr.GetMat().eval();
+    result = expr.asMatrix().eval();
     return result; 
   };
 
@@ -306,13 +308,13 @@ TEST(LinearOperatorSuite, ScalarMultiplication)
 TEST(LinearOperatorSuite, Composition)
 {
   // get a mesh
-  auto my_mesh = make_mesh(); 
+  auto my_mesh = make_Mesh1D(); 
 
   // vector of [1,1,...,1]
-  LinOps::Vector1D my_vals = LinOps::make_Discretization(my_mesh, 1.0); 
+  fdm::Vector1D my_vals = fdm::make_Discretization(my_mesh, 1.0); 
 
   // construct without ptr arg
-  RandLinOp L1(my_mesh), L2(my_mesh);
+  RandOp L1(my_mesh), L2(my_mesh);
 
   // composition L1( L2(.) ) 
   auto Expr = L1.compose(L2); 
@@ -320,9 +322,9 @@ TEST(LinearOperatorSuite, Composition)
   // // PRINT ---------------------------
   // using std::cout, std::endl; 
   // cout << "my_vals: " << my_vals.values().transpose() << endl; 
-  // cout << "L1 -------" <<endl << L1.GetMat() << endl; 
-  // cout << "L2 -------" <<endl << L2.GetMat() << endl; 
-  // // cout << "expr-----" << endl << Expr.GetMat() << endl; 
+  // cout << "L1 -------" <<endl << L1.asMatrix() << endl; 
+  // cout << "L2 -------" <<endl << L2.asMatrix() << endl; 
+  // // cout << "expr-----" << endl << Expr.asMatrix() << endl; 
   // // PRINT ---------------------------
 
   // get underlying Eigen::VectorXd results of .apply() 
@@ -340,74 +342,80 @@ TEST(LinearOperatorSuite, Composition)
 
 TEST(LinearOperatorSuite, ExpressionChaining)
 {
-  auto my_mesh = make_mesh(); 
+  auto my_mesh = make_Mesh1D(); 
   // just a messy expression 
-  auto my_expr = (2.0*(2.0*(2.0*(2.0*IOp())))).compose(50*IOp(my_mesh) + RandLinOp() + IOp() - RandLinOp(my_mesh).compose(IOp(my_mesh)));
+  // auto my_expr = (2.0*(2.0*(2.0*(2.0*IOp())))).compose(50*IOp(my_mesh) + RandOp() + IOp() - RandOp(my_mesh).compose(IOp(my_mesh)));
   // not all lhs/rhs had a mesh in expression construction 
-  my_expr.set_mesh(my_mesh); 
+  // my_expr.setMesh(my_mesh); 
   // we should be able to make into eigen Matrix no matter what
-  Eigen::MatrixXd resulting_mat = my_expr.GetMat(); 
+  // Eigen::MatrixXd resulting_mat = my_expr.asMatrix(); 
 
   // building the same expression step by step 
   auto tmp1 = 2.0*IOp();
   auto tmp2 = 2.0*tmp1; 
   auto tmp3 = 2.0*tmp2; 
   auto tmp4 = 2.0*tmp3;
-  auto rhs1 = 50*IOp(my_mesh); 
-  auto rhs2 = rhs1 + RandLinOp(); 
-  auto rhs3 = rhs2 + IOp(); 
-  auto rhs4 = rhs3 - RandLinOp(my_mesh).compose(IOp(my_mesh));
+  auto my_expr = tmp4; 
 
-  auto my_expr2 = tmp4.compose(rhs4); // all temporaries still alive
+  auto rhs1 = 50*IOp(my_mesh); 
+  auto rhs2 = rhs1 + RandOp(); 
+  auto rhs3 = rhs2 + IOp(); 
+  auto rhs4 = RandOp(my_mesh).compose(IOp(my_mesh));
+  auto my_expr2 = rhs4; // all temporaries still alive
 
   // test the expression still has a .apply() method 
-  LinOps::Vector1D disc = LinOps::make_Discretization(my_mesh, 1.0); 
+  fdm::Vector1D disc = fdm::make_Discretization(my_mesh, 1.0); 
 
-  my_expr2.set_mesh(my_mesh); 
-  LinOps::Vector1D result = my_expr2.apply(disc); 
-  
+  fdm::Matrix M1 = my_expr.asMatrix(); 
+  my_expr2.setMesh(my_mesh);
+  my_expr2.apply(disc);  
+
+  fdm::Matrix M2 = my_expr2.asMatrix(); 
+  my_expr2.setMesh(my_mesh);
+  my_expr2.apply(disc);  
+  my_expr2.setMesh(my_mesh); 
 }
 
 TEST(LinearOperatorSuite, Method_set_mesh_ExprHooking)
 {
-  // Calling set_mesh on an expression E = L1 + L2 
-  // should pass the mesh to L1.set_mesh() and L2.set_mesh() 
+  // Calling setMesh on an expression E = L1 + L2 
+  // should pass the mesh to L1.setMesh() and L2.setMesh() 
    
   // construct without mesh ptrs 
   IOp I_lval;
   auto Expr = I_lval + IOp();
 
   // make mesh and give it to expression
-  auto my_mesh = make_mesh();
-  Expr.set_mesh(my_mesh); 
+  auto my_mesh = make_Mesh1D();
+  Expr.setMesh(my_mesh); 
 
   // both Lhs and Rhs should now have m_mesh_ptr == my_mesh
-  ASSERT_EQ(I_lval.get_mesh1d(), my_mesh);
-  ASSERT_EQ(Expr.Rhs().get_mesh1d(), my_mesh);
+  ASSERT_EQ(I_lval.getMesh1D(), my_mesh);
+  ASSERT_EQ(Expr.getRhs().getMesh1D(), my_mesh);
 
   // test again for scalar multiply  // construct without mesh ptrs 
   IOp I2_lval;
   double c=2.0; 
   auto Expr2 = 2.0* I2_lval;
   auto Expr3 = c*IOp();
-  Expr2.set_mesh(my_mesh); 
-  Expr3.set_mesh(my_mesh); 
+  Expr2.setMesh(my_mesh); 
+  Expr3.setMesh(my_mesh); 
   // both Lhs and Rhs should now have m_mesh_ptr == my_mesh
-  ASSERT_EQ(I2_lval.get_mesh1d(), my_mesh);
-  ASSERT_EQ(Expr2.Rhs().get_mesh1d(), my_mesh);
-  ASSERT_EQ(Expr3.Rhs().get_mesh1d(), my_mesh);
+  ASSERT_EQ(I2_lval.getMesh1D(), my_mesh);
+  ASSERT_EQ(Expr2.getRhs().getMesh1D(), my_mesh);
+  ASSERT_EQ(Expr3.getRhs().getMesh1D(), my_mesh);
 
   // test again for composition 
-  RandLinOp I3_lval; 
+  RandOp I3_lval; 
   IOp I4_lval;
   auto Expr4 = I3_lval.compose(I3_lval); 
   auto Expr5 = Expr4.compose(IOp());
-  // Expr4.set_mesh(my_mesh); 
-  Expr5.set_mesh(my_mesh); 
+  // Expr4.setMesh(my_mesh); 
+  Expr5.setMesh(my_mesh); 
   // both Lhs and Rhs should now have m_mesh_ptr == my_mesh
-  ASSERT_EQ(I3_lval.get_mesh1d(), my_mesh);
-  // ASSERT_EQ(Expr4.Rhs().get_mesh1d(), my_mesh);
-  ASSERT_EQ(Expr5.Rhs().get_mesh1d(), my_mesh);
+  ASSERT_EQ(I3_lval.getMesh1D(), my_mesh);
+  // ASSERT_EQ(Expr4.Rhs().getMesh1D(), my_mesh);
+  ASSERT_EQ(Expr5.getRhs().getMesh1D(), my_mesh);
 }
 
 /* TEST(LinearOperatorSuite, LinOpTraits)
@@ -422,84 +430,83 @@ TEST(LinearOperatorSuite, Method_set_mesh_ExprHooking)
   ASSERT_FALSE(traits::has_apply<bar>::value); 
 
   // see if a given type is a derived from the LinOpBase<> CRTP class
-  ASSERT_TRUE(traits::is_linop_crtp<RandLinOp>::value);
+  ASSERT_TRUE(traits::is_linop_crtp<RandOp>::value);
   ASSERT_FALSE(traits::is_linop_crtp<int>::value); 
 }
 */ 
 
-// testing out SetTime() hooking
+// testing out setTime() hooking
 TEST(FdmPluginSuite, Method_SetTime_Hooking)
 {
   // make a LinOP
-  LinOps::IOp I; 
+  linops::IOp I; 
 
   auto expr01 = I+I;
   auto expr02 = I.compose(I); 
   auto expr03 = 3.0*I; 
-  auto expr04 = I.compose(LinOps::IOp()); 
+  auto expr04 = I.compose(linops::IOp()); 
 
   // set time, make sure it is equal 
-  I.SetTime(1.0);
-  ASSERT_EQ(1.0,I.Time()); 
+  I.setTime(1.0);
+  ASSERT_EQ(1.0,I.getTime()); 
 
   // set time of expression, make sure it propagates to t 
-  expr01.SetTime(2.0);
-  ASSERT_EQ(2.0,I.Time()); 
+  expr01.setTime(2.0);
+  ASSERT_EQ(2.0,I.getTime()); 
 
   // set time of expression, make sure it propagates to t 
-  expr02.SetTime(3.0);
-  ASSERT_EQ(3.0,I.Time()); 
+  expr02.setTime(3.0);
+  ASSERT_EQ(3.0,I.getTime()); 
 
   // set time of expression, make sure it propagates to t 
-  expr03.SetTime(4.0);
-  ASSERT_EQ(4.0,I.Time()); 
+  expr03.setTime(4.0);
+  ASSERT_EQ(4.0,I.getTime()); 
 
   // set time of expression, make sure it propagates to t 
-  expr04.SetTime(5.0);
-  ASSERT_EQ(5.0,I.Time()); 
+  expr04.setTime(5.0);
+  ASSERT_EQ(5.0,I.getTime()); 
 
 
   // make sure LHS is given priority 
-  LinOps::IOp I1, I2; 
-  I1.SetTime(1.0); 
-  I2.SetTime(2.0); 
+  linops::IOp I1, I2; 
+  I1.setTime(1.0); 
+  I2.setTime(2.0); 
   auto expr = I1+I2; 
 
-  ASSERT_EQ(I1.Time(), expr.Time()); 
-  ASSERT_TRUE(I2.Time() != expr.Time()); 
+  ASSERT_EQ(I1.getTime(), expr.getTime()); 
+  ASSERT_TRUE(I2.getTime() != expr.getTime()); 
 }; 
 
 // testing NthDerivOp is constructible 
 TEST(NthDerivOpSuite, NthDerivOpConstructible)
 {
-  NthDerivOp my_deriv; 
-  NthDerivOp order_2(2); 
-  NthDerivOp from_mesh(nullptr, 2); 
+  NthDerivOp<1> my_deriv; 
+  NthDerivOp<2> order_2; 
+  // NthDerivOp<2> from_mesh(nullptr); 
 }
 
-// testing set_mesh() completes with no errors. 
+// testing setMesh() completes with no errors. 
 TEST(NthDerivOpSuite, Method_set_mesh_completing)
 {
-  auto my_mesh_01 = LinOps::make_mesh(0.0,10.0,11);
-  auto my_mesh_02 = LinOps::make_mesh(0.0,10.0,101);
-  auto my_mesh_03 = LinOps::make_mesh(0.0,10.0,1001);
-  auto my_mesh_04 = LinOps::make_mesh(0.0,10.0,10001);
+  auto my_mesh_01 = make_Mesh1D(0.0,10.0,11);
+  auto my_mesh_02 = make_Mesh1D(0.0,10.0,101);
+  auto my_mesh_03 = make_Mesh1D(0.0,10.0,1001);
+  auto my_mesh_04 = make_Mesh1D(0.0,10.0,10001);
 
-  using LinOps::NthDerivOp; 
-  auto D1 = NthDerivOp(1); 
-  auto D2 = NthDerivOp(2); 
-  auto D3 = NthDerivOp(3); 
-  auto D4 = NthDerivOp(4); 
+  auto D1 = NthDerivOp<1>{}; 
+  auto D2 = NthDerivOp<2>{}; 
+  auto D3 = NthDerivOp<3>{}; 
+  auto D4 = NthDerivOp<4>{}; 
 
   auto test_mesh_lam = [&](auto mesh_ptr){
-    D1.set_mesh(mesh_ptr); 
-    D1.GetMat(); 
-    D2.set_mesh(mesh_ptr); 
-    D2.GetMat(); 
-    D3.set_mesh(mesh_ptr); 
-    D3.GetMat(); 
-    D4.set_mesh(mesh_ptr);
-    D1.GetMat(); 
+    D1.setMesh(mesh_ptr); 
+    D1.asMatrix(); 
+    D2.setMesh(mesh_ptr); 
+    D2.asMatrix(); 
+    D3.setMesh(mesh_ptr); 
+    D3.asMatrix(); 
+    D4.setMesh(mesh_ptr);
+    D1.asMatrix(); 
   };
 
   test_mesh_lam(my_mesh_01);
@@ -511,7 +518,7 @@ TEST(NthDerivOpSuite, Method_set_mesh_completing)
 /* // testing NthDerivOp custom .compose() method  
 TEST(NthDerivOpSuite, NthDerivOpCompose)
 {
-  using D = LinOps::NthDerivOp; 
+  using D = linops::NthDerivOp; 
   // constructible with a certain order 
   ASSERT_EQ(D(3).Order(), 3); 
 
@@ -520,12 +527,12 @@ TEST(NthDerivOpSuite, NthDerivOpCompose)
 
   // testing composition splits sums ((f+g)' = f' + g')
   auto add_expr = D(n) + D(m); 
-  ASSERT_EQ(D(n).compose(add_expr).Lhs().Order(), n+n); 
-  ASSERT_EQ(D(n).compose(add_expr).Rhs().Order(), n+m);
+  ASSERT_EQ(D(n).compose(add_expr).getLhs().Order(), n+n); 
+  ASSERT_EQ(D(n).compose(add_expr).getRhs().Order(), n+m);
   
   // testing composition parses scalar multiply ((c*f)' = c*f')
   auto mult_expr = 4.0 * D(n); 
-  // ASSERT_EQ(D(n).compose(mult_expr).Rhs().Order(), n+n);
+  // ASSERT_EQ(D(n).compose(mult_expr).getRhs().Order(), n+n);
 }
 
 */ 

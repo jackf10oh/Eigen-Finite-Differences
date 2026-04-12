@@ -26,20 +26,20 @@ class origin_bump : public OSteps::OStepBaseXD<origin_bump>
 
   public:
     // Member Funcs ------------------------------------------------
-    // Calls SetTime on any LinOps inside the expression
-    template<typename TIME_ITER, typename LHS_EXECUTOR, typename RHS_EXPR, OSteps::FDStep_Type Step>
-    void BeforeLinAlgebra(TIME_ITER& time_iter, LinOps::MeshXD_SPtr_t& mesh, LHS_EXECUTOR& exec, RHS_EXPR& rhs_expr)
+    // Calls setTime on any LinOps inside the expression
+    template<typename TIME_ITER, typename LHS_EXECUTOR, typename RHS_EXPR, OSteps::StepType Step>
+    void BeforeLinAlgebra(TIME_ITER& time_iter, LinOps::SharedConstMeshXD& mesh, LHS_EXECUTOR& exec, RHS_EXPR& rhs_expr)
     { 
       m_inv_coeff_ptr = &exec.inv_coeff(); 
     }
 
-    template<OSteps::FDStep_Type STEP>
-    void MatBeforeStep(double t, const LinOps::MeshXD_SPtr_t& mesh, LinOps::MatrixStorage_t& Mat) const 
+    template<OSteps::StepType STEP>
+    void MatBeforeStep(double t, const LinOps::SharedConstMeshXD& mesh, LinOps::MatrixStorage_t& Mat) const 
     { /* do nothing to stencil...*/}
 
     // Adds a 2d bump at origin to solution before step. regardless of implicit or explicit -> IMEX scheme
-    template<OSteps::FDStep_Type STEP>
-    void SolBeforeStep(double t, const LinOps::MeshXD_SPtr_t& mesh, OSteps::StridedRef_t Sol) const 
+    template<OSteps::StepType STEP>
+    void SolBeforeStep(double t, const LinOps::SharedConstMeshXD& mesh, OSteps::StridedRef_t Sol) const 
     {
       auto forcing = [&](double x, double y){ return bump_1d(x)*bump_1d(y)*std::sin(t); }; 
       Eigen::VectorXd disc_vals = LinOps::make_Discretization(mesh, forcing).values(); 
@@ -47,16 +47,16 @@ class origin_bump : public OSteps::OStepBaseXD<origin_bump>
       Sol += disc_vals; 
     }
 
-    template<OSteps::FDStep_Type STEP>
-    void SolAfterStep(double t, const LinOps::MeshXD_SPtr_t& mesh, OSteps::StridedRef_t Sol) const 
+    template<OSteps::StepType STEP>
+    void SolAfterStep(double t, const LinOps::SharedConstMeshXD& mesh, OSteps::StridedRef_t Sol) const 
     { /* do nothing to solution after step...*/} 
 }; 
 
 struct Wave2D_impl
 {
   // Utt 
-  using Lhs_t = TExprs::NthTimeDeriv;  
-  Lhs_t Lhs = TExprs::NthTimeDeriv(2);
+  using Lhs_t = texprs::NthTimeDeriv;  
+  Lhs_t getLhs = texprs::NthTimeDeriv(2);
   
   // = Uxx + Uyy 
   LinOps::DirectionalNthDerivOp Uxx = LinOps::DirectionalNthDerivOp(2,0);  
@@ -86,12 +86,12 @@ struct Wave2D_impl
 
 }; 
 
-struct Wave2D : public Wave2D_impl, public Solvers::Interpolator<Wave2D_impl::Lhs_t, Wave2D_impl::Rhs_t, Wave2D_impl::OStep_t, LinOps::MeshXD_SPtr_t>
+struct Wave2D : public Wave2D_impl, public Solvers::Interpolator<Wave2D_impl::Lhs_t, Wave2D_impl::Rhs_t, Wave2D_impl::OStep_t, LinOps::SharedConstMeshXD>
 {
-  using Interp_t = Solvers::Interpolator<Wave2D_impl::Lhs_t, Wave2D_impl::Rhs_t, Wave2D_impl::OStep_t, LinOps::MeshXD_SPtr_t>; 
+  using Interp_t = Solvers::Interpolator<Wave2D_impl::Lhs_t, Wave2D_impl::Rhs_t, Wave2D_impl::OStep_t, LinOps::SharedConstMeshXD>; 
   Wave2D()
     :Wave2D_impl(), 
-    Interp_t(this->Lhs, this->Rhs, this->osteps)
+    Interp_t(this->getLhs, this->Rhs, this->osteps)
   {};  
 
   void set_damping(double damping)

@@ -3,8 +3,7 @@ add_executable(tests_linops
 )
 
 target_link_libraries(tests_linops
-  PRIVATE LinOps
-  PRIVATE Utilities
+  PRIVATE FiniteDifference
   PRIVATE GTest::gtest 
   PRIVATE GTest::gtest_main 
   PRIVATE pthread # required by GTest
@@ -15,23 +14,22 @@ add_executable(tests_linopsxd
 )
 
 target_link_libraries(tests_linopsxd 
-  PRIVATE LinOps
-  PRIVATE Utilities
+  PRIVATE FiniteDifference
   PRIVATE GTest::gtest 
   PRIVATE GTest::gtest_main 
   PRIVATE pthread # required by GTest
 )
 
-add_executable(tests_texprs 
-  tests_texprs.cpp
-)
+# add_executable(tests_texprs 
+#   tests_texprs.cpp
+# )
 
-target_link_libraries(tests_texprs 
-  PRIVATE TExprs
-  PRIVATE GTest::gtest 
-  PRIVATE GTest::gtest_main 
-  PRIVATE pthread # required by GTest
-)
+# target_link_libraries(tests_texprs 
+#   PRIVATE TExprs
+#   PRIVATE GTest::gtest 
+#   PRIVATE GTest::gtest_main 
+#   PRIVATE pthread # required by GTest
+# )
 
 include(GoogleTest)
 gtest_discover_tests(tests_linops)

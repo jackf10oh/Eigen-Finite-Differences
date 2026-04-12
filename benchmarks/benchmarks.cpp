@@ -18,7 +18,7 @@ static void BENCHMARK_NthDerivOp_set_mesh(benchmark::State &state)
     state.PauseTiming();
     int r = state.range(0);  
     std::size_t order_n = 1; 
-    auto my_mesh = make_mesh(0.0,double(r), r+1); 
+    auto my_mesh = make_Mesh1D(0.0,double(r), r+1); 
     NthDerivOp D(order_n); 
     state.ResumeTiming(); 
     D.set_mesh(my_mesh); 
@@ -34,7 +34,7 @@ static void BENCHMARK_ConvectionDiffusionExpression_set_mesh(benchmark::State &s
     int n_gridpoints = state.range(0);
 
     // uniform mesh from 0.0 to r with n_gridpoints
-    MeshPtr_t my_mesh = make_mesh(0.0,r,n_gridpoints);
+    MeshPtr_t my_mesh = make_Mesh1D(0.0,r,n_gridpoints);
 
     // create an fdm_scheme for convection diffusion equation 
     using D = NthDerivOp; 
@@ -55,7 +55,7 @@ static void BENCHMARK_ConvectionDiffusionExpression_single_explicit_step(benchma
     int n_gridpoints = state.range(0);
 
     // uniform mesh from 0.0 to r with n_gridpoints
-    MeshPtr_t my_mesh = make_mesh(0.0,r,n_gridpoints);
+    MeshPtr_t my_mesh = make_Mesh1D(0.0,r,n_gridpoints);
 
     Discretization1D my_vals;
     
@@ -94,7 +94,7 @@ static void BENCHMARK_ConvectionDiffusionExpression_N_explicit_steps(benchmark::
     int n_gridpoints = 1000;
 
     // uniform mesh from 0.0 to r with n_gridpoints
-    MeshPtr_t my_mesh = make_mesh(0.0,r,n_gridpoints);
+    MeshPtr_t my_mesh = make_Mesh1D(0.0,r,n_gridpoints);
 
     Discretization1D my_vals;
     
@@ -139,7 +139,7 @@ static void BENCHMARK_ConvectionDiffusionExpression_N_Manual_explicit_steps(benc
     int n_gridpoints = 1000;
 
     // uniform mesh from 0.0 to r with n_gridpoints
-    MeshPtr_t my_mesh = make_mesh(0.0,r,n_gridpoints);
+    MeshPtr_t my_mesh = make_Mesh1D(0.0,r,n_gridpoints);
 
     Discretization1D my_vals;
     
@@ -164,7 +164,7 @@ static void BENCHMARK_ConvectionDiffusionExpression_N_Manual_explicit_steps(benc
 
     // fill out the stencil matrix
     fdm_scheme.set_mesh(my_mesh);
-    const MatrixStorage_t stencil = fdm_scheme.GetMat(); 
+    const Matrix stencil = fdm_scheme.asMatrix(); 
 
     state.ResumeTiming();
 
@@ -192,7 +192,7 @@ static void BENCHMARK_ConvectionDiffusionExpression_single_solve_implicit(benchm
     int n_gridpoints = state.range(0);
 
     // uniform mesh from 0.0 to r with n_gridpoints
-    MeshPtr_t my_mesh = make_mesh(0.0,r,n_gridpoints);
+    MeshPtr_t my_mesh = make_Mesh1D(0.0,r,n_gridpoints);
 
     Discretization1D my_vals;
     
