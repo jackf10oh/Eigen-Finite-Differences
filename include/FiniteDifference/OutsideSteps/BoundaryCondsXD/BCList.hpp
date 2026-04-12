@@ -80,13 +80,13 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
     virtual ~BCList()=default; 
 
     // Member Funcs =================================================
-    template<FDStep_Type STEP, typename TIMECTX = TimeContext<>, typename CONSTCTX = Context<> >
+    template<StepType STEP, typename TIMECTX = TimeContext<>, typename CONSTCTX = Context<> >
     void MatBeforeStep(fdm::Matrix& Mat, const TIMECTX& t = {}, const CONSTCTX& ctx = {})
     {      
       // check args are compaitble 
       if(ctx.getMesh()->dims() != sizeof...(BCPairs_Ts)) throw std::runtime_error("BCList SolAfterStep error: MeshXD.dims() != size of tuple / list of 1D BCs "); 
 
-      if constexpr(STEP == FDStep_Type::IMPLICIT)
+      if constexpr(STEP == StepType::Implicit)
       {    
         constexpr std::size_t N = sizeof...(BCPairs_Ts); 
         // Sets m_mats 2nd to last according to bc pairs 2nd to last... 
@@ -103,14 +103,14 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
       }
     } // end MatBeforeStep 
 
-    template<FDStep_Type STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
+    template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
     void VecBeforeStep(fdm::StridedRef u, const TCtx& t, const Ctx& ctx)
     {
       // check args are compaitble 
       const auto& mesh = ctx.getMesh(); 
       if(mesh->dims() != sizeof...(BCPairs_Ts)) throw std::runtime_error("BCList SolAfterStep error: MeshXD.dims() != size of tuple / list of 1D BCs "); 
 
-      if constexpr(STEP == FDStep_Type::IMPLICIT)
+      if constexpr(STEP == StepType::Implicit)
       {
         // this lambda takes 1 BCPair<L,R> and applies it to Sol
         // without double assigning to corners/edges of XDim space 
@@ -162,14 +162,14 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
       } // end if constexpr(step)
     } // end VecBeforeStep 
 
-    template<FDStep_Type STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
+    template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
     void VecAfterStep(fdm::StridedRef u, const TCtx& t, const Ctx& ctx)
     {
       
       const auto& mesh = ctx.getMesh(); // get the MeshXD 
       if(mesh->dims() != sizeof...(BCPairs_Ts)) throw std::runtime_error("BCList SolAfterStep error: MeshXD.dims() != size of tuple / list of 1D BCs "); 
       
-      if constexpr(STEP == FDStep_Type::EXPLICIT)
+      if constexpr(STEP == StepType::Explicit)
       {
         // this lambda takes 1 BCPair<L,R> and applies it to Sol
         // without double assigning to corners/edges of XDim space 

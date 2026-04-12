@@ -27,18 +27,18 @@ class origin_bump : public OSteps::OStepBaseXD<origin_bump>
   public:
     // Member Funcs ------------------------------------------------
     // Calls setTime on any LinOps inside the expression
-    template<typename TIME_ITER, typename LHS_EXECUTOR, typename RHS_EXPR, OSteps::FDStep_Type Step>
+    template<typename TIME_ITER, typename LHS_EXECUTOR, typename RHS_EXPR, OSteps::StepType Step>
     void BeforeLinAlgebra(TIME_ITER& time_iter, LinOps::SharedConstMeshXD& mesh, LHS_EXECUTOR& exec, RHS_EXPR& rhs_expr)
     { 
       m_inv_coeff_ptr = &exec.inv_coeff(); 
     }
 
-    template<OSteps::FDStep_Type STEP>
+    template<OSteps::StepType STEP>
     void MatBeforeStep(double t, const LinOps::SharedConstMeshXD& mesh, LinOps::MatrixStorage_t& Mat) const 
     { /* do nothing to stencil...*/}
 
     // Adds a 2d bump at origin to solution before step. regardless of implicit or explicit -> IMEX scheme
-    template<OSteps::FDStep_Type STEP>
+    template<OSteps::StepType STEP>
     void SolBeforeStep(double t, const LinOps::SharedConstMeshXD& mesh, OSteps::StridedRef_t Sol) const 
     {
       auto forcing = [&](double x, double y){ return bump_1d(x)*bump_1d(y)*std::sin(t); }; 
@@ -47,7 +47,7 @@ class origin_bump : public OSteps::OStepBaseXD<origin_bump>
       Sol += disc_vals; 
     }
 
-    template<OSteps::FDStep_Type STEP>
+    template<OSteps::StepType STEP>
     void SolAfterStep(double t, const LinOps::SharedConstMeshXD& mesh, OSteps::StridedRef_t Sol) const 
     { /* do nothing to solution after step...*/} 
 }; 

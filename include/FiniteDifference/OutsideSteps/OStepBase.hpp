@@ -15,9 +15,9 @@
 namespace fdm{
   namespace osteps{    
 
-enum class FDStep_Type{
-  EXPLICIT, 
-  IMPLICIT 
+enum class StepType{
+  Explicit, 
+  Implicit 
 }; 
 
 template<typename DERIVED>
@@ -25,16 +25,16 @@ class OStepBase
 {
   public:
     // Member Funcs ------------------------------------------------
-    template<FDStep_Type STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
+    template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
     void BeforeLinAlgebra(const TCtx& t, Ctx& ctx){/* edit everything before linear algebra starts*/}
 
-    template<FDStep_Type STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
+    template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
     void MatBeforeStep(fdm::Matrix& Mat, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
     
-    template<FDStep_Type STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
+    template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
     void VecBeforeStep(fdm::StridedRef u, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
 
-    template<FDStep_Type STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
+    template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
     void VecAfterStep(fdm::StridedRef u, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
 
 }; 

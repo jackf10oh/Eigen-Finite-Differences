@@ -28,7 +28,8 @@ class Executor
     using InvCoeff = std::conditional_t<std::tuple_size<MatrixTup>::value==0, double, fdm::Matrix>; 
 
     // number of nodes used in Fornberg algorithm 
-    static constexpr std::size_t numNodes = std::max(M, TimeDeriv::maxOrder+1); 
+    static constexpr std::size_t numStoredTimes = std::max(M, TimeDeriv::maxOrder+1); 
+    static constexpr std::size_t numStoredSols = numStoredTimes-1; 
 
   private:
     // Member Data ---------------------------------
@@ -40,13 +41,13 @@ class Executor
     MatrixTup m_mat_coeff_sum_partition; 
 
     // list of t0, t1, ..., tn 
-    std::array<double, numNodes> m_stored_times; 
+    std::array<double, numStoredTimes> m_stored_times; 
 
     // list of solutions u0, u1, ..., un-1 at times t0, t1, ..., tn-1 
-    std::array<Eigen::VectorXd, numNodes-1> m_stored_sols; 
+    std::array<Eigen::VectorXd, numStoredTimes-1> m_stored_sols; 
 
     // forberg weights calculator 
-    fdm::utils::FornArrayCalc<numNodes, TimeDeriv::maxOrder> m_weights_calc; 
+    fdm::utils::FornArrayCalc<numStoredTimes, TimeDeriv::maxOrder> m_weights_calc; 
     
     // result of build_inv_coeff.   
     InvCoeff m_inv_coeff; 
@@ -87,12 +88,12 @@ class Executor
     const auto& getStoredTimes() const { return m_stored_times; }; 
 
     // getter to time that matches last solution in list 
-    double& getCurrentTime(){ return m_stored_times[numNodes-2]; }
-    const double& getCurrentTime() const { return m_stored_times[numNodes-2]; }
+    double& getCurrentTime(){ return m_stored_times[numStoredTimes-2]; }
+    const double& getCurrentTime() const { return m_stored_times[numStoredTimes-2]; }
 
     // getter to future time
-    double& getNextTime(){ return m_stored_times[numNodes-1]; }
-    const double& getNextTime() const { return m_stored_times[numNodes-1]; }
+    double& getNextTime(){ return m_stored_times[numStoredTimes-1]; }
+    const double& getNextTime() const { return m_stored_times[numStoredTimes-1]; }
 
     // getters to stored solutions 
     auto& getStoredSolutions(){ return m_stored_sols; }
@@ -118,20 +119,28 @@ class Executor
     // sets current times from start,end iterators.  
     template<typename Iter>
     void pushTimeRange(Iter start, Iter end){ 
-      // if std::distance(start,end) != numNodes, 
-      // only copy to rightmost times 
-      std::size_t d = std::distance(start,end); 
-      if(d > numNodes) throw std::runtime_error("Executor setStoredTimes(it,it) error: distance(start,end) > numNodes"); 
-      std::copy(std::prev(m_stored_times.end(),numNodes-d), m_stored_times.end(), m_stored_times.begin()); 
-      std::copy(start,end,std::next(m_stored_times.begin(),numNodes-d)); 
+      std::size_t d = std::distance(start,end);        
+      if(d >= numStoredTimes) 
+      {
+        // throw std::runtime_error("Executor setStoredTimes(it,it) error: distance(start,end) > numStoredTimes");
+        // only copy from rightmost times 
+        std::copy(std::next(m_stored_times.begin(),d-numStoredTimes), m_stored_times.end(), m_stored_times.begin()); 
+        // std::copy(start,end,std::next(m_stored_times.begin(),numStoredTimes-d)); 
+      } 
+      else
+      {
+        // only copy into rightmost times 
+        std::copy(std::next(m_stored_times.begin(),d), m_stored_times.end(), m_stored_times.begin()); 
+        std::copy(start,end,std::next(m_stored_times.begin(),numStoredTimes-d)); 
+      }
     }
 
     // consume a solution. push back all previous 
     void pushSolution(Eigen::VectorXd sol)
     { 
-      /* same idea as ConsumeTime(). with move semantics*/
+      /* same idea as pushTime(). with move semantics*/
       std::move(std::next(m_stored_sols.begin()), m_stored_sols.end(), m_stored_sols.begin()); 
-      m_stored_sols.back() = std::move(sol); 
+      m_stored_sols[numStoredSols-1] = std::move(sol); 
     }
 
     // ConsumeSolution but copies full list into m_stored_sols
@@ -139,19 +148,31 @@ class Executor
     void pushSolutionRange(Iter start, Iter end)
     {
       std::size_t d = std::distance(start,end); 
-      if(d > numNodes-1) throw std::runtime_error("Executor pushSolutionRange(it,it) error: distance(start,end) > numNodes"); 
-      // push numNodes - 1 - d solutions to front of m_stored_sols 
-      std::move(
-          std::move_iterator(std::prev(m_stored_sols.end(), d)),
-          std::move_iterator(m_stored_sols.end()),
-          m_stored_sols.begin()
-      ); 
-      // move [start,end) to last entries of m_stored_sols
-      std::move(
-          std::move_iterator(start),
-          std::move_iterator(end),
-          std::next(m_stored_sols.begin(), numNodes - 1 - d)
-      ); 
+      if(d >= numStoredTimes-1) 
+      {
+        // throw std::runtime_error("Executor pushSolutionRange(it,it) error: distance(start,end) > numStoredTimes"); 
+        // move [start+d-numStoredTimes-1,end) to last entries of m_stored_sols
+        std::move(
+            std::move_iterator(std::next(start, d - (numStoredTimes-1))),
+            std::move_iterator(end),
+            m_stored_sols.begin()
+        ); 
+      }
+      else
+      {
+        // push numStoredTimes - 1 - d solutions to front of m_stored_sols
+        std::move(
+            std::move_iterator(std::prev(m_stored_sols.end(), d)),
+            std::move_iterator(m_stored_sols.end()),
+            m_stored_sols.begin()
+        ); 
+        // move [start,end) to last entries of m_stored_sols
+        std::move(
+            std::move_iterator(start),
+            std::move_iterator(end),
+            std::next(m_stored_sols.begin(), numStoredTimes - 1 - d)
+        ); 
+      }
     }
 
     // traverse stored tuples and sets mesh for any LinOps inside 
@@ -184,13 +205,13 @@ class Executor
     void calculate(double t){ 
       m_weights_calc.calculate(t, m_stored_times.cbegin(), m_stored_times.cend()); 
       // possibly detect if any LinOps are time dependent? 
-      // setTime(t); // handle inside of an outside step...   
+      setTime(t); // handle inside of an outside step...   
       /* m_inv_coeff = */ buildInvCoeff(); 
     }
 
     decltype(auto) getRhsExpression()
     {
-      return getRhsExpression_impl(std::make_index_sequence<numNodes-1>{}); 
+      return getRhsExpression_impl(std::make_index_sequence<numStoredTimes-1>{}); 
     }
 
     // getters to m_inv_coeff + m_rhs_vec 
@@ -213,7 +234,7 @@ class Executor
         // just scalars need to be added 
         double scalar_sum = std::apply(
           [&](auto&&... args){
-            return (args.template coeffAt<ithNode, numNodes>(m_weights_calc.getArray()) + ...); 
+            return (args.template coeffAt<ithNode, numStoredTimes>(m_weights_calc.getArray()) + ...); 
           }, 
           m_scalar_coeff_sum_partition
         ); 
@@ -224,7 +245,7 @@ class Executor
         // just matrix return types need to be added
         decltype(auto) matrix_sum = std::apply(
           [&](auto&&... args){
-            return (args.template coeffAt<ithNode, numNodes>(m_weights_calc.getArray()) + ...); 
+            return (args.template coeffAt<ithNode, numStoredTimes>(m_weights_calc.getArray()) + ...); 
           },
           m_mat_coeff_sum_partition
         ); 
@@ -234,13 +255,13 @@ class Executor
         // sum of both scalar AND matrix return types! 
         double scalar_sum = std::apply(
           [&](auto&&... args){
-            return (args.template coeffAt<ithNode, numNodes>(m_weights_calc.getArray()) + ...); 
+            return (args.template coeffAt<ithNode, numStoredTimes>(m_weights_calc.getArray()) + ...); 
           }, 
           m_scalar_coeff_sum_partition
         );
         decltype(auto) matrix_sum = std::apply(
           [&](auto&&... args){
-            return (args.template coeffAt<ithNode, numNodes>(m_weights_calc.getArray()) + ...); 
+            return (args.template coeffAt<ithNode, numStoredTimes>(m_weights_calc.getArray()) + ...); 
           }, 
           m_mat_coeff_sum_partition
         ); 
@@ -255,7 +276,7 @@ class Executor
       if constexpr(std::tuple_size<MatrixTup>::value == 0){
         double s = std::apply(
             [&](auto&&... coeffs){
-              return (coeffs.template coeffAt<numNodes-1, numNodes>(m_weights_calc.getArray()) + ...); 
+              return (coeffs.template coeffAt<numStoredTimes-1, numStoredTimes>(m_weights_calc.getArray()) + ...); 
             }, 
             m_scalar_coeff_sum_partition
         );
@@ -265,7 +286,7 @@ class Executor
         // all COeffAt's evaluate to matrix -> return (sum(coeffs)).cwiseInverse 
         auto expr = std::apply(
               [&](auto&&... coeffs){
-                return (coeffs.template coeffAt<numNodes-1, numNodes>(m_weights_calc.getArray()) + ...); 
+                return (coeffs.template coeffAt<numStoredTimes-1, numStoredTimes>(m_weights_calc.getArray()) + ...); 
               }, 
               m_mat_coeff_sum_partition 
         ); 
@@ -276,13 +297,13 @@ class Executor
         // otherwise return product of 1/sum(scalar) + (sum(Mats)).cwiseInverse()
         double s = std::apply(
             [&](auto&&... coeffs){
-              return (coeffs.template coeffAt<numNodes-1, numNodes>(m_weights_calc.getArray()) + ...); 
+              return (coeffs.template coeffAt<numStoredTimes-1, numStoredTimes>(m_weights_calc.getArray()) + ...); 
             }, 
             m_scalar_coeff_sum_partition
         );
         auto expr = std::apply(
               [&](auto&&... coeffs){
-                return (coeffs.template coeffAt<numNodes-1, numNodes>(m_weights_calc.getArray()) + ...); 
+                return (coeffs.template coeffAt<numStoredTimes-1, numStoredTimes>(m_weights_calc.getArray()) + ...); 
               }, 
               m_mat_coeff_sum_partition 
         ); 
@@ -314,16 +335,18 @@ class Executor
         setTime_singleton(t, tderiv.getRhs()); 
       }
       if constexpr(linops::traits::is_linop_crtp<TimeDerivU>::value){
-        tderiv.SetTime(t); 
+        if(tderiv.isTimeDep){
+          tderiv.SetTime(t); 
+        }
       }
     }
 }; 
 
 // entry point for giving specific # of nodes, CTAD time derivate
-template<std::size_t numNodes, typename TimeDeriv>
+template<std::size_t numStoredTimes, typename TimeDeriv>
 auto make_Executor(TimeDeriv& tderiv)
 {
-  return Executor<TimeDeriv,numNodes>(tderiv); 
+  return Executor<TimeDeriv,numStoredTimes>(tderiv); 
 } 
 
 // entry point  without nodes being specified 

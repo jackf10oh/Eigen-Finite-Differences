@@ -15,6 +15,9 @@
 #include<FiniteDifference/Utilities/PrintVec.hpp> 
 #include<FiniteDifference/Utilities/BumpFunc.hpp> 
 
+#include<FiniteDifference/Solvers/SolverArgs.hpp> 
+#include<FiniteDifference/Solvers/ExplicitSolver.hpp> 
+
 using std::cout, std::endl;
 
 using namespace fdm; 
@@ -23,44 +26,41 @@ int main()
 {
   // iomanip 
   std::cout << std::setprecision(3); 
-  
-  // domain mesh 
-  auto domain = make_Mesh1D(0.0,10.0,21); 
 
-  // times mesh
-  auto times = make_Mesh1D(0.0,4.0,20); 
+  fdm::solvers::SolverArgs args{
+    .mesh = make_Mesh1D(0.0,10.0,40), 
+    .times = make_Mesh1D(0.0, 4.0, 40)
+  }; 
 
-  // ICs 
-  utils::BumpFunc b{.L = 3.0, .R=7.0, .c=5.0,  .h=2.0}; 
-  std::vector<Eigen::VectorXd> sols{ make_Discretization(domain, b).values() }; 
+  // Initial Conditions  
+  utils::BumpFunc b{.L = 4.0, .R=6.0, .c=5.0,  .h=1.0}; 
+  auto v = make_Discretization(args.mesh, b).values(); 
+  args.initialConditions = { v }; 
 
   // LHS in time 
   auto Ut = texprs::NthTimeDeriv<1>{}; 
 
   // RHS in space 
-  auto expr = 0.5 * linops::NthDerivOp<2>{} - 0.5 * linops::NthDerivOp<1>{}; 
-  expr.setMesh(domain); 
+  auto expr = 0.2 * linops::NthDerivOp<2>{} - 0.5 * linops::NthDerivOp<1>{}; 
 
-  // Solving with explicit steps manually... 
-  auto exec = texprs::make_Executor(Ut); 
-  auto it = times->cbegin(); 
-  exec.pushTimeRange(it,++it); 
-  exec.pushSolution(sols[0]); 
+  // Boundary Conditions 
+  auto bcs = osteps::BCPair(osteps::DirichletBC(0.0),osteps::DirichletBC(0.0)); 
 
-  auto end = times->cend(); 
-  Eigen::VectorXd next_sol; 
+  // Solving ...
+  solvers::ExplicitSolver my_solver(Ut,expr,std::tie(bcs)); 
 
-  for(; it!=end; ++it)
-  {
-    exec.pushTime(*it); 
-    exec.calculate(*std::prev(it)); 
-    next_sol = exec.getInvCoeff() * expr.asMatrix() * exec.getCurrentSolution() + exec.getRhsExpression();
+  // utils::print_vec(args.initialConditions[0],"ICs"); 
+  // auto sol = my_solver.calculate(args, solvers::LastSaver{}); 
+  // utils::print_vec(sol, "Sol"); 
 
-    next_sol[0] = next_sol[next_sol.size()-1] = 0.0;
-     
-    sols.push_back(next_sol); 
-    exec.pushSolution(std::move(next_sol)); 
-  }
+  my_solver.calculate(args, solvers::PrintSaver{}); 
   
-  utils::print_mat(sols,"Solutions"); 
+  // auto time_taken = my_solver.calculate(args, solvers::TimerSaver{}); 
+  // cout << "milliseconds: " << time_taken.count() << endl;  
+
+  // std::size_t N = 40; 
+  // double sum = 0; 
+  // for(auto i=0; i<N; ++i) sum += my_solver.calculate(args, solvers::TimerSaver{}).count(); 
+  // cout << "Average time: " << (sum/N) << " ms" << endl; 
+
 };

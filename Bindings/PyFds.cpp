@@ -140,7 +140,7 @@ PYBIND11_MODULE(PyFds, m)
   py::class_<Wave2D>(m, "Wave2D")
     .def(py::init<>())
     .def("SetDomain", [](Wave2D& self, LinOps::SharedConstMeshXD m) -> Wave2D& 
-      {auto a = self.Args(); a.domain_mesh_ptr=m; self.SetArgs(std::move(a)); return self; }, py::arg("mesh"), "Sets a new domain mesh inside of solver") 
+      {auto a = self.Args(); a.domain_mesh_ptr=m; self.SetArgs(std::move(a)); return self; }, py::arg("mesh"), "Sets a new mesh mesh inside of solver") 
     .def("SetTime", [](Wave2D& self, LinOps::SharedConstMesh1D m) -> Wave2D& 
       {auto a = self.Args(); a.time_mesh_ptr=m; self.SetArgs(std::move(a)); return self; }, py::arg("mesh"), "Sets a new time mesh inside of solver") 
     .def("SetIC", [](Wave2D& self, std::vector<Eigen::VectorXd> v) -> Wave2D& 
@@ -148,7 +148,7 @@ PYBIND11_MODULE(PyFds, m)
     .def("SetHeight",[](Wave2D& self, double h) -> Wave2D& 
       { self.set_bump_height(h); self.Reset(); return self;}, py::arg("h")=1.0, "Sets new height for oscilation force term at origin")
     .def("SetDamping", [](Wave2D& self, double d) -> Wave2D& 
-      {self.set_damping(d); self.Reset(); return self;}, py::arg("d")=2.0, "Sets a new damping rate at boundaries of the domain")
+      {self.set_damping(d); self.Reset(); return self;}, py::arg("d")=2.0, "Sets a new damping rate at boundaries of the mesh")
     .def("StoredData", &Wave2D::StoredData, "returns a vector of solutions. solutions are flattened in dimensional order")
     .def("Compute", &Wave2D::FillVals, py::arg("max_iters")=20, "Computes solution at each entry in time. available in StoredData")
     .def("SolAt", [](Wave2D& self, double t, double x, double y){ return self.SolAt(t,x,y); }, py::arg("t"), py::arg("x"), py::arg("y"), "Returns value of solution at time t at coords (x,y)");    

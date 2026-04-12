@@ -39,33 +39,33 @@ class BCPair: public OStepBase<BCPair<LBC_T,RBC_T>>
     virtual ~BCPair()=default; 
 
     // Member Functions ==================================================================
-    template<FDStep_Type STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
+    template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
     void MatBeforeStep(fdm::Matrix& Mat, const TCtx& t, const Ctx& ctx) const
     {
       using M = std::remove_cv_t<std::remove_reference_t<decltype(ctx.getMesh())>>; 
       static_assert(std::is_same_v<M,std::shared_ptr<const fdm::Mesh1D>>, "error in OSteps::BCPair. Domain is not Mesh1D"); 
-      if constexpr(STEP == FDStep_Type::IMPLICIT){ 
+      if constexpr(STEP == StepType::Implicit){ 
         m_left.SetStencilL(t.next, ctx.getMesh(), Mat); 
         m_right.SetStencilR(t.next, ctx.getMesh(), Mat); 
       }
     }
 
-    template<FDStep_Type STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
+    template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
     void VecBeforeStep(fdm::StridedRef u, const TCtx& t, const Ctx& ctx) const
     {
       using M = std::remove_cv_t<std::remove_reference_t<decltype(ctx.getMesh())>>; 
-      static_assert(std::is_same_v<M,std::shared_ptr<const fdm::Mesh1D>>, "error in OSteps::BCPair. Domain is not Mesh1D");       if constexpr(STEP == FDStep_Type::IMPLICIT){
+      static_assert(std::is_same_v<M,std::shared_ptr<const fdm::Mesh1D>>, "error in OSteps::BCPair. Domain is not Mesh1D");       if constexpr(STEP == StepType::Implicit){
         m_left.SetImpSolL(t.next, ctx.getMesh(), u); 
         m_right.SetImpSolR(t.next, ctx.getMesh(), u); 
       }
     }
 
-    template<FDStep_Type STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
+    template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
     void VecAfterStep(fdm::StridedRef u, const TCtx& t, const Ctx& ctx) const 
     {
       using M = std::remove_cv_t<std::remove_reference_t<decltype(ctx.getMesh())>>; 
       static_assert(std::is_same_v<M,std::shared_ptr<const fdm::Mesh1D>>, "error in OSteps::BCPair. Domain is not Mesh1D"); 
-      if constexpr(STEP == FDStep_Type::EXPLICIT){
+      if constexpr(STEP == StepType::Explicit){
         m_left.SetSolL(t.next, ctx.getMesh(), u); 
         m_right.SetSolR(t.next, ctx.getMesh(), u); 
       }  

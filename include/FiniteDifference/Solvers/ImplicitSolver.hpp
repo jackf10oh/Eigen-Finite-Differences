@@ -9,14 +9,16 @@
 #ifndef IMPLICITSOLVER_H
 #define IMPLICITSOLVER_H 
 
-#include<LinOps/LinOpTraits.hpp> // trait to check RHS has .getMat() 
-#include<TExprs/TimeDerivBase.hpp> // trait to check LHS is a time deriv + MatrixStorage_t 
-#include<TExprs/TExprExecutor.hpp> // TExprExecutor class 
-#include<OutsideSteps/OStepBase.hpp> // FDStep_Type scoped enumeration 
+#include "../LinOps/LinOpTraits.hpp" // check RHS is 1D or XD LinOp + fdm::Matrix 
+#include "../TExprs/TExprTraits.hpp" // check LHS is time derivatives 
+#include "../TExprs/Executor.hpp" // marches through time 
+#include "../OutsideSteps/StepContexts.hpp"  // feed to outside steps tuple 
+#include "../OutsideSteps/OStepBase.hpp" // StepType scoped enumeration 
 #include "SolverArgs.hpp"
 #include "WritePolicies.hpp"
 
-namespace Solvers{ 
+namespace fdm{
+  namespace solvers{ 
 
 template<typename LHS_EXPR, typename RHS_EXPR, typename OSTEP_TUP>
 class ImplicitSolver
@@ -40,8 +42,8 @@ class ImplicitSolver
     void SetMaxIterations(std::size_t i){ m_max_iters = i; } 
     void MaxIterations(std::size_t i){ m_max_iters = i; } 
 
-    template<typename M, typename WRITE_POLICY_T = FinalWrite, template<typename MAT_T> class EIGENSOLVER_T=Eigen::BiCGSTAB>
-    auto Calculate(SolverArgs<M> args, WRITE_POLICY_T write_policy = {}) const 
+    template<typename M, typename WRITE_POLICY_T = LastSaver, template<typename MAT_T> class EIGENSOLVER_T=Eigen::BiCGSTAB>
+    auto Calculate(SolverArgs<M> args, WRITE_POLICY_T save_policy = {}) const 
     {
       texprs::TExprExecutor exec(m_lhs); 
       EIGENSOLVER_T<texprs::MatrixStorage_t> iterative_solver; // Eigen sparse iterative solver
@@ -62,7 +64,7 @@ class ImplicitSolver
       {
         // outside steps before any type of linear algebra is performed... 
         std::apply(
-          [&](auto&... lam_args){ ((lam_args.template BeforeLinAlgebra<decltype(it),decltype(exec),decltype(m_rhs),OSteps::FDStep_Type::IMPLICIT>(it, args.domain_mesh_ptr, exec, m_rhs)), ...); }, 
+          [&](auto&... lam_args){ ((lam_args.template BeforeLinAlgebra<decltype(it),decltype(exec),decltype(m_rhs),OSteps::StepType::Implicit>(it, args.domain_mesh_ptr, exec, m_rhs)), ...); }, 
           m_ostep_tup
         ); 
 
@@ -92,14 +94,14 @@ class ImplicitSolver
 
         // outside steps matrix before step(Mat) 
         std::apply(
-          [&](const auto&... lam_args){ ((lam_args.template MatBeforeStep<OSteps::FDStep_Type::IMPLICIT>(t, args.domain_mesh_ptr, Mat)), ...); }, 
+          [&](const auto&... lam_args){ ((lam_args.template MatBeforeStep<OSteps::StepType::Implicit>(t, args.domain_mesh_ptr, Mat)), ...); }, 
           m_ostep_tup
         ); 
 
         Eigen::VectorXd rhs = std::move(exec.RhsVector()); 
         // outside steps solution before step (rhs) 
         std::apply(
-          [&](const auto&... lam_args){ ((lam_args.template SolBeforeStep<OSteps::FDStep_Type::IMPLICIT>(t, args.domain_mesh_ptr, rhs)), ...); }, 
+          [&](const auto&... lam_args){ ((lam_args.template SolBeforeStep<OSteps::StepType::Implicit>(t, args.domain_mesh_ptr, rhs)), ...); }, 
           m_ostep_tup
         ); 
 
@@ -110,27 +112,28 @@ class ImplicitSolver
         
         // ourside steps solution after step(next_sol) 
         std::apply(
-          [&](const auto&... lam_args){ ((lam_args.template SolAfterStep<OSteps::FDStep_Type::IMPLICIT>(t, args.domain_mesh_ptr, next_sol)), ...); }, 
+          [&](const auto&... lam_args){ ((lam_args.template SolAfterStep<OSteps::StepType::Implicit>(t, args.domain_mesh_ptr, next_sol)), ...); }, 
           m_ostep_tup
         ); 
 
         // give expiring solution to WRITE_POLICY_T
-        write_policy.SaveSolution(std::move(exec.ExpiringSol())); 
+        save_policy.saveSolution(std::move(exec.ExpiringSol())); 
 
         // push Solution, time to executor 
         exec.ConsumeSolution(next_sol);
         exec.ConsumeTime(t); 
       }    
 
-      // Write remaining solutions to write_policy 
-      for(auto i=0; i<exec.StoredSols().size()-1; i++) write_policy.SaveSolution( std::move(exec.StoredSols()[i])); 
+      // Write remaining solutions to save_policy 
+      for(auto i=0; i<exec.StoredSols().size()-1; i++) save_policy.saveSolution( std::move(exec.StoredSols()[i])); 
 
       // write policy also determines return type / how to handle last solution
-      return write_policy.ConsumeLastSolution(std::move( exec.MostRecentSol() )); 
-    } // end .CalculateImp(args, write_policy) 
+      return save_policy.saveLastSolution(std::move( exec.MostRecentSol() )); 
+    } // end .CalculateImp(args, save_policy) 
 
 }; 
 
-} // end namespace Solvers 
+  } // end namespace solvers
+} // end namespace fdm 
 
 #endif // ExplicitSolver.hpp 

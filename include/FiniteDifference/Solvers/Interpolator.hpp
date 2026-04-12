@@ -32,8 +32,8 @@ class Interpolator
       VecSaveWrite()=delete; 
       VecSaveWrite(std::vector<Eigen::VectorXd>& v_init) : m_vec(v_init){}; 
       VecSaveWrite(const VecSaveWrite& other) : m_vec(other.m_vec){}; 
-      void SaveSolution(Eigen::VectorXd&& sol) const { m_vec.emplace_back(sol); }; 
-      void ConsumeLastSolution(Eigen::VectorXd&& sol) const { m_vec.emplace_back(sol); }; 
+      void saveSolution(Eigen::VectorXd&& sol) const { m_vec.emplace_back(sol); }; 
+      void saveLastSolution(Eigen::VectorXd&& sol) const { m_vec.emplace_back(sol); }; 
     }; 
 
     // Member Data ------------------------------

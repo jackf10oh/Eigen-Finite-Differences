@@ -66,8 +66,8 @@ class Context
 template<typename C=traits::NA>
 auto make_time(double t1=0.0, double t2=0.0, std::shared_ptr<const C> c=nullptr){ return TimeContext(t1,t2,c); }; 
 
-template<typename M=traits::NA, typename X=traits::NA, typename R=traits::NA>
-auto make_context(std::shared_ptr<const M> m=nullptr, X* x=nullptr, R* r=nullptr){ return Context(m,x,r); }
+template<typename M=traits::NA, typename X=traits::NA, typename R=traits::NA, typename S=traits::NA>
+auto make_context(std::shared_ptr<const M> m=nullptr, X* x=nullptr, R* r=nullptr, S* s=nullptr){ return Context(m,x,r,s); }
 
   } // end namespace osteps 
 } // end namespace fdm 
