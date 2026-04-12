@@ -15,8 +15,7 @@
 #include<FiniteDifference/Utilities/PrintVec.hpp> 
 #include<FiniteDifference/Utilities/BumpFunc.hpp> 
 
-#include<FiniteDifference/Solvers/SolverArgs.hpp> 
-#include<FiniteDifference/Solvers/ExplicitSolver.hpp> 
+#include<FiniteDifference/Solvers/CrankNicolsonSolver.hpp> 
 
 using std::cout, std::endl;
 
@@ -29,7 +28,7 @@ int main()
 
   fdm::solvers::SolverArgs args{
     .mesh = make_Mesh1D(0.0,10.0,40), 
-    .times = make_Mesh1D(0.0, 4.0, 40)
+    .times = make_Mesh1D(0.0, 4.0, 8)
   }; 
 
   // Initial Conditions  
@@ -48,7 +47,8 @@ int main()
 
   // Solving ...
   // solvers::ExplicitSolver my_solver(Ut,expr,std::tie(bcs)); 
-  solvers::ImplicitSolver my_solver(Ut,expr,std::tie(bcs)); 
+  // solvers::ImplicitSolver my_solver(Ut,expr,std::tie(bcs)); 
+  solvers::CrankNicolsonSolver my_solver(Ut,expr,std::tie(bcs)); 
 
   // utils::print_vec(args.initialConditions[0],"ICs"); 
   // auto sol = my_solver.calculate(args, solvers::LastSaver{}); 

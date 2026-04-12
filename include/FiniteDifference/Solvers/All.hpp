@@ -8,6 +8,6 @@
 #include "SavePolicies.hpp"
 #include "ExplicitSolver.hpp" 
 #include "ImplicitSolver.hpp" 
-// #include "Interpolator.hpp"
+#include "CrankNicolsonSolver.hpp"
 
 // All.hpp (Solvers)

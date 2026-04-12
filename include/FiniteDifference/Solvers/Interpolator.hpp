@@ -1,8 +1,12 @@
 // Interpolator.hpp
 //
-// 
+// ! Update: haven't redone linear interpolation. 
+// this class hasn't been ported to the new interfaces yet
+// plan on moving linear interpolation being in fdm::utils  
 //
-// JAF 1/19/2026 
+// JAF 4/12/2026 
+
+/*
 
 #ifndef INTERPOLATOR_H
 #define INTERPOLATOR_H 
@@ -14,7 +18,8 @@
 
 #include "ImplicitSolver.hpp"
 
-namespace Solvers{ 
+namespace fdm{
+  namespace solvers{ 
 
 template<typename LHS_EXPR, 
           typename RHS_EXPR, 
@@ -202,10 +207,12 @@ class Interpolator
 
 }; 
 
-} // end namespace Solvers 
+  } // end namespace solvers
+} // end namespace fdm 
 
 #endif // Interpolator.hpp
 
+*/
 
 // Linear interpolation scratch work 
 
