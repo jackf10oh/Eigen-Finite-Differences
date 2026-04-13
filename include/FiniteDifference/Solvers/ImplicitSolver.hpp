@@ -25,6 +25,11 @@ namespace fdm{
 template<typename LhsExpression, typename RhsExpression, typename OutsideStepsTuple>
 class ImplicitSolver
 {
+  public:
+    // Type Defs -------------------------------------- 
+    using TExpr = LhsExpression; 
+    using Linop = RhsExpression; 
+    
   private:
     // Member Data -------------------------------------
     LhsExpression& m_lhs; // expression of time derivatives 
@@ -35,14 +40,23 @@ class ImplicitSolver
 
   public:
     // Constructors + Destructor ===========================
+
     ImplicitSolver()=delete; 
+
     ImplicitSolver(LhsExpression& l_init, RhsExpression& r_init, OutsideStepsTuple ostep_init)
       : m_lhs(l_init), m_rhs(r_init), m_osteps(ostep_init), m_max_iters(20)
     {}
+
+    // not copyable!
     ImplicitSolver(const ImplicitSolver& other)=delete; 
+
+    // moveable 
+    ImplicitSolver(ImplicitSolver&& other)=default; 
+
+    // destructor 
     ~ImplicitSolver()=default; 
 
-    // Member Functions 
+    // Member Functions ===========================================================
     void setMaxIterations(std::size_t i){ m_max_iters = i; } 
     auto getMaxIterations() const { return m_max_iters; } 
 

@@ -150,7 +150,7 @@ PYBIND11_MODULE(PyFds, m)
     .def("SetDamping", [](Wave2D& self, double d) -> Wave2D& 
       {self.set_damping(d); self.Reset(); return self;}, py::arg("d")=2.0, "Sets a new damping rate at boundaries of the mesh")
     .def("StoredData", &Wave2D::StoredData, "returns a vector of solutions. solutions are flattened in dimensional order")
-    .def("Compute", &Wave2D::FillVals, py::arg("max_iters")=20, "Computes solution at each entry in time. available in StoredData")
+    .def("Compute", &Wave2D::fillStoredSolutions, py::arg("max_iters")=20, "Computes solution at each entry in time. available in StoredData")
     .def("SolAt", [](Wave2D& self, double t, double x, double y){ return self.SolAt(t,x,y); }, py::arg("t"), py::arg("x"), py::arg("y"), "Returns value of solution at time t at coords (x,y)");    
 }
 

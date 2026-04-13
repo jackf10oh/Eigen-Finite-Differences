@@ -6,64 +6,70 @@
 //
 // JAF 4/12/2026 
 
-/*
-
-#ifndef INTERPOLATOR_H
-#define INTERPOLATOR_H 
+#ifndef SOLUTIONINTERPOLATOR_H
+#define SOLUTIONINTERPOLATOR_H 
 
 #include<memory>
 #include<vector>
 #include<utility> // std::pair
 #include<Eigen/Core>
+#include "../MeshXD.hpp"
+#include "../LinOps/LinOpTraits.hpp" 
+#include "../Utilities/LinearInterpolation.hpp"
 
 #include "ImplicitSolver.hpp"
 
 namespace fdm{
   namespace solvers{ 
 
-template<typename LHS_EXPR, 
-          typename RHS_EXPR, 
-          typename OSTEP_TUP, 
-          template<typename L,typename R, typename O> SOLVER_T = Solvers::ImplicitSolver, 
-          typename M = LinOps::SharedConstMesh1D
+template<
+  typename StoredSolver, 
+  typename M = std::conditional_t<fdm::linops::traits::is_1dim_linop_crtp<typename StoredSolver::LinOp>::value, const fdm::Mesh1D, const fdm::MeshXD>, 
+  typename C = std::vector<double>
 >
 class Interpolator
 {
   protected:
     // Type Defs ----------------------------- 
-    struct VecSaveWrite
+    struct BackInserterSaver
     {
       std::vector<Eigen::VectorXd>& m_vec; 
-      VecSaveWrite()=delete; 
-      VecSaveWrite(std::vector<Eigen::VectorXd>& v_init) : m_vec(v_init){}; 
-      VecSaveWrite(const VecSaveWrite& other) : m_vec(other.m_vec){}; 
-      void saveSolution(Eigen::VectorXd&& sol) const { m_vec.emplace_back(sol); }; 
-      void saveLastSolution(Eigen::VectorXd&& sol) const { m_vec.emplace_back(sol); }; 
+      BackInserterSaver()=delete; 
+      BackInserterSaver(std::vector<Eigen::VectorXd>& v_init) : m_vec(v_init){}; 
+      BackInserterSaver(const BackInserterSaver& other) : m_vec(other.m_vec){}; 
+      void saveSolution(const Eigen::VectorXd& sol){ m_vec.push_back(sol); }; 
+      void saveSolution(Eigen::VectorXd&& sol){ m_vec.push_back(std::move(sol)); }; 
+      void saveLastSolution(const Eigen::VectorXd& sol){ m_vec.push_back(sol); }; 
+      void saveLastSolution(Eigen::VectorXd&& sol){ m_vec.push_back(std::move(sol)); }; 
     }; 
 
     // Member Data ------------------------------
     std::vector<Eigen::VectorXd> m_data; 
-    SOLVER_T<LHS_EXPR, RHS_EXPR, OSTEP_TUP> m_solver; 
-    SolverArgs<M> m_args; 
-    std::shared_ptr<const LinOps::MeshXD> m_high_dim_mesh; 
+    StoredSolver m_solver; 
+    SolverArgs<M,C> m_args; 
+    fdm::SharedConstMeshXD m_high_dim_mesh; 
     bool m_calculated; 
 
   public: 
     // Constructors + Destructor ===================================
-    // default 
+
+    // no default 
     Interpolator()=delete; 
 
-    // from args 
-    Interpolator(LHS_EXPR& lhs, RHS_EXPR& rhs, OSTEP_TUP ostep_init, SolverArgs<M> args_init = {})
+    // from solver + args 
+    Interpolator(StoredSolver s, SolverArgs<M,C> args = {})
       : m_data(0), 
-      m_args(std::move(args_init)), 
-      m_high_dim_mesh(LinOps::make_MeshXD(m_args.domain_mesh_ptr)), 
-      m_solver(lhs,rhs,ostep_init), 
+      m_args(std::move(args)), 
+      m_high_dim_mesh(fdm::make_MeshXD(m_args.mesh)), 
+      m_solver(std::move(s)),
       m_calculated(false) 
     {}
 
-    // copy 
+    // not copyable! 
     Interpolator(const Interpolator& other)=delete; 
+
+    // moveable 
+    Interpolator(Interpolator&& other)=default; 
 
     // destructor 
     ~Interpolator()=default; 
@@ -86,59 +92,59 @@ class Interpolator
     }
     
     // ... with container of spatial coords
-    template<typename Cont_C>
-    double SolAt(double t, const Cont_C& coords){
+    template<typename Container>
+    double SolAt(double t, const Container& coords){
       // if m_data is empty... 
-      if(!m_calculated) FillVals(); 
+      if(!m_calculated) fillStoredSolutions(); 
 
-      // find index in m_args.time_mesh_ptr
-      auto time_interval_pair = get_interval(*m_args.time_mesh_ptr, t);
-      auto time_idx = std::distance(m_args.time_mesh_ptr->cbegin(), time_interval_pair.first); 
+      // find index in m_args.times
+      auto time_interval = fdm::utils::make_subinterval(t, m_args.times->cbegin(), m_args.times->cend());
+      auto offset = std::distance(m_args.times->cbegin(), time_interval.first); 
 
       // find left / right value in linear interpolation 
-      double val_01 =  LinearInterp(coords, m_data[time_idx]); 
-      double val_02 =  LinearInterp(coords, m_data[time_idx+1]);
+      double y1 =  interpolateSolution(coords, m_data[offset].cbegin(), m_data[offset].cend()); 
+      double y2 =  interpolateSolution(coords, m_data[offset+1].cbegin(), m_data[offset+1].cbegin());
       
       // linear interpolation (t-t1) * (y2 - y1) / (t2 - t1) 
-      return val_01 + (t - *time_interval_pair.first) * (val_02 - val_01) / (*time_interval_pair.second - *time_interval_pair.first); 
+      return y1 + (t - *time_interval.first) * (y2 - y1) / (*time_interval.second - *time_interval.first); 
     }
 
     // resets m_calculated to false. resize m_data
-    void Reset()
+    void clearStoredSolutions()
     {      
-      m_data.resize(0); 
-      m_high_dim_mesh = LinOps::make_MeshXD(m_args.domain_mesh_ptr); 
+      m_data.clear(); 
       m_calculated=false; 
     }
     
     // getters to m_args
-    const auto& Args() const { return m_args; }; 
+    const auto& getArgs() const { return m_args; }; 
 
     // getters to m_solver 
-    auto& Solver(){return m_solver;} // non const allows access to solvers internals. i.e. SetMaxIterations 
-    const auto& Solver() const {return m_solver;}
+    auto& getSolver(){return m_solver;} // non const allows access to solvers internals. i.e. SetMaxIterations 
+    const auto& getSolver() const {return m_solver;}
     
     // set m_args to a new input
-    void SetArgs(SolverArgs<M> args_switch)
+    void setArgs(SolverArgs<M,C> args_switch)
     {
       m_args = std::move(args_switch); 
-      Reset(); 
+      m_high_dim_mesh = fdm::make_MeshXD(m_args.mesh); 
+      clearStoredSolutions(); 
     }
 
     // Getters to m_data 
-    const auto& StoredData() const { return m_data; }; 
+    const auto& getStoredSolutions() const { return m_data; }; 
 
     // Populate m_data with solutions at each step in time 
-    void FillVals()
+    void fillStoredSolutions()
     {
       if(!m_calculated)
       {
         // resize + reserve data 
         m_data.resize(0); 
-        m_data.reserve(m_args.time_mesh_ptr->size());
+        m_data.reserve(m_args.times->size());
 
         // WritePolicy moves all solutions at each time step to m_data
-        m_solver.Calculate(m_args, VecSaveWrite(m_data)); 
+        m_solver.calculate(m_args, BackInserterSaver(m_data)); 
 
         // update status of interp 
         m_calculated = true; 
@@ -147,62 +153,41 @@ class Interpolator
 
   private:
     // Unreachable ----------------------------------------------------
-    template<typename Cont_C, typename Cont_V>
-    double LinearInterp(const Cont_C& coords, const Cont_V& v)
+    template<typename Container, typename Iterator>
+    double interpolateSolution(const Container& coords, Iterator start, Iterator stop)
     {
-      return LinearInterp_recursive_impl(coords, v, m_high_dim_mesh, coords.size()-1);
+      return LinearInterp_recursive_impl(coords, start, stop, m_high_dim_mesh, coords.size()-1);
     }; 
 
-    template<typename Cont_C, typename Cont_V>
+    template<typename Container, typename Iterator>
     double LinearInterp_recursive_impl(
-      const Cont_C& coords, 
-      const Cont_V& v, 
-      const std::shared_ptr<const LinOps::MeshXD>& m,
+      const Container& coords, 
+      Iterator start, 
+      Iterator stop,  
+      const std::shared_ptr<const fdm::MeshXD>& m,
       std::size_t ith_dim,
-      std::size_t cumulative_offset = 0
-    )
+      std::size_t cumulative_offset = 0)
     {
       const auto& sub_dim_m = m->getMesh1DSafe(ith_dim); 
-      auto bounding_interval = get_interval(*sub_dim_m, coords[ith_dim]);  
+      auto subinterval = fdm::utils::make_subinterval(coords[ith_dim], sub_dim_m->cbegin(), sub_dim_m->cend());  
 
-      if(ith_dim == 0)
-      {
-        std::size_t final_offset_01 = cumulative_offset + std::distance(sub_dim_m->cbegin(), bounding_interval.first); 
-        std::size_t final_offset_02 = final_offset_01 + 1; 
+      if(ith_dim == 0){
+        std::size_t final_offset = cumulative_offset + std::distance(sub_dim_m->cbegin(), subinterval.first); 
+        auto it = std::next(start, final_offset); 
+        double y1 = *it; ++it; 
+        double y2 = *it; 
         // result = y1 + (c-x1) * (y2-y1) / (x2-x1)
-        double result = v[final_offset_01] + (coords[ith_dim] - *bounding_interval.first) * (v[final_offset_02]-v[final_offset_01]) / (*bounding_interval.second - *bounding_interval.first);  
-        return result; 
+        return y1 + (y2-y1) * (coords[ith_dim] - *subinterval.first) / (*subinterval.second - *subinterval.first);  
       }
-      else
-      {
-        std::size_t stride_size = m->sizesMiddleProduct(0,ith_dim); 
-        std::size_t interval_start_idx = std::distance(sub_dim_m->cbegin(), bounding_interval.first); 
-        std::size_t offset_01 = cumulative_offset + stride_size * (interval_start_idx); 
-        std::size_t offset_02 = cumulative_offset + stride_size * (interval_start_idx+1); 
-
-        double endpoint_01 = LinearInterp_recursive_impl(coords, v, m, ith_dim-1, offset_01); 
-        double endpoint_02 = LinearInterp_recursive_impl(coords, v, m, ith_dim-1, offset_02);
-        
+      else{
+        std::size_t stride = m->sizesMiddleProduct(0,ith_dim); 
+        std::size_t idx = std::distance(sub_dim_m->cbegin(), subinterval.first); 
+        std::size_t next_offset = cumulative_offset + stride * (idx); 
+        double y1 = LinearInterp_recursive_impl(coords, start, stop, m, ith_dim-1, next_offset); 
+        double y2 = LinearInterp_recursive_impl(coords, start, stop, m, ith_dim-1, next_offset + stride);
         // result = y1 + (c-x1) * (y2-y1) / (x2-x1)
-        double result = endpoint_01 + (coords[ith_dim] - *bounding_interval.first) * (endpoint_02 - endpoint_01) / (*bounding_interval.second - *bounding_interval.first); 
-        return result; 
+        return y1 + (y2 - y1) * (coords[ith_dim] - *subinterval.first) / (*subinterval.second - *subinterval.first); 
       }
-    }; 
-
-    template<typename Cont>
-    auto get_interval(const Cont& v, double c)
-    {
-    // runtime checks 
-    if(v.size() < 2) throw std::runtime_error("size of v < 2"); 
-    if(c < v.cbegin()[0]) throw std::runtime_error("c < v[0]"); 
-
-    // right side a(i+1) 
-    auto after = std::lower_bound(v.cbegin(), v.cend(), c);
-    if(after == v.cend()) throw std::runtime_error("right bound == v.cend()"); 
-
-    // if a(i+1) == v[0] bump it by 1. 
-    auto before = (after==v.cbegin()) ? after++ : std::prev(after); 
-    return std::pair(before, after); 
     }; 
 
 }; 
@@ -212,10 +197,7 @@ class Interpolator
 
 #endif // Interpolator.hpp
 
-*/
-
 // Linear interpolation scratch work 
-
 
 // 1D Case: 
 
@@ -313,9 +295,9 @@ if this is an intermediate dimension
 // std::pair<double,double> val_pair_02 = LinearInterp_recursive_impl(coords, v, m, ith_dim-1, cumulative_offset_02);
 
 // // perform linear interpolation in this dimension to produce pair of values 
-// double val_01 = val_pair_01.first + (coords[ith_dim] - *internval_pair.first) * (val_pair_01.second-val_pair_01.first) / (*internval_pair.second-*internval_pair.first);
-// double val_02 = val_pair_02.first + (coords[ith_dim] - *internval_pair.first) * (val_pair_02.second-val_pair_02.first) / (*internval_pair.second-*internval_pair.first);
+// double y1 = val_pair_01.first + (coords[ith_dim] - *internval_pair.first) * (val_pair_01.second-val_pair_01.first) / (*internval_pair.second-*internval_pair.first);
+// double y2 = val_pair_02.first + (coords[ith_dim] - *internval_pair.first) * (val_pair_02.second-val_pair_02.first) / (*internval_pair.second-*internval_pair.first);
 
 // // return std::pair<double,double> 
-// return {val_01, val_02}; 
+// return {y1, y2}; 
 // }

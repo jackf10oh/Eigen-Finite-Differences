@@ -108,7 +108,7 @@ using HeatPDE = Concrete_PDE_1D<HeatPDE_impl>;
   pde.Args().time_dep_flag = false;
 
   pde.Reset(); 
-  pde.FillVals(); 
+  pde.fillStoredSolutions(); 
 
   print_mat(pde.StoredData(), "Solution"); 
 

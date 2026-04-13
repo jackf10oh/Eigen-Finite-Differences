@@ -26,6 +26,10 @@ namespace fdm{
 template<typename LhsExpression, typename RhsExpression, typename OutsideStepsTuple>
 class ExplicitSolver
 {
+  public:
+    // Type Defs -------------------------------------- 
+    using TExpr = LhsExpression; 
+    using Linop = RhsExpression; 
   private:
     // Member Data -------------------------------------
     LhsExpression& m_lhs; // expression of time derivatives 
@@ -42,9 +46,14 @@ class ExplicitSolver
       : m_lhs(l_init), m_rhs(r_init), m_osteps(ostep_init)
     {}
 
+    // not copyable! 
     ExplicitSolver(const ExplicitSolver& other)=delete; 
 
-    // Destructor 
+    // moveable
+    ExplicitSolver(ExplicitSolver&& other)=default;  
+
+
+    // destructor  
     ~ExplicitSolver()=default; 
 
     // Member Functions ======================================================

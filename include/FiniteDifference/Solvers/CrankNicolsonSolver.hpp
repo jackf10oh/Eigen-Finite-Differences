@@ -24,6 +24,11 @@ namespace fdm{
 template<typename LhsExpression, typename RhsExpression, typename OutsideStepsTuple>
 class CrankNicolsonSolver
 {
+  public:
+    // Type Defs -------------------------------------- 
+    using TExpr = LhsExpression; 
+    using Linop = RhsExpression; 
+    
   private:
     // Member Data -------------------------------------
     LhsExpression& m_lhs; // expression of time derivatives 
@@ -33,15 +38,24 @@ class CrankNicolsonSolver
     std::size_t m_max_iters; // max number of iterations between time steps for iterative linear solver. 
 
   public:
-    // Constructors + Destructor ===========================
+    // Constructors + Destructor ==============================================================
+
     CrankNicolsonSolver()=delete; 
+
     CrankNicolsonSolver(LhsExpression& l_init, RhsExpression& r_init, OutsideStepsTuple ostep_init)
       : m_lhs(l_init), m_rhs(r_init), m_osteps(ostep_init), m_max_iters(20)
     {}
+
+    // not copyable! 
     CrankNicolsonSolver(const CrankNicolsonSolver& other)=delete; 
+
+    // moveable 
+    CrankNicolsonSolver(CrankNicolsonSolver&& other)=default; 
+
+    // destructor 
     ~CrankNicolsonSolver()=default; 
 
-    // Member Functions 
+    // Member Functions ==============================================================
     void setMaxIterations(std::size_t i){ m_max_iters = i; } 
     auto getMaxIterations() const { return m_max_iters; } 
 

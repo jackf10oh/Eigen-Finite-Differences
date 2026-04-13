@@ -16,6 +16,7 @@
 #include<FiniteDifference/Utilities/BumpFunc.hpp> 
 
 #include<FiniteDifference/Solvers/CrankNicolsonSolver.hpp> 
+#include<FiniteDifference/Solvers/Interpolator.hpp> 
 
 using std::cout, std::endl;
 
@@ -50,11 +51,11 @@ int main()
   // solvers::ImplicitSolver my_solver(Ut,expr,std::tie(bcs)); 
   solvers::CrankNicolsonSolver my_solver(Ut,expr,std::tie(bcs)); 
 
-  // utils::print_vec(args.initialConditions[0],"ICs"); 
-  // auto sol = my_solver.calculate(args, solvers::LastSaver{}); 
-  // utils::print_vec(sol, "Sol"); 
+  utils::print_vec(args.initialConditions[0],"ICs"); 
+  auto sol = my_solver.calculate(args, solvers::LastSaver{}); 
+  utils::print_vec(sol, "Sol"); 
 
-  my_solver.calculate(args, solvers::PrintSaver{}); 
+  // my_solver.calculate(args, solvers::PrintSaver{}); 
   
   // auto time_taken = my_solver.calculate(args, solvers::TimerSaver{}); 
   // cout << "milliseconds: " << time_taken.count() << endl;  
@@ -63,5 +64,12 @@ int main()
   // double sum = 0; 
   // for(auto i=0; i<N; ++i) sum += my_solver.calculate(args, solvers::TimerSaver{}).count(); 
   // cout << "Average time: " << (sum/N) << " ms" << endl; 
+
+  solvers::Interpolator my_interp(std::move(my_solver), args); 
+  std::cout << "interp: ["; 
+  auto it = args.mesh->cbegin(); 
+  auto end = std::prev(args.mesh->cend()); 
+  for(; it!=end;++it) cout << my_interp.SolAt(4.0, *it) << ", "; 
+  cout << my_interp.SolAt(4.0, *it) << "]" << endl; ;
 
 };

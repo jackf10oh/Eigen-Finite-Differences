@@ -9,5 +9,6 @@
 #include "ExplicitSolver.hpp" 
 #include "ImplicitSolver.hpp" 
 #include "CrankNicolsonSolver.hpp"
+#include "Interpolator.hpp"
 
 // All.hpp (Solvers)
