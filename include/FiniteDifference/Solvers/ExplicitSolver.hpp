@@ -58,7 +58,7 @@ class ExplicitSolver
 
     // Member Functions ======================================================
     template<typename M, typename C, typename Pred = LastSaver>
-    auto calculate(SolverArgs<M,C> args, Pred save_policy = {}) const 
+    auto calculate(SolverArgs<M,C> args, Pred save_policy = {}) 
     {
       // setup time context 
       auto it = std::next(args.times->cbegin(), args.initialConditions.size()-1); 

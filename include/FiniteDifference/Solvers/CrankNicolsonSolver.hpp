@@ -20,8 +20,12 @@
 namespace fdm{
   namespace solvers{ 
 
-// template<typename LhsExpression, typename RhsExpression, typename OutsideStepsTuple>
-template<typename LhsExpression, typename RhsExpression, typename OutsideStepsTuple>
+template<
+  typename LhsExpression, 
+  typename RhsExpression, 
+  typename OutsideStepsTuple, 
+  class SparseIterativeSolver=Eigen::BiCGSTAB<fdm::Matrix>
+>
 class CrankNicolsonSolver
 {
   public:
@@ -34,17 +38,24 @@ class CrankNicolsonSolver
     LhsExpression& m_lhs; // expression of time derivatives 
     RhsExpression& m_rhs; // expression of spatial derivatives 
     using TupleCleaned = typename std::remove_reference<OutsideStepsTuple>::type; 
-    TupleCleaned m_osteps; // std::tuple<> of outside steps 
-    std::size_t m_max_iters; // max number of iterations between time steps for iterative linear solver. 
+    TupleCleaned m_osteps; // std::tuple<> of outside steps
+    std::unique_ptr<SparseIterativeSolver> m_iterative_solver;
 
   public:
     // Constructors + Destructor ==============================================================
 
     CrankNicolsonSolver()=delete; 
 
-    CrankNicolsonSolver(LhsExpression& l_init, RhsExpression& r_init, OutsideStepsTuple ostep_init)
-      : m_lhs(l_init), m_rhs(r_init), m_osteps(ostep_init), m_max_iters(20)
-    {}
+    CrankNicolsonSolver(
+      LhsExpression& l_init, 
+      RhsExpression& r_init, 
+      OutsideStepsTuple ostep_init, 
+      std::unique_ptr<SparseIterativeSolver> s_init = std::make_unique<SparseIterativeSolver>()
+    )
+      : m_lhs(l_init), m_rhs(r_init), m_osteps(ostep_init), m_iterative_solver(std::move(s_init))
+    {
+      static_assert(std::is_same_v<typename SparseIterativeSolver::MatrixType, fdm::Matrix>, "must use iterative solver on fmd::Matrix"); 
+    }
 
     // not copyable! 
     CrankNicolsonSolver(const CrankNicolsonSolver& other)=delete; 
@@ -56,15 +67,11 @@ class CrankNicolsonSolver
     ~CrankNicolsonSolver()=default; 
 
     // Member Functions ==============================================================
-    void setMaxIterations(std::size_t i){ m_max_iters = i; } 
-    auto getMaxIterations() const { return m_max_iters; } 
+    auto& getIterativeSolver(){ return *m_iterative_solver; }
+    const auto& getIterativeSolver() const { return *m_iterative_solver; }
 
-    template<typename M, typename C, typename Pred = LastSaver, template<typename Matrix> class SparseIterativeSolver=Eigen::BiCGSTAB>
-    auto calculate(
-      SolverArgs<M,C> args, 
-      Pred save_policy = {}, 
-      SparseIterativeSolver<fdm::Matrix> iterative_solver = {}
-    ) const 
+    template<typename M, typename C, typename Pred = LastSaver>
+    auto calculate(SolverArgs<M,C> args, Pred save_policy = {})  
     {
       // setup time context 
       auto it = std::next(args.times->cbegin(), args.initialConditions.size()-1); 
@@ -143,9 +150,8 @@ class CrankNicolsonSolver
         ); 
 
         // Implicit Step (I - D(t+1))*U(n+1) = rhs 
-        iterative_solver.setMaxIterations(m_max_iters); 
-        iterative_solver.compute(stencil); 
-        Eigen::VectorXd solution_u = iterative_solver.solveWithGuess(rhs_vector,rhs_vector);
+        m_iterative_solver->compute(stencil); 
+        solution_u = m_iterative_solver->solveWithGuess(rhs_vector,rhs_vector);
         
         // outside steps vector after step(next_sol) 
         std::apply(
@@ -171,8 +177,8 @@ class CrankNicolsonSolver
   
 }; 
 
-template<typename L, typename R, typename O>
-using CNSolver = CrankNicolsonSolver<L,R,O>; 
+template<typename L, typename R, typename O, class S=Eigen::BiCGSTAB<fdm::Matrix>>
+using CNSolver = CrankNicolsonSolver<L,R,O,S>; 
 
   } // end namespace solvers
 } // end namespace fdm 
