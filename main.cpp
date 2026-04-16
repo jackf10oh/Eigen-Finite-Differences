@@ -4,72 +4,79 @@
 //
 // JAF 12/8/2025
 
+#include<Traits.hpp> 
+#include<FiniteDifference/Mesh.hpp> 
+#define EIGEN_SPARSEMATRIXBASE_PLUGIN "EigenBasePlugin.hpp" 
+
 #include<cstdint>
 #include<iostream>
 #include<iomanip>
 #include<vector>
-#include<tuple>
-#include<Eigen/Dense>
-#include<FiniteDifference/All.hpp> 
+#include<memory>
+// #include<FiniteDifference/All.hpp> 
+// #include<FiniteDifference/Mesh.hpp> 
+// #include<Eigen/Dense>
+// #include<FiniteDifference/Utilities/PrintVec.hpp> 
+// #include<FiniteDifference/Utilities/BumpFunc.hpp> 
 
-#include<FiniteDifference/Utilities/PrintVec.hpp> 
-#include<FiniteDifference/Utilities/BumpFunc.hpp> 
-
-#include<FiniteDifference/Solvers/CrankNicolsonSolver.hpp> 
-#include<FiniteDifference/Solvers/Interpolator.hpp> 
-
-using std::cout, std::endl;
-
+#include<Eigen/SparseCore> // macro plugin takes effect. 
+#include<Foo.hpp> 
+  
 using namespace fdm; 
 
+using std::endl, std::cout; 
 int main()
 {
-  // iomanip 
-  std::cout << std::setprecision(3); 
 
-  fdm::solvers::SolverArgs args{
-    .mesh = make_Mesh1D(0.0,10.0,40), 
-    .times = make_Mesh1D(0.0, 4.0, 8)
-  }; 
+  fdm::Matrix A, B; 
+  A.resize(10,10); 
+  B.resize(10,10); 
 
-  // Initial Conditions  
-  utils::BumpFunc b{.L = 4.0, .R=6.0, .c=5.0,  .h=1.0}; 
-  auto v = make_Discretization(args.mesh, b).values(); 
-  args.initialConditions = { v }; 
 
-  // LHS in time 
-  auto Ut = texprs::NthTimeDeriv<1>{}; 
+  // // testing the plugin 
+  auto mesh = fdm::make_Mesh(); 
+  Foo my_linop; 
+  my_linop.resize(10,10); 
 
-  // RHS in space 
-  auto expr = 0.2 * linops::NthDerivOp<2>{} - 0.5 * linops::NthDerivOp<1>{}; 
+  auto messy = A + my_linop; 
+  messy.setMesh(mesh); 
+  messy.setTime(3.0); 
 
-  // Boundary Conditions 
-  auto bcs = osteps::BCPair(osteps::DirichletBC(0.0),osteps::DirichletBC(0.0)); 
+  cout << endl << "--------------------" << endl; 
+  cout << "messy's mesh is null? " << (messy.getMesh()==nullptr) << endl; 
+  cout << "A's mesh is null? " << (A.getMesh()==nullptr) << endl; 
+  cout << "my_linops's mesh is null? " << (my_linop.getMesh()==nullptr) << endl; 
+  cout << "rhs mesh is null? " << (messy.rhs().derived().getMesh()==nullptr) << endl; 
 
-  // Solving ...
-  // solvers::ExplicitSolver my_solver(Ut,expr,std::tie(bcs)); 
-  // solvers::ImplicitSolver my_solver(Ut,expr,std::tie(bcs)); 
-  solvers::CrankNicolsonSolver my_solver(Ut,expr,std::tie(bcs)); 
+  cout << endl << "--------------------" << endl; 
+  cout << "messy's time: " << messy.getTime() << endl; 
+  cout << "A's time: " << A.getTime() << endl; 
+  cout << "my_linop's time: " << my_linop.getTime() << endl; 
+  cout << "rhs time: " << messy.rhs().getTime() << endl; 
 
-  utils::print_vec(args.initialConditions[0],"ICs"); 
-  auto sol = my_solver.calculate(args, solvers::LastSaver{}); 
-  utils::print_vec(sol, "Sol"); 
+  cout << endl << "--------------------" << endl; 
+  cout << "messy is linop? " << traits::is_linop<decltype(messy)>::value << endl; 
+  cout << "A is linop? " << traits::is_linop<decltype(A)>::value << endl; 
+  cout << "my_linop is linop? " << traits::is_linop<decltype(my_linop)>::value << endl; 
 
-  // my_solver.calculate(args, solvers::PrintSaver{}); 
-  
-  // auto time_taken = my_solver.calculate(args, solvers::TimerSaver{}); 
-  // cout << "milliseconds: " << time_taken.count() << endl;  
+  // cout << "A storage: " <<
 
-  // std::size_t N = 40; 
-  // double sum = 0; 
-  // for(auto i=0; i<N; ++i) sum += my_solver.calculate(args, solvers::TimerSaver{}).count(); 
-  // cout << "Average time: " << (sum/N) << " ms" << endl; 
+  cout << endl << "--------------------" << endl; 
+  cout << "manual func ptr == " << (&Foo::setTime == &Foo::Base::setTime) << endl; 
+  cout << "decltype is time dep? " << traits::is_time_dep<decltype(my_linop)>::value << endl;
+  cout << "pure type is_time_dep? " << traits::is_time_dep<Foo>::value << endl; 
+  cout << "A is_time_dep? " << traits::is_time_dep<decltype(A)>::value << endl; 
+  cout << "messy is_time_dep? " << traits::is_time_dep<decltype(messy)>::value << endl; 
 
-  solvers::Interpolator my_interp(std::move(my_solver), args); 
-  std::cout << "interp: ["; 
-  auto it = args.mesh->cbegin(); 
-  auto end = std::prev(args.mesh->cend()); 
-  for(; it!=end;++it) cout << my_interp.SolAt(4.0, *it) << ", "; 
-  cout << my_interp.SolAt(4.0, *it) << "]" << endl; ;
+  // cout << "pure type is linop? " << traits::is_linop<Foo>::value << endl; 
 
+
+  // // const auto& left = messy.lhs(); 
+  // auto& left = messy.lhs().const_cast_derived(); 
+
+  // // left.setMesh(mesh); 
+
+  // cout << endl << "--------------------" << endl; 
+  // cout << "messy::RhsNested is lval? " << std::is_lvalue_reference<decltype(messy)::RhsNested>::value << endl; 
+  // cout << "messy::RhsNested is const? " << std::is_const<decltype(messy)::RhsNested>::value << endl; 
 };
