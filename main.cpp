@@ -16,9 +16,13 @@
 #include<FiniteDifference/All.hpp> 
 #include<FiniteDifference/Utilities/PrintVec.hpp> 
 #include<Eigen/Dense>
+#include<Eigen/Core>
 #include<Eigen/SparseCore> // macro plugin takes effect. 
 
 #include<FiniteDifference/Diffops/NodeSelector.hpp>
+#include<FiniteDifference/Diffops/CoordinateSelector.hpp> 
+#include<FiniteDifference/Diffops/PartialDerivBase.hpp> 
+#include<FiniteDifference/Diffops/NthPartialDeriv.hpp> 
   
 using namespace fdm; 
 
@@ -26,50 +30,41 @@ using std::endl, std::cout;
 
 int main()
 {
-  auto my_mesh = make_Mesh1D(0.0,10.0,11); 
+  auto my_mesh = fdm::make_Mesh(1); 
+  my_mesh->getAxis(0) = Eigen::VectorXd::LinSpaced(11,0.0,10.0); 
+  // utils::print_vec(my_mesh->getAxis(0)); 
 
-  linops::NthDerivOp<1> my_deriv;
+  linops::NthPartialDeriv<5,0> my_deriv; 
   my_deriv.setMesh(my_mesh); 
+  cout << my_deriv.m_stencil << endl; 
 
-  fdm::CSRMatrix A = my_deriv.asMatrix(); 
-  cout << A << endl; 
+  // cout << "nnz: " << fdm::linops::internal::NodeSelector<2>::sumNodesPerRow(my_mesh->getAxis(0)) << endl; ; 
+  // for(auto row_idx=0; row_idx<11; ++row_idx){
+  //   fdm::linops::internal::NodeSelector<2> nodes(my_mesh->getAxis(0), row_idx);
+  //   cout << "row " << row_idx << ": " << nodes.nonZerosOffset << endl;  
+  // }
 
-  cout << "nnz A: " << A.nonZeros() << " estimate: " << linops::internal::NodeSelector<2>::sumNodesPerRow(*my_mesh) << endl; 
-
-  for(auto i=0; i<A.rows(); i++){
-    auto start = A.outerIndexPtr()[i];
-    auto end = A.outerIndexPtr()[i+1];
-    cout << "row " << i <<": " << (end-start) << "idxs: ";  
-    for(auto j=start; j<end; ++j){
-      cout << A.innerIndexPtr()[j] << ", "; 
-    }
-    cout << "\n";
-    
-    linops::internal::NodeSelector<2> test_selector(*my_mesh, i); 
-    cout << test_selector.numNodesUsed << " idxs: "; 
-    for(auto j=0; j<test_selector.numNodesUsed; ++j){
-      cout << test_selector.nodeIndices[j] << ", "; 
-    }
-    cout << "\n"; 
-  }
-
-  bool success = true; 
-  if(A.nonZeros() != linops::internal::NodeSelector<2>::sumNodesPerRow(*my_mesh)) success = false;
-
-  for(auto i=0; i<A.rows(); i++){
-    linops::internal::NodeSelector<2> test_selector(*my_mesh, i); 
-    auto start = A.outerIndexPtr()[i];
-    auto end = A.outerIndexPtr()[i+1];
-    for(auto j=start; j<end; ++j){
-      if(A.innerIndexPtr()[j] != test_selector.nodeIndices[j-start]) success = false;  
-    }
-    if((end - start) != test_selector.numNodesUsed) success = false; 
-  }
-
-  cout << "everything looks good? " << success << endl; 
-
-
+  // fdm::utils::FornArrayCalc<5,2> my_calc; 
+  // const auto& ax = my_mesh->getAxis(0); 
+  // my_calc.calculate(0.0, ax.cbegin(), ax.cbegin()+3); 
+  // fdm::utils::print_vec(my_calc.getArray(), "weights"); 
 };
+
+
+// using MyArray = Eigen::Matrix<fdm::Scalar, 1, Eigen::Dynamic>; 
+// MyArray weights(10); 
+// weights << 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0;
+
+// Eigen::Map<MyArray> map(weights.data(), 5); 
+// cout << map << endl; 
+
+// Eigen::Map<MyArray> map2(weights.data()+5, 5); 
+// cout << map2 << endl; 
+
+// using Mapped = Eigen::Map<Eigen::Matrix<fdm::Scalar, 1, Eigen::Dynamic>>;
+// Mapped(weights.data(), 5) = Mapped(weights.data()+5, 5); 
+// cout << weights << endl;  
+
 
 // Future interfaces inside of diffops 
 

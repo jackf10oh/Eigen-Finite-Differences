@@ -11,6 +11,7 @@
 #include<vector> // std::vector
 #include<memory> // std::shared_ptr
 #include<Eigen/Core> // Eigen::VectorXd 
+#include<iostream> // TODO remove this 
 // #include "LinOps/LinOpTraits.hpp"
 
 namespace fdm {
@@ -44,9 +45,12 @@ class Mesh : public std::enable_shared_from_this<Mesh>
     // default
     Mesh()=default;
 
+    // from number of axes. stops shared_ptr from initializing to nullptr. 
+    Mesh(std::size_t dims) : m_mesh_vec(dims){ for(auto& ax:m_mesh_vec) ax = std::make_shared<Eigen::VectorXd>(); } 
+
     // forward args to std::vector
-    template<typename... Args>
-    Mesh(Args... args) : m_mesh_vec(args...){}; 
+    template<typename... Args,   typename = std::enable_if_t<!(sizeof...(Args) == 1 && (std::is_integral_v<std::decay_t<Args>> && ...))>>
+    Mesh(Args... args) : m_mesh_vec(args...){std::cout << "variadic mesh constructor called" << std::endl; }  
 
     // Copy 
     Mesh(const Mesh& other)=default; 

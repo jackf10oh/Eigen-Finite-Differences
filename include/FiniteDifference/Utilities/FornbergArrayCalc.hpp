@@ -24,9 +24,10 @@ class FornArrayCalc
   public:
     // Member Data ----------------------------------------------------------
     static constexpr std::size_t order = N;                // maximum order of derivative stencil  
-    static constexpr std::size_t numNodes = M;              // number of nodes to use in approximation
+    static constexpr std::size_t numNodesMax = M;              // number of nodes to use in approximation
   private:
     std::array<double, M*(N+1)> m_arr;          // single allocation of memory rows*cols big 
+    std::size_t m_nodes_used; // stores how many nodes were actually used in the algorithm
   public:
     // Constructors + Destructor =========================================================
     FornArrayCalc(){ static_assert(M+1 >= N, "FornbergArrayCalc requires NUM_NODES + 1 >= ORDER"); };
@@ -37,18 +38,21 @@ class FornArrayCalc
     // Member Funcs ======================================================================================
     
     // Const getter to stored weights 
-    const auto& getArray() const { return m_arr; };  
+    const auto& getArray() const { return m_arr; }
+    auto getNumNodesUsed() const { return m_nodes_used; }  
 
     // Updates m_arr to contain weights up to order n
     template<typename Input_Iter>
     void calculate(double x_bar, Input_Iter start, Input_Iter end)
     {
-      // make sure distance(start,end) == numNodes 
-      if(std::distance(start,end) != numNodes) throw std::runtime_error("FornbergArrayCalc error: distance(start,end) != numNodes");  
+      // make sure distance(start,end) <= numNodesMax 
+      auto d = std::distance(start,end); 
+      if(d > numNodesMax) throw std::runtime_error("FornbergArrayCalc error: distance(start,end) > numNodesMax");  
+      m_nodes_used = d; 
 
       // utility lambdas convert (i,j) -> index in flattened m_arr 
-      auto entryRef = [this](std::size_t i, std::size_t j)->double& { return this->m_arr[i*numNodes+j];}; 
-      auto nodeRef = [&start](std::size_t i)-> const double& {return *std::next(start,i); };
+      auto entryRef = [this](std::size_t i, std::size_t j)->double& { return this->m_arr[i*m_nodes_used+j];}; 
+      auto nodeRef = [&start](std::size_t i)-> double {return *std::next(start,i); };
       
       // zero all stored entries
       for(auto& entry : m_arr) entry=0.0; 
@@ -57,7 +61,7 @@ class FornArrayCalc
       entryRef(0,0) = 1; 
 
       // if using >= 2 nodes 
-      if constexpr(numNodes >= 2)
+      if(m_nodes_used >= 2)
       {
         // update first row according to legrend polynomials by hand  
         entryRef(0,0) = (x_bar - nodeRef(1)) / (nodeRef(0) - nodeRef(1)); 
@@ -67,17 +71,17 @@ class FornArrayCalc
         entryRef(1,0) = (1 / (nodeRef(0) - nodeRef(1)));
         entryRef(1,1) = (1 / (nodeRef(1) - nodeRef(0)));
       }
-
-      // c1 holds old c2 for next loop
-      double c1 = (nodeRef(1)-nodeRef(0))*(nodeRef(1)-nodeRef(0)); 
-      // c2 will hold an accumulation of (node[n]-node[0]) * ... * (node[n]-node[n-1])
-      double c2; 
-      // c3 holds the difference (nodes[new]-nodes[old])
-      double c3; 
     
       // for number of nodes n=3, ..., N (first node was zero index)
-      if constexpr(numNodes >= 3){
-        for(std::size_t n=2; n < numNodes; n++)
+      if(m_nodes_used >= 3){
+        // c1 holds old c2 for next loop
+        double c1 = (nodeRef(1)-nodeRef(0))*(nodeRef(1)-nodeRef(0)); 
+        // c2 will hold an accumulation of (node[n]-node[0]) * ... * (node[n]-node[n-1])
+        double c2; 
+        // c3 holds the difference (nodes[new]-nodes[old])
+        double c3; 
+
+        for(std::size_t n=2; n < m_nodes_used; n++)
         {
           // c1 *= (x_bar-nodes[n-1]);
           // reset c5. it depends on node[n]

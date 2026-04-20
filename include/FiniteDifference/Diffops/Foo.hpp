@@ -6,13 +6,22 @@
 
 struct Foo; 
 
+namespace fdm{
+  namespace internal{ 
+
+template<>
+struct traits_impl<Foo> : traits_impl<fdm::RowMajorMatrix>{}; 
+
+  }
+}
+
+
 namespace Eigen{
-using FdmMatrix = Eigen::SparseMatrix<double, Eigen::RowMajor>; 
 
 namespace internal{
 
 template<>
-struct traits<Foo> : public traits<FdmMatrix>{};
+struct traits<Foo> : public traits<fdm::RowMajorMatrix>{};
 
 } // namespace internal
 }// namespace Eigen 
@@ -81,7 +90,7 @@ class Foo : public Eigen::SparseCompressedBase<Foo>
 
   private:
     // member data -----------------------------------
-    Eigen::FdmMatrix m_mat; 
+    fdm::RowMajorMatrix m_mat; 
     std::weak_ptr<const fdm::Mesh> m_mesh_ptr; 
     double m_time; 
 
@@ -92,9 +101,9 @@ namespace internal{
 
 template<>
 struct evaluator< Foo >
-  : evaluator< FdmMatrix >
+  : evaluator< fdm::RowMajorMatrix >
 {
-  typedef evaluator< FdmMatrix  > Base;
+  typedef evaluator< fdm::RowMajorMatrix  > Base;
   evaluator() : Base() {}
   explicit evaluator(const Foo &f) : Base(f.m_mat) {}
 };
