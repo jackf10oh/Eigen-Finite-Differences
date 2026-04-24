@@ -1,11 +1,11 @@
 // Traits.hpp
 //
-//
+// traits used by all subdirectory of fdm library 
 //
 // JAF 4/14/2026 
 
-#ifndef FDMTRAITS_H
-#define FDMTRAITS_H
+#ifndef FDM_TRAITS_H
+#define FDM_TRAITS_H
 
 #include<cstdint>
 #include<string>
@@ -19,99 +19,102 @@
 #include<Eigen/src/SparseCore/SparseUtil.h> // forward declares SparseMatrix<...> 
 #include<Eigen/src/SparseCore/CompressedStorage.h>
 #include<Eigen/src/SparseCore/SparseCompressedBase.h>
-// class CompressedStorage; 
-
 // #include<Eigen/SparseCore> can't include before plugin macro takes effect! 
+#include "Types.hpp"
 
 namespace fdm{ 
-// forward declare ------ 
-class Mesh; 
-
-// helpful aliases ------
-using Scalar = double; // might use this more consistently in the future... 
-using RowMajorMatrix = Eigen::SparseMatrix<Scalar, Eigen::RowMajor>;
-using CSRMatrix = RowMajorMatrix; // Column Sparse Row (CSR) Matrix
-using StridedRef = typename Eigen::Ref<Eigen::VectorXd, 0, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>; 
-using Stride =  Eigen::Stride<0,Eigen::Dynamic>; 
-using StrideView =  Eigen::Map<Eigen::VectorXd, Eigen::Unaligned, Stride>;
-
 namespace internal{
 
-// template trait to detect if T<> and U<> are the same templates 
+// template trait to detect if T<> and U<> are the same templates -------------
 template<template<typename...> class T, template<typename...> class U>
 struct is_same_template : std::false_type{}; 
 
 template<template<typename...> class T>
 struct is_same_template<T,T> : std::true_type{}; 
 
-template<class T>
-struct traits_impl{}; 
-
-// standard tratis of any SparseMatrix type ------------------------------- 
-template<typename _Scalar, int _Options, typename _StorageIndex>
-struct traits_impl< Eigen::SparseMatrix<_Scalar, _Options, _StorageIndex> >
+// traits around a callable F ----------------------------------------------
+template<typename F>
+class callable_traits
 {
-  static constexpr bool is_linop = true; 
-  static constexpr bool is_unarop = false; 
-  static constexpr bool is_binop = false; 
-  static constexpr bool is_ternop = false; 
-  static constexpr std::size_t max_num_args_called = 0; 
-  static constexpr bool is_timedep = false; 
-  static constexpr int direction = -1; 
-  static constexpr std::size_t maxOrder = 0; 
-}; 
+  private: 
+  // get return type of callable type G invoked on N scalars 
+  template<typename G, std::size_t numScalars, typename... Args> 
+  struct result_traits
+  {
+    using result_type = typename result_traits<G,numScalars-1, fdm::Scalar, Args...>::result_type; 
+  }; 
 
-// standard traits for derived from Eigen::SparseMatrixBase or SparseCompressedBase ------------------------------------
-template<class Derived>
-struct traits_impl< Eigen::SparseMatrixBase<Derived> > : traits_impl< std::decay_t<Derived> >{}; 
+  template<typename G, typename... Args> 
+  struct result_traits<G,0,Args...>
+  {
+    using result_type = typename std::invoke_result<G,Args...>::type; 
+  }; 
 
-template<class Derived>
-struct traits_impl< Eigen::SparseCompressedBase<Derived> > : traits_impl< std::decay_t<Derived> >{}; 
+  // ---------------------------------------------------------------
+  // test if callable type G can be invoked on N scalars up to max_n_args
+  static constexpr std::size_t numScalarsMax = 20; 
+  template<typename G, std::size_t numScalars=numScalarsMax, typename... Args> //  typename = std::enable_if<N!= std::size_t{-1}> 
+  struct arg_traits
+  {
+    constexpr static bool is_callable = std::is_invocable<G,Args...>::value;
 
-// traits of a  Binary Expression ------------------------------------
-template<class Op, class L, class R>
-struct traits_impl< Eigen::CwiseBinaryOp<Op,L,R> >
-{
-  static constexpr bool is_linop = true; 
-  static constexpr bool is_unarop = false; 
-  static constexpr bool is_binop = true; 
-  static constexpr bool is_ternop = false; 
-  static constexpr std::size_t max_num_args_called = std::max( traits_impl<std::decay_t<L>>::max_num_args_called, traits_impl<std::decay_t<R>>::max_num_args_called); // records maximum number of dims L/R needs to execute its callable 
-  static constexpr bool is_timedep = ( traits_impl<std::decay_t<L>>::is_timedep || traits_impl<std::decay_t<R>>::is_timedep); // if either L/R is timedep the xpr is time dep 
-  static constexpr int direction = -1; // by default mixing operators direction falls back to eigen... 
-  static constexpr std::size_t maxOrder = std::max(traits_impl<L>::maxOrder,traits_impl<R>::maxOrder); // highest order of derivative in the expression 
-}; 
+    constexpr static std::size_t num_args(){ 
+      if constexpr (is_callable){
+        return sizeof...(Args); 
+      }
+      else{
+        return arg_traits<G,numScalars-1,fdm::Scalar, Args...>::num_args(); 
+      }
+    }
+    
+    using result_type = typename result_traits<G,num_args()>::result_type; 
+  }; 
 
-// Products are similar ----- 
-template<class L, class R, int Options>
-struct traits_impl< Eigen::Product<L,R,Options> >
-{
-  static constexpr bool is_linop = true; 
-  static constexpr bool is_unarop = false; 
-  static constexpr bool is_binop = true; 
-  static constexpr bool is_ternop = false; 
-  static constexpr std::size_t max_num_args_called = std::max( traits_impl<std::decay_t<L>>::max_num_args_called, traits_impl<std::decay_t<R>>::max_num_args_called); // records maximum number of dims L/R needs to execute its callable 
-  static constexpr bool is_timedep = ( traits_impl<std::decay_t<L>>::is_timedep || traits_impl<std::decay_t<R>>::is_timedep); // if either L/R is timedep the xpr is time dep 
-  static constexpr int direction = -1; // by default mixing operators results in undefined direction... 
-  static constexpr std::size_t maxOrder = std::max(traits_impl<L>::maxOrder,traits_impl<R>::maxOrder); // highest order of derivative in the expression 
-}; 
+  // terminating case 
+  template<typename G, typename... Args> //  typename = std::enable_if<N!= std::size_t{-1}> 
+  struct arg_traits<G,0,Args...>
+  {
+    constexpr static bool is_callable = std::is_invocable<G,Args...>::value; 
 
-// traits of Unary Expressions --------------------------------- 
-template<class Op, class T>
-struct traits_impl< Eigen::CwiseUnaryOp<Op, T> >
-{
-  static constexpr bool is_linop = true; 
-  static constexpr bool is_unarop = true; 
-  static constexpr bool is_binop = false; 
-  static constexpr bool is_ternop = false; 
-  static constexpr std::size_t max_num_args_called = traits_impl<std::decay_t<T>>::max_num_args_called; 
-  static constexpr bool is_timedep = traits_impl<std::decay_t<T>>::is_timedep; // if either L/R is timedep the xpr is time dep 
-  static constexpr int direction = traits_impl<std::decay_t<T>>::direction; // by default mixing operators results in undefined direction... 
-  static constexpr std::size_t maxOrder = traits_impl<std::decay_t<T>>::maxOrder; // highest order of derivative in the expression 
-}; 
+    constexpr static std::size_t num_args(){ 
+      if constexpr (is_callable){
+        return sizeof...(Args); 
+      }
+      else{
+        static_assert(false, "maximum length of args reached"); 
+      }
+    } 
 
-template<class T>
-using traits = traits_impl<std::remove_reference_t<std::remove_cv_t<T>>>; 
+    using result_type = typename result_traits<F,num_args()>::result_type; 
+  }; 
+
+  // --------------------------------------------------------------------- 
+  // Given a callable G, return a new type F that has constructor F( G g, Scalar x0)
+  // with an operator() that accepts # args == # args in G - 1.
+  // the result is f(x1,...,xn) = g(x0,x1,...,xn) 
+
+  template<std::size_t numScalars, typename G, typename... Args> 
+  struct BindFirst_impl : public BindFirst_impl<numScalars-1,G,fdm::Scalar,Args...>
+  {
+    using Base = BindFirst_impl<numScalars-1,G,fdm::Scalar,Args...>; 
+    BindFirst_impl(G g, fdm::Scalar t): Base(g,t) {}; 
+    using BindFirst_impl<numScalars-1,G,fdm::Scalar, Args...>::operator(); 
+  }; 
+
+  template<typename G, typename... Args> 
+  struct BindFirst_impl<0,G,Args...>
+  {
+    const G func; 
+    fdm::Scalar captured; 
+    BindFirst_impl(G g, fdm::Scalar x0): func(g), captured(x0) {}; 
+    fdm::Scalar operator()(Args... args){return func(captured,args...); }; 
+  }; 
+
+  public:
+  constexpr static std::size_t num_args = arg_traits<F>::num_args(); 
+  using result_type = typename result_traits<F, num_args>::result_type; 
+  using BindFirst = std::conditional_t<num_args, BindFirst_impl<num_args-1, F>, void>;
+}; // end callable_traits
 
 } // end namespace internal 
 } // end namespace fdm

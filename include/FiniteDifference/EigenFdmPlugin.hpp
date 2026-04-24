@@ -14,14 +14,14 @@ public:
 void setMesh(const std::shared_ptr<const fdm::Mesh>& m) 
 {
   // TODO ternary operators? 
-  if constexpr(fdm::internal::traits<Derived>::is_binop){
+  if constexpr(fdm::linops::internal::traits<Derived>::is_binop){
     // binary expressions hook lhs/rhs
     std::cout <<"binop SetMesh! "; 
-    if constexpr(fdm::internal::traits<typename Derived::Lhs>::is_linop){
+    if constexpr(fdm::linops::internal::traits<typename Derived::Lhs>::is_linop){
       std::cout <<"L hooked, "; 
       derived().lhs().const_cast_derived().setMesh(m);      
     }
-    if constexpr(fdm::internal::traits<typename Derived::Rhs>::is_linop){
+    if constexpr(fdm::linops::internal::traits<typename Derived::Rhs>::is_linop){
       std::cout <<"R Hooked" << std::endl;
       std::cout << "RHS type: " << typeid(decltype(derived().rhs())).name() << std::endl; 
       std::cout << "RHS  const cast type: " << typeid(decltype(derived().rhs().const_cast_derived())).name() << std::endl; 
@@ -29,10 +29,10 @@ void setMesh(const std::shared_ptr<const fdm::Mesh>& m)
     }
     std::cout << std::endl;
   }
-  else if constexpr(fdm::internal::traits<Derived>::is_unarop){
+  else if constexpr(fdm::linops::internal::traits<Derived>::is_unarop){
     // unary expressions hook nestedExpression 
     std::cout <<"unarop SetMesh!"; 
-    if constexpr(fdm::internal::traits<typename Derived::XprTypeNested>::is_linop){
+    if constexpr(fdm::linops::internal::traits<typename Derived::XprTypeNested>::is_linop){
       std::cout << "nested hooked"; 
       derived().nestedExpression().const_cast_derived().setMesh(m); 
     }
@@ -48,10 +48,10 @@ void setMesh(const std::shared_ptr<const fdm::Mesh>& m)
 std::shared_ptr<const fdm::Mesh> getMesh() const 
 {
   // TODO ternary operators? 
-  if constexpr(fdm::internal::traits<Derived>::is_binop){
+  if constexpr(fdm::linops::internal::traits<Derived>::is_binop){
     // binary expressions hook lhs/rhs
-    constexpr bool left_returns = fdm::internal::traits<typename Derived::Lhs>::is_linop; 
-    constexpr bool right_returns = fdm::internal::traits<typename Derived::Rhs>::is_linop; 
+    constexpr bool left_returns = fdm::linops::internal::traits<typename Derived::Lhs>::is_linop; 
+    constexpr bool right_returns = fdm::linops::internal::traits<typename Derived::Rhs>::is_linop; 
     if constexpr(left_returns && right_returns){
       auto result = derived().lhs().derived().getMesh(); 
       return (result != nullptr) ? result : derived().rhs().derived().getMesh();  
@@ -66,9 +66,9 @@ std::shared_ptr<const fdm::Mesh> getMesh() const
       return nullptr; 
     }
   }
-  else if constexpr(fdm::internal::traits<Derived>::is_unarop){
+  else if constexpr(fdm::linops::internal::traits<Derived>::is_unarop){
     // unary expressions hook nestedExpression 
-    if constexpr(fdm::internal::traits<typename Derived::XprTypeNested>::is_linop){
+    if constexpr(fdm::linops::internal::traits<typename Derived::XprTypeNested>::is_linop){
       return derived().nestedExpression().derived().getMesh(); 
     }
     else{
@@ -84,18 +84,18 @@ std::shared_ptr<const fdm::Mesh> getMesh() const
 void setTime(double t)
 {
   // TODO ternary operators? 
-  if constexpr(fdm::internal::traits<Derived>::is_binop){
+  if constexpr(fdm::linops::internal::traits<Derived>::is_binop){
     // binary expressions hook lhs/rhs
-    if constexpr(fdm::internal::traits<typename Derived::Lhs>::is_linop){
+    if constexpr(fdm::linops::internal::traits<typename Derived::Lhs>::is_linop){
       derived().lhs().const_cast_derived().setTime(t);      
     }
-    if constexpr(fdm::internal::traits<typename Derived::Rhs>::is_linop){
+    if constexpr(fdm::linops::internal::traits<typename Derived::Rhs>::is_linop){
       derived().rhs().const_cast_derived().setTime(t);      
     }       
   }
-  else if constexpr(fdm::internal::traits<Derived>::is_unarop){
+  else if constexpr(fdm::linops::internal::traits<Derived>::is_unarop){
     // unary expressions hook nestedExpression 
-    if constexpr(fdm::internal::traits<typename Derived::XprTypeNested>::is_unarop){
+    if constexpr(fdm::linops::internal::traits<typename Derived::XprTypeNested>::is_unarop){
       derived().nestedExpression().const_cast_derived().setTime(t);      
     }
   }
@@ -105,10 +105,10 @@ void setTime(double t)
 double getTime() const 
 {
   // TODO ternary operators? 
-  if constexpr(fdm::internal::traits<Derived>::is_binop){
+  if constexpr(fdm::linops::internal::traits<Derived>::is_binop){
     // binary expressions hook lhs/rhs
-    constexpr bool left_returns = fdm::internal::traits<typename Derived::Lhs>::is_linop; 
-    constexpr bool right_returns = fdm::internal::traits<typename Derived::Rhs>::is_linop; 
+    constexpr bool left_returns = fdm::linops::internal::traits<typename Derived::Lhs>::is_linop; 
+    constexpr bool right_returns = fdm::linops::internal::traits<typename Derived::Rhs>::is_linop; 
     if constexpr(left_returns && right_returns){
       auto result = derived().lhs().derived().getTime(); 
       return (result != -1.0) ? result : derived().rhs().derived().getTime();  
@@ -123,9 +123,9 @@ double getTime() const
       return -1.0; 
     }
   }
-  else if constexpr(fdm::internal::traits<Derived>::is_unarop){
+  else if constexpr(fdm::linops::internal::traits<Derived>::is_unarop){
     // unary expressions hook nestedExpression 
-    if constexpr(fdm::internal::traits<typename Derived::XprTypeNested>::is_linop){
+    if constexpr(fdm::linops::internal::traits<typename Derived::XprTypeNested>::is_linop){
       return derived().nestedExpression().derived().getTime(); 
     }
     else{

@@ -7,18 +7,40 @@
 #ifndef NTHPARTIALDERIV_H
 #define NTHPARTIALDERIV_H
 
+#include "EvaluatorBase.hpp"
+#include "../Traits.hpp"
+
 namespace fdm{
 namespace linops{
 
-// Forward Declaration ------------------------------------------------- 
+  // Forward Declaration ------------------------------------------------- 
 template<std::size_t nthOrder, int direction>
 class NthPartialDeriv; 
 
-} // end namespace linops 
-
 namespace internal{
 
-// Traits ------------------------------------------------------------
+// NodeSelector 
+template<std::size_t _nthOrder, int _direction>
+struct NodeSelector<fdm::linops::NthPartialDeriv<_nthOrder,_direction>>
+{
+  template<std::size_t numNodesMin>
+  using type = fdm::linops::internal::CoreNodeSelector<numNodesMin>; 
+}; 
+
+// Evaluator  
+template<std::size_t _nthOrder, int _direction>
+struct Evaluator<fdm::linops::NthPartialDeriv<_nthOrder,_direction>> : public EvaluatorBase< fdm::linops::NthPartialDeriv<_nthOrder,_direction> >
+{
+  Evaluator(const fdm::linops::NthPartialDeriv<_nthOrder,_direction>& xpr){}
+  template<std::size_t N>
+  auto evaluateWeightsAndCoords(const fdm::Scalar* weights, std::size_t weights_per_order, const fdm::linops::Coordinate<N>& coords) const 
+  {
+    return Eigen::Map<const Eigen::Matrix<fdm::Scalar, Eigen::Dynamic, 1>>(weights + weights_per_order * _nthOrder, weights_per_order); 
+  }
+}; 
+
+
+// Traits
 template<std::size_t _nthOrder, int _direction>
 struct traits_impl<fdm::linops::NthPartialDeriv<_nthOrder,_direction>>
 {
@@ -33,13 +55,28 @@ struct traits_impl<fdm::linops::NthPartialDeriv<_nthOrder,_direction>>
 }; 
 
 } // end namespace internal 
+} // end namespace linops 
 } // end namespace fdm
 
 namespace Eigen{
 namespace internal{
 
-template<std::size_t nthOrder, int direction>
-struct traits<fdm::linops::NthPartialDeriv<nthOrder,direction>> : traits<fdm::linops::PartialDerivBase<fdm::linops::NthPartialDeriv<nthOrder,direction>>>{}; 
+template<std::size_t _nthOrder, int _direction>
+struct traits<fdm::linops::NthPartialDeriv<_nthOrder, _direction>>
+{
+  typedef fdm::Scalar Scalar;
+  typedef Eigen::Index StorageIndex;
+  typedef Sparse StorageKind;
+  typedef MatrixXpr XprKind;
+  enum {
+    RowsAtCompileTime = Dynamic,
+    ColsAtCompileTime = Dynamic,
+    MaxRowsAtCompileTime = Dynamic,
+    MaxColsAtCompileTime = Dynamic,
+    Flags = Eigen::RowMajor | NestByRefBit, /* | no assignment LvalueBit  */ /* | not CompressedAccessBit*/ 
+    SupportedAccessPatterns = OuterRandomAccessPattern
+  };
+}; 
 
 } // end namespace internal 
 } // end namespace Eigen 
@@ -51,20 +88,7 @@ namespace linops{
 
 template<std::size_t nthOrder, int direction>
 class NthPartialDeriv : public PartialDerivBase<NthPartialDeriv<nthOrder,direction>>
-{
-  friend PartialDerivBase<NthPartialDeriv<nthOrder,direction>>; 
-  // TODO NthPartialDeriv has a template parameter for NodeSelector and declares it inside the class.... 
-  public:
-    template<std::size_t numNodesMax, std::size_t numCoordsMax=0>
-    auto evaluateWeightsAndCoords(
-      const std::array<double, numNodesMax>& weights, 
-      std::size_t weights_per_order, 
-      const std::array<double,numCoordsMax>& coords={}) const 
-    {
-      using Mapped = Eigen::Map<const Eigen::Matrix<fdm::Scalar, 1, Eigen::Dynamic>>;  
-      return Mapped(weights.data() + nthOrder * weights_per_order, weights_per_order); 
-    }
-}; 
+{}; 
 
 } // end namespace linops 
 } // end namespace fdm 

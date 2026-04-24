@@ -4,7 +4,7 @@
 //
 // JAF 12/8/2025
 
-#include<FiniteDifference/Traits.hpp> 
+#include<FiniteDifference/Diffops/Traits.hpp> 
 #include<FiniteDifference/Mesh.hpp> 
 #define EIGEN_SPARSEMATRIXBASE_PLUGIN <FiniteDifference/EigenFdmPlugin.hpp> 
 
@@ -18,11 +18,10 @@
 #include<Eigen/Dense>
 #include<Eigen/Core>
 #include<Eigen/SparseCore> // macro plugin takes effect. 
-
-#include<FiniteDifference/Diffops/NodeSelector.hpp>
-#include<FiniteDifference/Diffops/CoordinateSelector.hpp> 
+ 
 #include<FiniteDifference/Diffops/PartialDerivBase.hpp> 
 #include<FiniteDifference/Diffops/NthPartialDeriv.hpp> 
+#include<FiniteDifference/Diffops/NwiseUnaryOp.hpp> 
   
 using namespace fdm; 
 
@@ -32,22 +31,26 @@ int main()
 {
   auto my_mesh = fdm::make_Mesh(1); 
   my_mesh->getAxis(0) = Eigen::VectorXd::LinSpaced(11,0.0,10.0); 
-  // utils::print_vec(my_mesh->getAxis(0)); 
+  utils::print_vec(my_mesh->getAxis(0)); 
 
-  linops::NthPartialDeriv<5,0> my_deriv; 
+  linops::NthPartialDeriv<1,0> my_deriv; 
   my_deriv.setMesh(my_mesh); 
   cout << my_deriv.m_stencil << endl; 
 
-  // cout << "nnz: " << fdm::linops::internal::NodeSelector<2>::sumNodesPerRow(my_mesh->getAxis(0)) << endl; ; 
-  // for(auto row_idx=0; row_idx<11; ++row_idx){
-  //   fdm::linops::internal::NodeSelector<2> nodes(my_mesh->getAxis(0), row_idx);
-  //   cout << "row " << row_idx << ": " << nodes.nonZerosOffset << endl;  
-  // }
 
-  // fdm::utils::FornArrayCalc<5,2> my_calc; 
-  // const auto& ax = my_mesh->getAxis(0); 
-  // my_calc.calculate(0.0, ax.cbegin(), ax.cbegin()+3); 
-  // fdm::utils::print_vec(my_calc.getArray(), "weights"); 
+  auto xpr = -my_deriv; 
+  xpr.setMesh(my_mesh); 
+  cout << xpr.m_stencil << endl; 
+
+  double coeff = 2.0; 
+  auto mult = coeff * my_deriv; 
+  mult.setMesh(my_mesh); 
+  cout << mult.m_stencil << endl; 
+
+  coeff = 4.0; 
+  mult.setMesh(my_mesh); 
+  cout << mult.m_stencil << endl;
+   
 };
 
 

@@ -30,8 +30,20 @@ class FornArrayCalc
     std::size_t m_nodes_used; // stores how many nodes were actually used in the algorithm
   public:
     // Constructors + Destructor =========================================================
-    FornArrayCalc(){ static_assert(M+1 >= N, "FornbergArrayCalc requires NUM_NODES + 1 >= ORDER"); };
+    FornArrayCalc()
+    { 
+      static_assert(M+1 >= N, "FornbergArrayCalc requires NUM_NODES + 1 >= ORDER"); 
+    }
+    
+    template<typename Iter>
+    FornArrayCalc(double x_bar, Iter start, Iter end)
+    { 
+      static_assert(M+1 >= N, "FornbergArrayCalc requires NUM_NODES + 1 >= ORDER"); 
+      calculate(x_bar,start,end); 
+    }
+    
     FornArrayCalc(const FornArrayCalc& other)=default; 
+    
     // destructor 
     ~FornArrayCalc()=default; 
     
@@ -42,8 +54,8 @@ class FornArrayCalc
     auto getNumNodesUsed() const { return m_nodes_used; }  
 
     // Updates m_arr to contain weights up to order n
-    template<typename Input_Iter>
-    void calculate(double x_bar, Input_Iter start, Input_Iter end)
+    template<typename Iter>
+    void calculate(double x_bar, Iter start, Iter end)
     {
       // make sure distance(start,end) <= numNodesMax 
       auto d = std::distance(start,end); 
