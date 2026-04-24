@@ -19,14 +19,6 @@ class NthPartialDeriv;
 
 namespace internal{
 
-// NodeSelector 
-template<std::size_t _nthOrder, int _direction>
-struct NodeSelector<fdm::linops::NthPartialDeriv<_nthOrder,_direction>>
-{
-  template<std::size_t numNodesMin>
-  using type = fdm::linops::internal::CoreNodeSelector<numNodesMin>; 
-}; 
-
 // Evaluator  
 template<std::size_t _nthOrder, int _direction>
 struct Evaluator<fdm::linops::NthPartialDeriv<_nthOrder,_direction>> : public EvaluatorBase< fdm::linops::NthPartialDeriv<_nthOrder,_direction> >
@@ -52,6 +44,7 @@ struct traits_impl<fdm::linops::NthPartialDeriv<_nthOrder,_direction>>
   static constexpr bool is_timedep = false; 
   static constexpr int direction = _direction; 
   static constexpr std::size_t maxOrder = _nthOrder; 
+  typedef centered_selector_tag node_selector_tag; 
 }; 
 
 } // end namespace internal 

@@ -45,7 +45,7 @@ struct Coordinate
   fdm::Scalar apply_impl(const Callable& c, std::index_sequence<idxs...>) const { return c(values[idxs]...); }
 };
 
-namespace internal{ 
+namespace internal{
 
 // declare as empty struct. specialized by individual types. should always inherit from EvaluatorBase<Xpr>  
 template<class Xpr>
@@ -122,12 +122,21 @@ struct CoreNodeSelector
 };
 
 // holds (x1, x2, ..., xn) in the same dimension 
-template<class Xpr >
-struct NodeSelector
+template<class Xpr, std::size_t numNodesMin>
+struct NodeSelector{}; 
+
+// Specialize the NodeSelector base on tags 
+struct centered_selector_tag {};
+template<std::size_t numNodesMin>
+struct NodeSelector<centered_selector_tag, numNodesMin> : public CoreNodeSelector<numNodesMin>
 {
-  template<std::size_t  numNodesMin>
-  using type = CoreNodeSelector<numNodesMin>; 
+  // Constructor ============================
+  template<class Container>
+  NodeSelector(const Container& c, std::size_t idx)  
+    : CoreNodeSelector<numNodesMin>(c, idx) 
+  {}
 }; 
+// TODO? // struct forward_selector_tag {}; // struct backward_selector_tag {};
 
 template<class Xpr>
 struct EvaluatorBase
@@ -137,7 +146,7 @@ struct EvaluatorBase
 
   // estimate is for compressed matrix. need to handle block diagonals outside of Evaluator. 
   template<class Container>
-  static std::size_t nonZerosEstimate(const Container& c){ return NodeSelector<Xpr>::template type<numNodesMin>::sumNodesPerRow(c); } 
+  static std::size_t nonZerosEstimate(const Container& c){ return NodeSelector<typename traits_t::node_selector_tag, numNodesMin>::sumNodesPerRow(c); } 
   
   // holds const Evaluator&, nodes, coords, and fornberg weights 
   class Row
@@ -145,8 +154,8 @@ struct EvaluatorBase
     private:
     // member data  
     const Evaluator<Xpr>& m_eval; 
-    typename NodeSelector<Xpr>::type<numNodesMin> m_nodes; 
-    typename fdm::utils::FornArrayCalc<NodeSelector<Xpr>::template type<numNodesMin>::numNodesMax, traits_t::maxOrder> m_calc; 
+    NodeSelector<typename traits_t::node_selector_tag, numNodesMin> m_nodes; 
+    typename fdm::utils::FornArrayCalc<NodeSelector<typename traits_t::node_selector_tag, numNodesMin>::numNodesMax, traits_t::maxOrder> m_calc; 
     Coordinate<traits_t::max_num_args_called> m_coords; 
 
     public:
@@ -178,8 +187,7 @@ struct EvaluatorBase
 }; 
 
 } // end namespace internal 
-
-  } // end namespace linops 
+} // end namespace linops 
 } // end namespace fdm 
 
 #endif // Evaluator.hpp

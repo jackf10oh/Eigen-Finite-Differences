@@ -44,19 +44,19 @@ struct UnaryScalarMultiplyFO
 struct BinaryAdditionFO
 {
   template<typename X, typename Y>
-  auto operator()(const X& x, const Y& y){ return x + y; }
+  auto operator()(const X& x, const Y& y) const { return x + y; }
 }; 
 
 struct BinarySubtractionFO
 {
   template<typename X, typename Y>
-  auto operator()(const X& x, const Y& y){ return x - y; }
+  auto operator()(const X& x, const Y& y) const { return x - y; }
 }; 
 
 struct BinaryMultiplyFO
 {
   template<typename X, typename Y>
-  auto operator()(const X& x, const Y& y){ return x * y; }
+  auto operator()(const X& x, const Y& y) const { return x * y; }
 }; 
 
 } // end namespace internal 

@@ -19,10 +19,6 @@ struct NwiseUnaryOp;
 
 namespace internal{
 
-// NodeSelector 
-template<class UnaryOp, class XprType>
-struct NodeSelector<fdm::linops::NwiseUnaryOp<UnaryOp,XprType>> : public NodeSelector<XprType>{}; 
-
 // Evaluator 
 template<class UnaryOp, class XprType>
 struct Evaluator<fdm::linops::NwiseUnaryOp<UnaryOp,XprType>> : public EvaluatorBase<fdm::linops::NwiseUnaryOp<UnaryOp,XprType>>
@@ -39,7 +35,13 @@ struct Evaluator<fdm::linops::NwiseUnaryOp<UnaryOp,XprType>> : public EvaluatorB
 
 // Traits
 template<class UnaryOp, class XprType>
-struct traits_impl<fdm::linops::NwiseUnaryOp<UnaryOp,XprType>> : public traits_impl<XprType>{}; 
+struct traits_impl<fdm::linops::NwiseUnaryOp<UnaryOp,XprType>> : public traits_impl<XprType>
+{
+  static constexpr bool is_linop = true; 
+  static constexpr bool is_unarop = true; 
+  static constexpr bool is_binop = false; 
+  static constexpr bool is_ternop = false; 
+}; 
 
 } // end namespace internal 
 } // end namespace linops
@@ -87,7 +89,7 @@ class NwiseUnaryOp : public fdm::linops::PartialDerivBase<NwiseUnaryOp<UnaryOp,X
     XprTypeNested m_xpr; 
   
   public:
-    // Constructors + Destructor ====================== 
+    // Constructors ====================== 
     NwiseUnaryOp(const XprType& xpr, const UnaryOp& func = UnaryOp())
       : m_xpr(xpr), m_functor(func) 
     {}

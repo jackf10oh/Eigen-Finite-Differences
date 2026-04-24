@@ -22,6 +22,7 @@
 #include<FiniteDifference/Diffops/PartialDerivBase.hpp> 
 #include<FiniteDifference/Diffops/NthPartialDeriv.hpp> 
 #include<FiniteDifference/Diffops/NwiseUnaryOp.hpp> 
+#include<FiniteDifference/Diffops/NwiseBinaryOp.hpp> 
   
 using namespace fdm; 
 
@@ -50,7 +51,12 @@ int main()
   coeff = 4.0; 
   mult.setMesh(my_mesh); 
   cout << mult.m_stencil << endl;
-   
+
+
+  auto messy = my_deriv + 3.0 * my_deriv - 10.0 * my_deriv; 
+  messy.setMesh(my_mesh); 
+  cout << messy.m_stencil << endl; 
+
 };
 
 

@@ -19,17 +19,6 @@ template<class Derived> class PartialDerivBase;
 
 namespace internal{ 
 
-template<class Derived>
-class PartialDerivBase; 
-
-// NodeSelector 
-template<class Derived>
-struct NodeSelector<PartialDerivBase<Derived>>
-{
-  template<std::size_t numNodesMin>
-  using type = typename NodeSelector<Derived>::type<numNodesMin>; 
-}; 
-
 // Evaluator 
 template<class Derived>
 struct Evaluator<PartialDerivBase<Derived>> : public EvaluatorBase<PartialDerivBase<Derived>>
