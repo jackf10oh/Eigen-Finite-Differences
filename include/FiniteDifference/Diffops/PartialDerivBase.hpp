@@ -111,7 +111,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived> // TODO inherit
         for(std::size_t row_idx=0; row_idx<axis_size; ++row_idx)
         {
           // use node selector 
-          typename Evaluator::Row row(eval, m.get(), row_idx); 
+          typename Evaluator::Row row(eval, m.get(), m_prod_before * row_idx); 
 
           std::cout << "row: " << row_idx << " valuePtrOffset: " << row.valuePtrOffset() << std::endl; 
 

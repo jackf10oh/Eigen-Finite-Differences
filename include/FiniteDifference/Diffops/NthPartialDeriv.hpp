@@ -66,9 +66,28 @@ struct traits<fdm::linops::NthPartialDeriv<_nthOrder, _direction>>
     ColsAtCompileTime = Dynamic,
     MaxRowsAtCompileTime = Dynamic,
     MaxColsAtCompileTime = Dynamic,
-    Flags = Eigen::RowMajor | NestByRefBit, /* | no assignment LvalueBit  */ /* | not CompressedAccessBit*/ 
+    Flags = Eigen::RowMajorBit | NestByRefBit, /* | no assignment LvalueBit  */ /* | not CompressedAccessBit*/ 
     SupportedAccessPatterns = OuterRandomAccessPattern
   };
+}; 
+
+template<std::size_t _nthOrder, int _direction>
+struct evaluator<fdm::linops::NthPartialDeriv<_nthOrder, _direction>> 
+  : public evaluator<fdm::linops::PartialDerivBase<fdm::linops::NthPartialDeriv<_nthOrder, _direction>>>, 
+  public evaluator_base<fdm::linops::NthPartialDeriv<_nthOrder, _direction>> 
+{
+  struct InnerIterator
+    : public evaluator<fdm::linops::PartialDerivBase<fdm::linops::NthPartialDeriv<_nthOrder, _direction>>>::InnerIterator
+  {
+    enum { CoeffReadCost = evaluator<fdm::linops::PartialDerivBase<fdm::linops::NthPartialDeriv<_nthOrder, _direction>>>::CoeffReadCost, Flags = evaluator<fdm::linops::PartialDerivBase<fdm::linops::NthPartialDeriv<_nthOrder, _direction>>>::Flags };
+
+    InnerIterator(const evaluator& eval, Index row_idx)
+      : evaluator<fdm::linops::PartialDerivBase<fdm::linops::NthPartialDeriv<_nthOrder, _direction>>>::InnerIterator(eval, row_idx)
+    {}
+  }; 
+  evaluator(const fdm::linops::NthPartialDeriv<_nthOrder, _direction>& xpr_d)
+    : evaluator<fdm::linops::PartialDerivBase<fdm::linops::NthPartialDeriv<_nthOrder, _direction>>>(xpr_d)
+  {}
 }; 
 
 } // end namespace internal 

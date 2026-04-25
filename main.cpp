@@ -23,6 +23,7 @@
 #include<FiniteDifference/Diffops/NthPartialDeriv.hpp> 
 #include<FiniteDifference/Diffops/NwiseUnaryOp.hpp> 
 #include<FiniteDifference/Diffops/NwiseBinaryOp.hpp> 
+#include<FiniteDifference/Diffops/EigenEvaluator.hpp> 
   
 using namespace fdm; 
 
@@ -30,32 +31,18 @@ using std::endl, std::cout;
 
 int main()
 {
-  auto my_mesh = fdm::make_Mesh(1); 
-  my_mesh->getAxis(0) = Eigen::VectorXd::LinSpaced(11,0.0,10.0); 
+  auto my_mesh = fdm::make_Mesh(2); 
+  my_mesh->getAxis(0) = Eigen::VectorXd::LinSpaced(7,0.0,6.0); 
+  my_mesh->getAxis(1) = Eigen::VectorXd::LinSpaced(7,0.0,6.0); 
   utils::print_vec(my_mesh->getAxis(0)); 
 
-  linops::NthPartialDeriv<1,0> my_deriv; 
-  my_deriv.setMesh(my_mesh); 
-  cout << my_deriv.m_stencil << endl; 
+  linops::NthPartialDeriv<1,1> my_deriv;
 
+  auto expr = -my_deriv + 4.0 * my_deriv - my_deriv + 3 * my_deriv; 
+  expr.setMesh(my_mesh); 
 
-  auto xpr = -my_deriv; 
-  xpr.setMesh(my_mesh); 
-  cout << xpr.m_stencil << endl; 
-
-  double coeff = 2.0; 
-  auto mult = coeff * my_deriv; 
-  mult.setMesh(my_mesh); 
-  cout << mult.m_stencil << endl; 
-
-  coeff = 4.0; 
-  mult.setMesh(my_mesh); 
-  cout << mult.m_stencil << endl;
-
-
-  auto messy = my_deriv + 3.0 * my_deriv - 10.0 * my_deriv; 
-  messy.setMesh(my_mesh); 
-  cout << messy.m_stencil << endl; 
+  fdm::CSRMatrix result = expr; 
+  cout << result << endl; 
 
 };
 

@@ -51,7 +51,7 @@ struct traits_impl<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
   static constexpr bool is_binop = true; 
   static constexpr bool is_ternop = false; 
   static constexpr std::size_t max_num_args_called = std::max(traits<LhsType>::max_num_args_called,traits<RhsType>::max_num_args_called); 
-  static constexpr bool is_timedep = traits<LhsType>::is_time_dep || traits<RhsType>::is_time_dep; // if either L/R is timedep the xpr is time dep 
+  static constexpr bool is_timedep = traits<LhsType>::is_timedep || traits<RhsType>::is_timedep; // if either L/R is timedep the xpr is time dep 
   static constexpr int direction = traits<LhsType>::direction; // by default mixing operators results in undefined direction... 
   static constexpr std::size_t maxOrder = std::max(traits<LhsType>::maxOrder,traits<RhsType>::maxOrder); // highest order of derivative in the expression 
   typedef typename traits<LhsType>::node_selector_tag node_selector_tag; // give priority to lhs 
@@ -76,13 +76,35 @@ struct traits<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
     ColsAtCompileTime = Dynamic,
     MaxRowsAtCompileTime = Dynamic,
     MaxColsAtCompileTime = Dynamic,
-    Flags = Eigen::RowMajor,  /* no | NestByRefBit */ /* | no assignment LvalueBit  */ /* | not CompressedAccessBit*/ 
+    Flags = Eigen::RowMajorBit,  /* no | NestByRefBit */ /* | no assignment LvalueBit  */ /* | not CompressedAccessBit*/ 
     SupportedAccessPatterns = OuterRandomAccessPattern
   };
 }; 
 
+template<class BinaryOp, class LhsType, class RhsType>
+struct evaluator<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> 
+  : public evaluator<fdm::linops::PartialDerivBase<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>, 
+  public evaluator_base<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> 
+{
+  struct InnerIterator
+    : public evaluator<fdm::linops::PartialDerivBase<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>::InnerIterator
+  {
+    enum { 
+      CoeffReadCost = evaluator<fdm::linops::PartialDerivBase<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>::CoeffReadCost, 
+      Flags = evaluator<fdm::linops::PartialDerivBase<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>::Flags 
+    };
+
+    InnerIterator(const evaluator& eval, Index row_idx)
+      : evaluator<fdm::linops::PartialDerivBase<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>::InnerIterator(eval, row_idx)
+    {}
+  }; 
+  evaluator(const fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>& xpr_d)
+    : evaluator<fdm::linops::PartialDerivBase<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>(xpr_d)
+  {}
+}; 
+
 } // end namespac internal 
-} // end namespac internal 
+} // end namespac Eigen 
 
 namespace fdm{ 
 namespace linops{
@@ -126,7 +148,9 @@ template<
     std::is_same<
       typename linops::internal::traits<LeftDerived>::node_selector_tag, 
       typename linops::internal::traits<RightDerived>::node_selector_tag
-    >::value
+    >::value &&  
+    (linops::internal::traits<LeftDerived>::is_timedep == linops::internal::traits<RightDerived>::is_timedep) && 
+    (linops::internal::traits<LeftDerived>::direction == linops::internal::traits<RightDerived>::direction)
   >
 >
 auto operator-(const PartialDerivBase<LeftDerived>& lhs, const PartialDerivBase<RightDerived>& rhs)
@@ -141,7 +165,9 @@ template<
     std::is_same<
       typename linops::internal::traits<LeftDerived>::node_selector_tag, 
       typename linops::internal::traits<RightDerived>::node_selector_tag
-    >::value
+    >::value &&  
+    (linops::internal::traits<LeftDerived>::is_timedep == linops::internal::traits<RightDerived>::is_timedep) && 
+    (linops::internal::traits<LeftDerived>::direction == linops::internal::traits<RightDerived>::direction)
   >
 >
 auto operator+(const PartialDerivBase<LeftDerived>& lhs, const PartialDerivBase<RightDerived>& rhs)

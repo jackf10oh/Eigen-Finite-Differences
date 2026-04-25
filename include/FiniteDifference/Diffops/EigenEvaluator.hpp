@@ -11,61 +11,58 @@
 #include<FiniteDifference/Utilities/BlockDiagExpr.hpp>
 #include<FiniteDifference/Utilities/HighDimExpr.hpp>
 
-namespace fdm{
-  namespace linops{
-    namespace internal{
-
-    } // endn namespace internal 
-  } // end namespace linops 
-} // end namespace fdm 
-
 namespace Eigen {
 namespace internal {
+
+// implementation depends on if max_num_args_called == 0, <= maxOrder, or > maxOrder 
 template<class Derived, std::size_t max_num_args_called>
 struct EigenEvaluator_impl; 
 
+// reads row iterators from double kronecker products I(n) D @ I(m)
 template<class Derived>
-struct evaluator<fdm::linops::PartialDerivBase<Derived>>: EigenEvaluator_impl< fdm::linops::PartialDerivBase<Derived>, fdm::internal::traits<Derived>::max_num_args_called >{}; 
-
-// reads row iterators from double kronecker products I(n) D @ I(m) no need to pack coords
-template<class Derived, std::size_t max_num_args_called, int direction>
-struct EigenEvaluator_impl< fdm::linops::PartialDerivBase<Derived>,0>
+struct evaluator<fdm::linops::PartialDerivBase<Derived>> : public evaluator_base<fdm::linops::PartialDerivBase<Derived>>
 {
-  typedef typename Derived XprType;
+  typedef Derived XprType;
+
   typedef typename nested_eval< fdm::utils::BlockDiag<fdm::utils::HighDim<fdm::CSRMatrix>> , XprType::ColsAtCompileTime >::type ArgTypeNested;
   typedef typename remove_all< ArgTypeNested >::type ArgTypeNestedCleaned;
   typedef typename XprType::CoeffReturnType CoeffReturnType; // do we need theeeesee? 
   typedef typename XprType::Index Index; 
   typedef typename XprType::Scalar Scalar; 
+  enum { CoeffReadCost = evaluator<fdm::utils::BlockDiag<fdm::utils::HighDim<fdm::CSRMatrix>>>::CoeffReadCost, Flags = Eigen::RowMajorBit };
 
-  // Custom InnerIterator -----------------------------------------
-  struct InnerIterator : public Eigen::internal::evaluator< fdm::utils::BlockDiag<fdm::utils::HighDim<fdm::CSRMatrix>> >::InnerIterator
+  struct InnerIterator : public evaluator<fdm::utils::BlockDiag<fdm::utils::HighDim<fdm::CSRMatrix>>>::InnerIterator
   {
-    InnerIterator(const EigenEvaluator_impl& eval, Index row_idx) 
-      : evaluator<fdm::utils::BlockDiag<fdm::utils::HighDim<fdm::CSRMatrix>>>::InnerIterator(eval.m_stencilKronecker, row_idx)
-    {} 
-  };
+    InnerIterator(const evaluator& eval, Index row_idx)
+      : evaluator<fdm::utils::BlockDiag<fdm::utils::HighDim<fdm::CSRMatrix>>>::InnerIterator(eval.m_stencilKroneckerImpl, row_idx)
+    {}
+    InnerIterator(const Eigen::internal::evaluator<Derived>& eval, Index row_idx)
+      : evaluator<fdm::utils::BlockDiag<fdm::utils::HighDim<fdm::CSRMatrix>>>::InnerIterator(eval.m_stencilKroneckerImpl, row_idx)
+    {}
+  }; 
 
-  // Constructors ======================================================== 
-  evaluator(const PartialDerivBase<Derived>& xpr) 
-    : m_xpr(xpr.derived()), 
-    m_stencilKronecker(fdm::utils::make_BlockDiag(fdm::utils::make_HighDim(m_xpr.m_stencil),m_xpr.m_prod_before)m_xpr.m_prod_after)
-    // m_stencilKroneckerImpl(m_stencilKronecker)
-  {};
-  
-  Index rows() const {return m_xpr.rows(); }; 
-  Index cols() const {return m_xpr.cols(); }; 
+  evaluator(const fdm::linops::PartialDerivBase<Derived>& xpr_b)
+    : m_xpr(xpr_b.derived()), 
+    m_stencilKronecker(fdm::utils::make_BlockDiag(fdm::utils::make_HighDim(m_xpr.m_stencil, m_xpr.m_prod_before), m_xpr.m_prod_after)), 
+    m_stencilKroneckerImpl(m_stencilKronecker)
+  {}
+
+  evaluator(const Derived& xpr)
+    : m_xpr(xpr), 
+    m_stencilKronecker(fdm::utils::make_BlockDiag(fdm::utils::make_HighDim(m_xpr.m_stencil, m_xpr.m_prod_before), m_xpr.m_prod_after)), 
+    m_stencilKroneckerImpl(m_stencilKronecker)
+  {}
+
+  Index rows() const {return m_xpr.rows(); }
+  Index cols() const {return m_xpr.cols(); }
   Index outerSize() const { return m_xpr.rows(); }
   Index innerSize() const { return m_xpr.cols(); }
   Index nonZerosEstimate() const { return m_xpr.nonZerosEstimate(); }
 
-  // Flags ------------------------------- 
-  enum { CoeffReadCost = evaluator<ArgTypeNestedCleaned>::CoeffReadCost, Flags = Eigen::RowMajor };
-
-  // Member Data ------------------ 
+  // don't pay attention to NestByRefBit at all. m_stencil should never be copied. 
   const XprType& m_xpr; 
   const fdm::utils::BlockDiag<fdm::utils::HighDim<fdm::CSRMatrix>> m_stencilKronecker; 
-  // evaluator<fdm::utils::BlockDiag<fdm::utils::HighDim<fdm::CSRMatrix>>> m_stencilKroneckerImpl; // TODO unnecessary? 
+  evaluator<fdm::utils::BlockDiag<fdm::utils::HighDim<fdm::CSRMatrix>>> m_stencilKroneckerImpl; 
 }; 
 
 // reads row iterators from single kronecker products D @ I(m)

@@ -25,13 +25,6 @@
 namespace fdm{ 
 namespace internal{
 
-// template trait to detect if T<> and U<> are the same templates -------------
-template<template<auto...> class T, template<auto...> class U>
-struct is_same_template : std::false_type{}; 
-
-template<template<auto...> class T>
-struct is_same_template<T,T> : std::true_type{}; 
-
 // traits around a callable F ----------------------------------------------
 template<typename F>
 class callable_traits

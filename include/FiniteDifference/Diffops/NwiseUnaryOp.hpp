@@ -62,13 +62,35 @@ struct traits<fdm::linops::NwiseUnaryOp<UnaryOp,XprType>>
     ColsAtCompileTime = Dynamic,
     MaxRowsAtCompileTime = Dynamic,
     MaxColsAtCompileTime = Dynamic,
-    Flags = Eigen::RowMajor,  /* no | NestByRefBit */ /* | no assignment LvalueBit  */ /* | not CompressedAccessBit*/ 
+    Flags = Eigen::RowMajorBit,  /* no | NestByRefBit */ /* | no assignment LvalueBit  */ /* | not CompressedAccessBit*/ 
     SupportedAccessPatterns = OuterRandomAccessPattern
   };
 }; 
 
+template<class UnaryOp, class XprType>
+struct evaluator<fdm::linops::NwiseUnaryOp<UnaryOp,XprType>> 
+  : public evaluator<fdm::linops::PartialDerivBase<fdm::linops::NwiseUnaryOp<UnaryOp,XprType>>>, 
+  public evaluator_base<fdm::linops::NwiseUnaryOp<UnaryOp,XprType>> 
+{
+  struct InnerIterator
+    : public evaluator<fdm::linops::PartialDerivBase<fdm::linops::NwiseUnaryOp<UnaryOp,XprType>>>::InnerIterator
+  {
+    enum { 
+      CoeffReadCost = evaluator<fdm::linops::PartialDerivBase<fdm::linops::NwiseUnaryOp<UnaryOp,XprType>>>::CoeffReadCost, 
+      Flags = evaluator<fdm::linops::PartialDerivBase<fdm::linops::NwiseUnaryOp<UnaryOp,XprType>>>::Flags 
+    };
+
+    InnerIterator(const evaluator& eval, Index row_idx)
+      : evaluator<fdm::linops::PartialDerivBase<fdm::linops::NwiseUnaryOp<UnaryOp,XprType>>>::InnerIterator(eval, row_idx)
+    {}
+  }; 
+  evaluator(const fdm::linops::NwiseUnaryOp<UnaryOp,XprType>& xpr_d)
+    : evaluator<fdm::linops::PartialDerivBase<fdm::linops::NwiseUnaryOp<UnaryOp,XprType>>>(xpr_d)
+  {}
+}; 
+
 } // end namespac internal 
-} // end namespac internal 
+} // end namespac Eigen
 
 namespace fdm{ 
 namespace linops{
