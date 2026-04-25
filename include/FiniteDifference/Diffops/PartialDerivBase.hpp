@@ -133,17 +133,14 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived> // TODO inherit
         std::size_t nnz = product_before * Evaluator::nonZerosEstimate(axis); 
         m_stencil.reserve(nnz); 
         m_stencil.resize(product_before*axis_size, product_before*axis_size); 
-
-        std::cout << "setMesh: innerIndexPtr: " << m_stencil.innerIndexPtr() << std::endl;
+        // std::cout << "setMesh: innerIndexPtr: " << m_stencil.innerIndexPtr() << std::endl;
 
         // write node wise expressions into each row stencil 
         for(std::size_t row_idx=0; row_idx < product_before*axis_size; ++row_idx)
         {
           // use node selector 
           typename Evaluator::Row row(eval, m.get(), row_idx); 
-
-          std::cout << "row: " << row_idx << " valuePtrOffset: " << (row.valuePtrOffset() * product_before)+(row.size()*(row_idx%product_before)) << std::endl; 
-
+          // std::cout << "row: " << row_idx << " valuePtrOffset: " << (row.valuePtrOffset() * product_before)+(row.size()*(row_idx%product_before)) << std::endl; 
           // // copy the indices into m_stencil's inner indices ptr
           std::size_t inner_offset = (row.valuePtrOffset() * product_before)+(row.size()*(row_idx%product_before)); 
           std::size_t inset = row_idx%product_before; 
@@ -157,14 +154,39 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived> // TODO inherit
           row.mapToEigen(m_stencil.valuePtr() + inner_offset) = row.values(); 
         }
         // very last outer index needs set. 
-        m_stencil.outerIndexPtr()[product_before * axis_size] = nnz; 
+        m_stencil.outerIndexPtr()[product_before*axis_size] = nnz; 
       }
       else{ // direction+1 < max_num_args <= m->numDims()
+        // we can store the inflated 1st kronecker product repeated n times 
+        std::cout << "max args > direction + 1" << std::endl; 
         m_prod_before = 1; 
+        std::size_t product_before = m->sizesMiddleProduct(0,traits_t::direction); 
+        std::size_t num_repeats = m->sizesMiddleProduct(traits_t::direction+1, traits_t::max_num_args_called); 
         m_prod_after = m->sizesMiddleProduct(traits_t::max_num_args_called, m->numDims()); 
-        // this could be combined with the above implementation??????? 
-        // TODO 
-      }      
+
+        std::size_t nnz = product_before * Evaluator::nonZerosEstimate(axis); 
+        m_stencil.reserve(num_repeats * nnz); 
+        m_stencil.resize(num_repeats*product_before*axis_size, num_repeats*product_before*axis_size); 
+
+        // write node wise expressions into each row of stencil 
+        std::cout << "entering for loop" << std::endl; 
+        for(std::size_t row_idx=0; row_idx < num_repeats*product_before*axis_size; ++row_idx)
+        {
+          typename Evaluator::Row row(eval, m.get(), row_idx); 
+          std::size_t inner_offset = (nnz)*(row_idx/(product_before*axis_size))+(row.valuePtrOffset() * product_before)+(row.size()*(row_idx%product_before)); 
+          std::size_t inset = (product_before*axis_size)*(row_idx/(product_before*axis_size)) + (row_idx%product_before); 
+          std::transform(
+            row.columnIndices().cbegin(), 
+            std::next(row.columnIndices().cbegin(), row.size()), 
+            m_stencil.innerIndexPtr() + inner_offset, 
+            [&](std::size_t idx){ return inset + product_before*idx; }
+          ); 
+          m_stencil.outerIndexPtr()[row_idx] = inner_offset; 
+          row.mapToEigen(m_stencil.valuePtr() + inner_offset) = row.values();
+        }
+        // very last outer index needs set. 
+        m_stencil.outerIndexPtr()[num_repeats*product_before*axis_size] = num_repeats * nnz; 
+      } 
     }
 
     SharedConstMesh getMesh() const { return m_mesh_observed.lock(); }

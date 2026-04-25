@@ -35,14 +35,15 @@ using std::endl, std::cout;
 
 int main()
 {
-  auto my_mesh = fdm::make_Mesh(2); 
-  my_mesh->getAxis(0) = Eigen::VectorXd::LinSpaced(7,0.0,6.0); 
-  my_mesh->getAxis(1) = Eigen::VectorXd::LinSpaced(7,0.0,6.0); 
+  auto my_mesh = fdm::make_Mesh(3); 
+  my_mesh->getAxis(0) = Eigen::VectorXd::LinSpaced(4,0.0,3.0); 
+  my_mesh->getAxis(1) = Eigen::VectorXd::LinSpaced(4,0.0,3.0); 
+  my_mesh->getAxis(2) = Eigen::VectorXd::LinSpaced(4,0.0,3.0); 
   utils::print_vec(my_mesh->getAxis(0)); 
 
   linops::NthPartialDeriv<1,1> my_deriv; 
 
-  linops::AutonomousCoeff my_coeff = [](double x, double y){ return x*x + 2*y; }; 
+  linops::AutonomousCoeff my_coeff = [](double x, double y, double z){ return z; }; 
 
   auto mult = my_coeff * my_deriv; 
   mult.setMesh(my_mesh); 
