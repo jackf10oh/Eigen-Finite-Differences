@@ -24,6 +24,10 @@
 #include<FiniteDifference/Diffops/NwiseUnaryOp.hpp> 
 #include<FiniteDifference/Diffops/NwiseBinaryOp.hpp> 
 #include<FiniteDifference/Diffops/EigenEvaluator.hpp> 
+
+#include<FiniteDifference/Coeffs/CoeffBase.hpp>
+#include<FiniteDifference/Coeffs/CoeffProduct.hpp> 
+#include<FiniteDifference/Coeffs/AutonomousCoeff.hpp>
   
 using namespace fdm; 
 
@@ -36,13 +40,19 @@ int main()
   my_mesh->getAxis(1) = Eigen::VectorXd::LinSpaced(7,0.0,6.0); 
   utils::print_vec(my_mesh->getAxis(0)); 
 
-  linops::NthPartialDeriv<1,1> my_deriv;
+  linops::NthPartialDeriv<1,1> my_deriv; 
 
-  auto expr = -my_deriv + 4.0 * my_deriv - my_deriv + 3 * my_deriv; 
-  expr.setMesh(my_mesh); 
+  linops::AutonomousCoeff my_coeff = [](double x, double y){ return x*x + 2*y; }; 
 
-  fdm::CSRMatrix result = expr; 
+  auto mult = my_coeff * my_deriv; 
+  mult.setMesh(my_mesh); 
+  fdm::CSRMatrix result = mult; 
   cout << result << endl; 
+
+  // auto expr = -my_deriv + 4.0 * my_deriv - my_deriv + 3 * my_deriv; 
+  // expr.setMesh(my_mesh); 
+  // fdm::CSRMatrix result = expr; 
+  // cout << result << endl; 
 
 };
 

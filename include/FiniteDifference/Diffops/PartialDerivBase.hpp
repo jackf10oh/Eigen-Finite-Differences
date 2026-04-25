@@ -120,18 +120,50 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived> // TODO inherit
           std::copy_n(row.columnIndices().cbegin(), row.size(), m_stencil.innerIndexPtr() + row.valuePtrOffset());  
           row.mapToEigen(m_stencil.valuePtr() + row.valuePtrOffset()) = row.values(); 
         }
-        // veeeerrry last outer index needs set. 
+        // very last outer index needs set. 
         m_stencil.outerIndexPtr()[axis_size] = nnz; 
       }
-      else if constexpr(traits_t::max_num_args_called <= traits_t::direction){
+      else if constexpr(traits_t::max_num_args_called <= traits_t::direction+1){
         // we can store the inflated 1st kronecker product, accounting for callables requiring coordinates. 
         m_prod_before = 1; 
+        std::size_t product_before = m->sizesMiddleProduct(0,traits_t::direction); 
         m_prod_after = m->sizesMiddleProduct(traits_t::direction+1, m->numDims()); 
+
+        // resize + reserve the stencil 
+        std::size_t nnz = product_before * Evaluator::nonZerosEstimate(axis); 
+        m_stencil.reserve(nnz); 
+        m_stencil.resize(product_before*axis_size, product_before*axis_size); 
+
+        std::cout << "setMesh: innerIndexPtr: " << m_stencil.innerIndexPtr() << std::endl;
+
+        // write node wise expressions into each row stencil 
+        for(std::size_t row_idx=0; row_idx < product_before*axis_size; ++row_idx)
+        {
+          // use node selector 
+          typename Evaluator::Row row(eval, m.get(), row_idx); 
+
+          std::cout << "row: " << row_idx << " valuePtrOffset: " << (row.valuePtrOffset() * product_before)+(row.size()*(row_idx%product_before)) << std::endl; 
+
+          // // copy the indices into m_stencil's inner indices ptr
+          std::size_t inner_offset = (row.valuePtrOffset() * product_before)+(row.size()*(row_idx%product_before)); 
+          std::size_t inset = row_idx%product_before; 
+          std::transform(
+            row.columnIndices().cbegin(), 
+            std::next(row.columnIndices().cbegin(), row.size()), 
+            m_stencil.innerIndexPtr() + inner_offset, 
+            [&](std::size_t idx){ return inset + product_before*idx; }
+          ); 
+          m_stencil.outerIndexPtr()[row_idx] = inner_offset; 
+          row.mapToEigen(m_stencil.valuePtr() + inner_offset) = row.values(); 
+        }
+        // very last outer index needs set. 
+        m_stencil.outerIndexPtr()[product_before * axis_size] = nnz; 
       }
-      else{ // max_num_args <= m->numDims()
+      else{ // direction+1 < max_num_args <= m->numDims()
         m_prod_before = 1; 
         m_prod_after = m->sizesMiddleProduct(traits_t::max_num_args_called, m->numDims()); 
         // this could be combined with the above implementation??????? 
+        // TODO 
       }      
     }
 

@@ -128,7 +128,7 @@ auto operator-(const PartialDerivBase<Derived>& xpr)
   return NwiseUnaryOp(xpr.derived(), fdm::linops::internal::UnaryNegateFO{}); 
 }; 
 
-template<typename C, typename Derived>
+template<typename C, typename Derived, typename = std::enable_if_t<std::is_arithmetic<C>::value>>
 auto operator*(C&& c, const PartialDerivBase<Derived>& xpr)
 {
   return NwiseUnaryOp(xpr.derived(), fdm::linops::internal::UnaryScalarMultiplyFO<C>(std::forward<C>(c))); 
