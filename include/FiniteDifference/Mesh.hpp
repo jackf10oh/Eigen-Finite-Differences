@@ -21,15 +21,6 @@ class Mesh;
 using SharedMesh = std::shared_ptr<Mesh>; 
 using SharedConstMesh = std::shared_ptr<const Mesh>; 
 
-using AxesList = std::vector<std::shared_ptr<Eigen::VectorXd>>; 
-
-struct Converter
-{
-  const AxesList& m_wrapped;
-  Converter(AxesList& w) : m_wrapped(w){};  
-  const Eigen::VectorXd* operator()(Eigen::Index i) const { return m_wrapped[i].get(); }
-}; 
-
 class Mesh : public std::enable_shared_from_this<Mesh>
 {
   private:
@@ -37,20 +28,38 @@ class Mesh : public std::enable_shared_from_this<Mesh>
     using Stride =  Eigen::Stride<0,Eigen::Dynamic>; 
     using StrideView =  Eigen::Map<Eigen::VectorXd, Eigen::Unaligned, Stride>;
     // member data ----------------------------
-    typename std::vector<std::shared_ptr<Eigen::VectorXd>> m_mesh_vec; // dynamic array of 1d meshes.
+    static constexpr std::size_t numDimsMax = 5; // fixed maximum.
+    typename std::array<Eigen::VectorXd, numDimsMax> m_mesh_arr; // fixed size array of 1d axes.
+    std::size_t m_size; // runtime size that counts how many dims are used. 
 
   public:
     // Constructors + Destructor =============================================================== 
-    
-    // default
-    Mesh()=default;
 
     // from number of axes. stops shared_ptr from initializing to nullptr. 
-    Mesh(std::size_t dims) : m_mesh_vec(dims){ for(auto& ax:m_mesh_vec) ax = std::make_shared<Eigen::VectorXd>(); } 
+    Mesh(std::size_t dims) : m_size(dims){} 
 
     // forward args to std::vector
-    template<typename... Args,   typename = std::enable_if_t<!(sizeof...(Args) == 1 && (std::is_integral_v<std::decay_t<Args>> && ...))>>
-    Mesh(Args... args) : m_mesh_vec(args...){std::cout << "variadic mesh constructor called" << std::endl; }  
+    template<typename ArgType>
+    Mesh(const Eigen::MatrixBase<ArgType>& xpr, std::size_t dims=1)
+      : m_size(dims)
+    {
+      if(dims > numDimsMax) throw std::runtime_error("Can't construct mesh with given dims"); 
+      for(std::size_t idx=0; idx<m_size; ++idx){
+        m_mesh_arr[idx] = xpr; 
+      }
+    }
+
+    template<typename... ArgType>
+    Mesh(const Eigen::MatrixBase<ArgType>&... xpr)
+      : m_size(0)
+    {
+      static_assert(sizeof...(ArgType), "Can't construct mesh with given dims");
+      auto lam = [&](const auto& x){m_mesh_arr[m_size] = x; ++m_size; }; 
+      std::apply(
+        lam, 
+        xpr... 
+      ); 
+    }
 
     // Copy 
     Mesh(const Mesh& other)=default; 
@@ -61,28 +70,37 @@ class Mesh : public std::enable_shared_from_this<Mesh>
     // Member Functions ===============================================================
 
     // get list of stored 1d mesh pointers. uses NullaryExpr + Converter to propragate constness 
-    auto& getAxesList(){ return m_mesh_vec; } 
-    auto getAxesList() const {   return Eigen::Matrix<const Eigen::VectorXd*, Eigen::Dynamic, 1>::NullaryExpr(m_mesh_vec.size(), Converter{m_mesh_vec});  }
+    auto& getAxesList(){ return m_mesh_arr; } 
     
     // number of dimensions 
-    std::size_t numDims() const {return m_mesh_vec.size(); } 
+    std::size_t numDims() const {return m_size; } 
 
     // size of a specific axis 
-    std::size_t sizeOfDim(std::size_t i) const {return m_mesh_vec.at(i)->size();} 
+    std::size_t sizeOfDim(std::size_t i) const {return m_mesh_arr[i].size();} 
 
     // get a specific axis
-    auto& getAxis(std::size_t i){ return *(m_mesh_vec[i]); }
-    const auto& getAxis(std::size_t i) const { return *(m_mesh_vec[i]); }
+    auto& getAxis(std::size_t i){ return (m_mesh_arr[i]); }
+    const auto& getAxis(std::size_t i) const { return (m_mesh_arr[i]); }
 
     // get a spec
-    auto& getAxisSafe(std::size_t i){ return *( m_mesh_vec.at(i) ); }
-    const auto& getAxisSafe(std::size_t i) const { return *(m_mesh_vec[i]); }
+    auto& getAxisSafe(std::size_t i)
+    {
+      if(i >= m_size) throw std::runtime_error("error ith_dim out of range. ");  
+      return ( m_mesh_arr.at(i) ); 
+    }
+    const auto& getAxisSafe(std::size_t i) const 
+    {
+      if(i >= m_size) throw std::runtime_error("error ith_dim out of range. ");  
+      return ( m_mesh_arr.at(i) ); 
+    }
 
     // full size of XD mesh. i.e. axis1.size() * ... * axisn.size()
     std::size_t sizesProduct() const 
     {
       std::size_t p = 1; 
-      for(const auto& m : m_mesh_vec) p *= m->size(); 
+      for(auto idx=0; idx<m_size; ++idx){
+        p *= m_mesh_arr[idx].size(); 
+      }
       return p; 
     } 
 
@@ -90,9 +108,11 @@ class Mesh : public std::enable_shared_from_this<Mesh>
     std::size_t sizesMiddleProduct(std::size_t start, std::size_t end) const 
     {
       if(start > end) throw std::invalid_argument("start index must be <= end index for middle product"); 
-      if(end > m_mesh_vec.size()) throw std::invalid_argument("end index must be <= # of numDims in MeshXD"); 
+      if(end > m_size) throw std::invalid_argument("end index must be <= # of numDims in MeshXD"); 
       std::size_t prod = 1; 
-      for(std::size_t i=start; i<end; i++) prod *= m_mesh_vec[i]->size(); 
+      for(auto idx=start; idx<end; ++idx){
+        prod *= m_mesh_arr[idx].size(); 
+      }
       return prod; 
     } 
 
