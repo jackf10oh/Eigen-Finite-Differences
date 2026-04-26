@@ -139,6 +139,11 @@ class NwiseBinaryOp : public fdm::linops::PartialDerivBase<NwiseBinaryOp<BinaryO
     auto& lhs(){ return m_lhs; }
     const auto& rhs() const { return m_rhs; }
     auto& rhs(){ return m_rhs; }
+    void setTime_hooked(double t)
+    {
+      m_lhs.const_cast_derived().setTime_hooked(t); 
+      m_rhs.const_cast_derived().setTime_hooked(t); 
+    }
 }; 
 
 template<

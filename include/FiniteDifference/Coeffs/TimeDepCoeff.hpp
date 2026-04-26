@@ -23,7 +23,7 @@ namespace internal{
 template<class Callable>
 struct traits_impl<fdm::linops::TimeDepCoeff<Callable>>
 {
-  static constexpr std::size_t max_num_args_called = fdm::internal::callable_traits<Callable>::num_args; 
+  static constexpr std::size_t max_num_args_called = fdm::internal::callable_traits<Callable>::num_args - 1; // first arg binded to time. 
   static constexpr bool is_timedep = true; 
 }; 
 
@@ -92,6 +92,10 @@ class TimeDepCoeff : public CoeffBase<TimeDepCoeff<Callable>>
       CoeffBase<TimeDepCoeff>::setMesh_impl(m_mesh_raw);
     }
     double getTime() const { return m_callable.captured; }
+    void setTime_hooked(double t)
+    {
+      m_callable.captured = t;
+    }
 };
 
 } // end namespace linops 

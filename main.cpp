@@ -28,6 +28,7 @@
 #include<FiniteDifference/Coeffs/CoeffBase.hpp>
 #include<FiniteDifference/Coeffs/CoeffProduct.hpp> 
 #include<FiniteDifference/Coeffs/AutonomousCoeff.hpp>
+#include<FiniteDifference/Coeffs/TimeDepCoeff.hpp>
   
 using namespace fdm; 
 
@@ -43,12 +44,15 @@ int main()
 
   linops::NthPartialDeriv<1,1> my_deriv; 
 
-  linops::AutonomousCoeff my_coeff = [](double x, double y, double z){ return z; }; 
+  linops::TimeDepCoeff my_coeff = [](double t){ return t*t; }; 
 
   auto mult = my_coeff * my_deriv; 
   mult.setMesh(my_mesh); 
+  mult.setTime(5.0); 
   fdm::CSRMatrix result = mult; 
-  cout << result << endl; 
+  // cout << result << endl; 
+  cout << result.block(0,0,16,16) << endl; 
+  cout << result.block(16,16,32,32) << endl; 
 
   // auto expr = -my_deriv + 4.0 * my_deriv - my_deriv + 3 * my_deriv; 
   // expr.setMesh(my_mesh); 

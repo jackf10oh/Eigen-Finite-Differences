@@ -19,6 +19,17 @@ template<class Derived> class PartialDerivBase;
 
 namespace internal{ 
 
+// Member data that is only used by time dependent partial derivs 
+template<bool isTimeDep>
+struct TimeDepMemberData{}; 
+
+template<>
+struct TimeDepMemberData<true>{
+  double m_current_time; 
+  const Mesh* m_mesh_raw; 
+
+}; 
+
 // Evaluator 
 template<class Derived>
 struct Evaluator<PartialDerivBase<Derived>> : public EvaluatorBase<PartialDerivBase<Derived>>
@@ -34,20 +45,18 @@ struct Evaluator<PartialDerivBase<Derived>> : public EvaluatorBase<PartialDerivB
   }
 }; 
 
-
 // linops traits
 template<class Derived>
 struct traits_impl<fdm::linops::PartialDerivBase<Derived>> : traits_impl<Derived>{}; 
 
 } // end namespace internal 
-} // end namespace internal 
+} // end namespace linops 
 } // end namespace fdm 
 
-// Eigen traits 
 namespace Eigen{
 namespace internal{
 
-// traits of PartialDerivBase is same as Derived
+// Eigen traits of PartialDerivBase is same as Derived
 template<class Derived>
 struct traits<fdm::linops::PartialDerivBase<Derived>> : public traits<Derived>{}; 
 
@@ -55,10 +64,10 @@ struct traits<fdm::linops::PartialDerivBase<Derived>> : public traits<Derived>{}
 } // end namespace Eigen
 
 namespace fdm{
-  namespace linops{
+namespace linops{
 
 template<class Derived>
-class PartialDerivBase : public Eigen::SparseMatrixBase<Derived> // TODO inherit from compressed base? whats the difference?  
+class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected linops::internal::TimeDepMemberData<linops::internal::traits<Derived>::is_timedep>
 {
   public:
     // Type Defs --------------------- 
@@ -81,6 +90,55 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived> // TODO inherit
     // FDM Interface -------
     void setMesh(const std::shared_ptr<const Mesh>& m)
     {
+      if constexpr(fdm::linops::internal::traits<Derived>::is_timedep){
+        // just change the mesh thats observed
+        this->m_mesh_observed = m; 
+        this->m_mesh_raw = m.get(); 
+      }
+      else{
+        // change mesh observed + update m_stencil matrix 
+        this->m_mesh_observed = m; 
+        setMesh_impl(m.get()); 
+      }
+    }
+    SharedConstMesh getMesh() const { return m_mesh_observed.lock(); }
+    void setTime(double t){ 
+      if constexpr(fdm::linops::internal::traits<Derived>::is_timedep){
+        // update m_current_time + update m_stencil matrix 
+        this->m_current_time=t; 
+        derived().setTime_hooked(t); 
+        setMesh_impl(this->m_mesh_raw); 
+      }
+    }
+    void setTime_hooked(double t){}
+    double getTime() const {
+      if constexpr(fdm::linops::internal::traits<Derived>::is_timedep){
+        return this->m_current_time; 
+      }
+      return -1.0; 
+    }
+    
+    // Eigen Interface ------- 
+    StorageIndex rows() const { return m_prod_before * m_prod_after * m_stencil.rows(); }
+    StorageIndex cols() const { return m_prod_before * m_prod_after * m_stencil.cols(); }
+    StorageIndex nonZerosEstimate() const {return m_prod_before * m_prod_after * m_stencil.nonZeros(); }
+
+    // Operators ====================================================================== 
+    
+    // removed assignment from inheritance hierarchy 
+    template<typename OtherDerived>
+    Derived& operator=(const Eigen::EigenBase<OtherDerived> &other)=delete;
+
+    template<typename OtherDerived>
+    inline Derived& assign(const OtherDerived& other)=delete;
+
+    template<typename OtherDerived>
+    inline Derived& assignGeneric(const OtherDerived& other)=delete;
+
+  protected:
+    // Implementations ----------------------------------------------------------------
+    void setMesh_impl(const Mesh* m)
+    {
       using traits_t = fdm::linops::internal::traits<Derived>; 
       const auto& axis = m->getAxis(traits_t::direction); 
       const std::size_t axis_size = m->sizeOfDim(traits_t::direction); 
@@ -90,9 +148,6 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived> // TODO inherit
       bool direction_check = traits_t::direction >=  m->numDims(); 
       if(callable_check || direction_check) throw std::runtime_error("diffops setMesh: # of args in callables must be <= # of dims in mesh and direction must be < # of dims."); 
       
-      // update state 
-      this->m_mesh_observed = m; // does not hook! getMesh() returns nullptr on leafs ( they will never be calculated in this function)
-
       using Evaluator = fdm::linops::internal::Evaluator<Derived>; 
       Evaluator eval(derived()); 
 
@@ -111,10 +166,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived> // TODO inherit
         for(std::size_t row_idx=0; row_idx<axis_size; ++row_idx)
         {
           // use node selector 
-          typename Evaluator::Row row(eval, m.get(), m_prod_before * row_idx); 
-
-          std::cout << "row: " << row_idx << " valuePtrOffset: " << row.valuePtrOffset() << std::endl; 
-
+          typename Evaluator::Row row(eval, m, m_prod_before * row_idx); 
           // copy the indices into m_stencil's inner indices ptr
           m_stencil.outerIndexPtr()[row_idx] = row.valuePtrOffset(); 
           std::copy_n(row.columnIndices().cbegin(), row.size(), m_stencil.innerIndexPtr() + row.valuePtrOffset());  
@@ -133,14 +185,12 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived> // TODO inherit
         std::size_t nnz = product_before * Evaluator::nonZerosEstimate(axis); 
         m_stencil.reserve(nnz); 
         m_stencil.resize(product_before*axis_size, product_before*axis_size); 
-        // std::cout << "setMesh: innerIndexPtr: " << m_stencil.innerIndexPtr() << std::endl;
 
         // write node wise expressions into each row stencil 
         for(std::size_t row_idx=0; row_idx < product_before*axis_size; ++row_idx)
         {
           // use node selector 
-          typename Evaluator::Row row(eval, m.get(), row_idx); 
-          // std::cout << "row: " << row_idx << " valuePtrOffset: " << (row.valuePtrOffset() * product_before)+(row.size()*(row_idx%product_before)) << std::endl; 
+          typename Evaluator::Row row(eval, m, row_idx);
           // // copy the indices into m_stencil's inner indices ptr
           std::size_t inner_offset = (row.valuePtrOffset() * product_before)+(row.size()*(row_idx%product_before)); 
           std::size_t inset = row_idx%product_before; 
@@ -158,7 +208,6 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived> // TODO inherit
       }
       else{ // direction+1 < max_num_args <= m->numDims()
         // we can store the inflated 1st kronecker product repeated n times 
-        std::cout << "max args > direction + 1" << std::endl; 
         m_prod_before = 1; 
         std::size_t product_before = m->sizesMiddleProduct(0,traits_t::direction); 
         std::size_t num_repeats = m->sizesMiddleProduct(traits_t::direction+1, traits_t::max_num_args_called); 
@@ -169,10 +218,9 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived> // TODO inherit
         m_stencil.resize(num_repeats*product_before*axis_size, num_repeats*product_before*axis_size); 
 
         // write node wise expressions into each row of stencil 
-        std::cout << "entering for loop" << std::endl; 
         for(std::size_t row_idx=0; row_idx < num_repeats*product_before*axis_size; ++row_idx)
         {
-          typename Evaluator::Row row(eval, m.get(), row_idx); 
+          typename Evaluator::Row row(eval, m, row_idx); 
           std::size_t inner_offset = (nnz)*(row_idx/(product_before*axis_size))+(row.valuePtrOffset() * product_before)+(row.size()*(row_idx%product_before)); 
           std::size_t inset = (product_before*axis_size)*(row_idx/(product_before*axis_size)) + (row_idx%product_before); 
           std::transform(
@@ -188,30 +236,9 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived> // TODO inherit
         m_stencil.outerIndexPtr()[num_repeats*product_before*axis_size] = num_repeats * nnz; 
       } 
     }
-
-    SharedConstMesh getMesh() const { return m_mesh_observed.lock(); }
-    void setTime(double t){ derived().setTime(t); }
-    double getTime() const { return derived().getTime(); }
-    
-    // Eigen Interface ------- 
-    StorageIndex rows() const { return m_prod_before * m_prod_after * m_stencil.rows(); }
-    StorageIndex cols() const { return m_prod_before * m_prod_after * m_stencil.cols(); }
-    StorageIndex nonZerosEstimate() const {return m_prod_before * m_prod_after * m_stencil.nonZeros(); }
-
-    // Operators ====================================================================== 
-    
-    // removed assignment from inheritance hierarchy 
-    template<typename OtherDerived>
-    Derived& operator=(const Eigen::EigenBase<OtherDerived> &other)=delete;
-
-    template<typename OtherDerived>
-    inline Derived& assign(const OtherDerived& other)=delete;
-
-    template<typename OtherDerived>
-    inline Derived& assignGeneric(const OtherDerived& other)=delete;
 }; 
 
-  } // end namespace linops
+} // end namespace linops
 } // end namespace fdm 
 
 #endif // DiffOpBase.hpp  

@@ -97,6 +97,7 @@ class CoeffBase : public Eigen::DiagonalBase<Derived>
 
     // Member Functions -------------------
     using Base::derived; 
+    // using Base::const_derived; ????  
     const auto& diagonal() const { return m_cyclic_wrapper; }
     const auto& callable() const { return derived().callable(); }
 
@@ -104,7 +105,6 @@ class CoeffBase : public Eigen::DiagonalBase<Derived>
     template<class OtherDerived>
     auto operator*(const fdm::linops::PartialDerivBase<OtherDerived>& rhs)
     {
-      std::cout << "Coeff Product Made!" << std::endl; 
       return CoeffProduct(derived(), rhs.derived()); 
     } 
     

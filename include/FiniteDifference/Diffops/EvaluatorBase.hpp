@@ -37,8 +37,13 @@ struct Coordinate
   // Member Functions ------------------------
   template<class Callable>
   fdm::Scalar apply(const Callable& c) const {
-    constexpr std::size_t N = linops::traits::callable_traits<Callable>::num_args; 
-    return apply_impl(c, std::make_index_sequence<N>{}); 
+    constexpr std::size_t N = linops::traits::callable_traits<Callable>::num_args;
+    if constexpr(N == 0){
+      return c();
+    }  
+    else{
+      return apply_impl(c, std::make_index_sequence<N>{}); 
+    }
   }
 
   template<class Callable, std::size_t... idxs>

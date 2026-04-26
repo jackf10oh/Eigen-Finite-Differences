@@ -100,7 +100,7 @@ class callable_traits
     const G func; 
     fdm::Scalar captured; 
     BindFirst_impl(G g, fdm::Scalar x0): func(g), captured(x0) {}; 
-    fdm::Scalar operator()(Args... args){return func(captured,args...); }; 
+    fdm::Scalar operator()(Args... args) const {return func(captured,args...); }; 
   }; 
 
   public:
