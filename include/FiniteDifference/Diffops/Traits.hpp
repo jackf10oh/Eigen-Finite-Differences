@@ -36,7 +36,16 @@ namespace internal{
 
 // Base of all traits_impl<>. specialized by individual classes 
 template<class T>
-struct traits_impl{}; 
+struct traits_impl{
+  static constexpr bool is_linop = false; 
+  static constexpr bool is_unarop = false; 
+  static constexpr bool is_binop = false; 
+  static constexpr bool is_ternop = false; 
+  static constexpr std::size_t max_num_args_called = 0;  
+  static constexpr bool is_timedep = false;
+  static constexpr int direction = -1;
+  static constexpr std::size_t maxOrder = 0;
+}; 
 
 // standard tratis of any SparseMatrix type ------------------------------- 
 template<typename _Scalar, int _Options, typename _StorageIndex>
@@ -120,6 +129,16 @@ using is_partialderiv_crtp = is_partialderiv_crtp_impl<std::remove_cv_t<std::rem
 // Determine what type to use to nest any partial deriv 
 template<class T, typename = void>
 struct NestedStorage
+{
+  typedef typename std::conditional<
+    (std::is_lvalue_reference<T>::value),
+    T,
+    typename std::remove_reference<T>::type
+  >::type type; 
+};
+
+template<class T>
+struct NestedStorage<T, std::void_t<decltype(Eigen::internal::traits<std::remove_cv_t<std::remove_reference_t<T>>>::Flags)>>
 {
   typedef typename std::conditional<
     (Eigen::internal::traits<std::remove_cv_t<std::remove_reference_t<T>>>::Flags & Eigen::NestByRefBit) && (std::is_lvalue_reference<T>::value),

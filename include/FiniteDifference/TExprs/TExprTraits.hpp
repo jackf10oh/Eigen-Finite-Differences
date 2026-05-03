@@ -13,6 +13,9 @@ namespace fdm{
 template<typename Derived, std::size_t N>
 class TimeDerivBase; 
 
+template<std::size_t N>
+class NthTimeDeriv; 
+
 template<typename Coeff, typename TimeDeriv>
 class CoeffMultExpr; 
 
@@ -96,11 +99,23 @@ struct TimeDerivTraits
   using CoeffAtReturnType = std::remove_cv_t<std::remove_reference_t<_coeffatreturntype_unclean_>>;
 }; 
 
-template<typename TIMEDERIV_T>
-struct coeffat_returns_double : public std::is_same<double, typename TimeDerivTraits<TIMEDERIV_T>::CoeffAtReturnType>{}; 
+template<typename T>
+struct coeffat_returns_double_impl : std::false_type{};
 
-template<typename TIMEDERIV_T>
-struct coeffat_returns_other : public std::negation<coeffat_returns_double<TIMEDERIV_T>>{}; 
+template<std::size_t nthOrder>
+struct coeffat_returns_double_impl<texprs::NthTimeDeriv<nthOrder>> : std::true_type{}; 
+
+template<class Lhs, class Rhs>
+struct coeffat_returns_double_impl<texprs::CoeffMultExpr<Lhs,Rhs>> : std::conjunction<
+  std::is_arithmetic<Lhs>, 
+  coeffat_returns_double_impl<std::remove_cv_t<std::remove_reference_t<std::remove_cv_t<std::remove_reference_t<Rhs>>>>>
+>{}; 
+
+template<class T>
+using coeffat_returns_double = coeffat_returns_double_impl<std::remove_cv_t<std::remove_reference_t<T>>>; 
+
+template<typename T>
+struct coeffat_returns_other : public std::negation<coeffat_returns_double<T>>{}; 
 
 } // end namespace traits
 
@@ -108,7 +123,7 @@ struct coeffat_returns_other : public std::negation<coeffat_returns_double<TIMED
 namespace traits{ 
 
 template<template<typename...> class PRED, typename TUP_T>
-auto filter_tup(TUP_T tup)
+auto filter_tup(TUP_T&& tup)
 {
   auto filter_lam = [](auto&& elem){
     using T = decltype(elem); 

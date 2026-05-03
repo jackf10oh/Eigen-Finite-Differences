@@ -68,7 +68,7 @@ class AutonomousCoeff : public CoeffBase<AutonomousCoeff<Callable>>
     // Type Defs ------------
     using CallableCleaned = std::remove_cv_t<std::remove_reference_t<Callable>>; 
     // Member Data ----------- 
-    std::weak_ptr<const Mesh> m_mesh_observed; 
+    std::weak_ptr<const fdm::Mesh> m_mesh_observed; 
     CallableCleaned m_callable; 
 
   public:
@@ -79,7 +79,7 @@ class AutonomousCoeff : public CoeffBase<AutonomousCoeff<Callable>>
     
     // Member Functions 
     const auto& callable() const { return m_callable; }
-    void setMesh(const std::shared_ptr<const Mesh>& m)
+    void setMesh(const std::shared_ptr<const fdm::Mesh>& m)
     {
       m_mesh_observed = m; 
       CoeffBase<AutonomousCoeff<Callable>>::setMesh_impl(m.get()); 

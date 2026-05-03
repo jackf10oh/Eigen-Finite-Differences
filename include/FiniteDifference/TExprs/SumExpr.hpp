@@ -37,7 +37,7 @@ class SumExpr : public TimeDerivBase<SumExpr<Args...>, texprs::internal::variadi
     decltype(auto) coeffAt(const Cont& v) const = delete; 
 
     // Lvalue toTuple 
-    auto toTuple() & 
+    auto& toTuple() & 
     { return m_args; }
 
     // Rvalue toTuple -> move args 

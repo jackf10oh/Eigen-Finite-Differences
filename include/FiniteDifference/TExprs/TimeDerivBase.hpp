@@ -42,13 +42,13 @@ class TimeDerivBase
     // packs this pointer into iterable tuple object. note: SumExpr will override it
     auto toTuple() &
     {
-      // std::cout << "Lvalue Base .toTuple()" << std::endl; 
-      return std::tie(static_cast<Derived&>(*this)); // lvalue -> reference
+      std::cout << "Lvalue Base .toTuple()" << std::endl; 
+      return std::tie(*static_cast<Derived*>(this)); // lvalue -> reference
     }
     auto toTuple() &&
     {
-      // std::cout << "Rvalue Base .toTuple()" << std::endl; 
-      return std::make_tuple(std::move(static_cast<Derived&&>(*this))); // rvalue -> move
+      std::cout << "Rvalue Base .toTuple()" << std::endl; 
+      return std::make_tuple(std::move(*static_cast<Derived*>(this))); // rvalue -> move
     }
 
     // Operators ================================
@@ -68,14 +68,16 @@ class TimeDerivBase
     // Unary Negation Ut -> -Ut (Lvalue) -----------------------
     auto operator-() &
     {
-      // delegate to Operator*() from CoeffMultExpr.hpp 
+      // delegate to Operator*() from CoeffMultExpr.hpp
+      std::cout << "Lval operator-() called!" << std::endl; 
       return (-1.0) * static_cast<Derived&>(*this); 
     }
     // (Rvalue) 
     auto operator-() &&
     {
       // delegate to Operator*() from CoeffMultExpr.hpp 
-      return (-1.0) * std::move(static_cast<Derived&>(*this)); 
+      std::cout << "Rval operator-() called!" << std::endl; 
+      return (-1.0) * std::move(static_cast<Derived&&>(*this)); 
     }
 
     // Binary Subtraction (Ut - Utt) -> (Ut) + (-Utt) (Lvalue) ----------------------------------

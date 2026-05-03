@@ -38,7 +38,7 @@ namespace internal{
 
 // Traits 
 template<class Callable>
-struct traits<fdm::linops::TimeDepCoeff<Callable>>
+struct traits<fdm::linops::TimeDepCoeff<Callable>> // : public traits<fdm::linops::CoeffBase<fdm::linops::AutonomousCoeff<Callable>>>
 {
   typedef Eigen::DiagonalShape XprKind; 
   typedef typename Eigen::CwiseNullaryOp<fdm::linops::CyclicWrapper, Eigen::Matrix<fdm::Scalar, 1, Eigen::Dynamic>> DiagonalVectorType;

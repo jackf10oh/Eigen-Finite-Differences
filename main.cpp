@@ -39,40 +39,35 @@ using std::endl, std::cout;
 
 int main()
 {
+  std::cout << std::setprecision(4); 
+
   auto my_mesh = fdm::make_Mesh(2); 
   my_mesh->getAxis(0) = Eigen::VectorXd::LinSpaced(4,0.0,3.0); 
   my_mesh->getAxis(1) = Eigen::VectorXd::LinSpaced(4,0.0,3.0); 
-  // utils::print_vec(my_mesh->getAxis(0)); 
 
-  auto deriv = linops::NthPartialDeriv<1,1>{} + linops::NthPartialDeriv<2,1>{}; 
-  deriv.setMesh(my_mesh); 
-  fdm::CSRMatrix result01 = deriv; 
-  cout << result01.toDense() << endl; 
+  std::vector<fdm::Vector> ics = { Eigen::VectorXd::LinSpaced(my_mesh->sizesProduct(), 0.0, 11.0) };
 
+  fdm::linops::AutonomousCoeff a = [](double x){ return x + 5.0; }; 
+  cout << &a << endl; 
+  fdm::linops::TimeDepCoeff b = [](double t){ return t*t; };
+  // auto xpr = a * texprs::NthTimeDeriv<1>{} - b * texprs::NthTimeDeriv<1>{};// + texprs::NthTimeDeriv<1>{}; 
+  auto xpr = texprs::NthTimeDeriv<1>{}; 
+  // auto xpr = b * texprs::NthTimeDeriv<1>{}; 
 
-  linops::TimeDepCoeff my_coeff = [](double t){ return t*t; }; 
+  auto executor = texprs::make_Executor(xpr); 
+  executor.pushTimeRange(my_mesh->getAxis(0).cbegin(), my_mesh->getAxis(0).cend()); 
+  executor.pushSolution(ics[0]); 
+  executor.setMesh(my_mesh); 
+  executor.calculate(3.0);  
 
-  auto mult = my_coeff * deriv; 
-  mult.setMesh(my_mesh); 
-  mult.setTime(5.0); 
-  fdm::CSRMatrix result = mult; 
-  cout << result.toDense() << endl; 
+  utils::print_vec(executor.getStoredTimes(), "times"); 
 
-  auto messy = -mult + deriv; // time dep + non time dep 
-  messy.setMesh(my_mesh); 
-  messy.setTime(5.0); 
-  fdm::CSRMatrix result09 = messy; 
-  cout << result09.toDense() << endl; 
+  cout << "numStoredSols: " << executor.numStoredSols << endl; 
+  cout << "sol[0]: " << executor.getStoredSolutions()[0].transpose().eval() << endl; 
+  cout << executor.getRhsExpression().transpose() << endl; 
 
-  // my_coeff.setMesh(my_mesh); 
-  // my_coeff.setTime(5.0); 
-
-  // fdm::DiagMatrix result04 = my_coeff + 3 * my_coeff;  
-  // cout << result04.toDenseMatrix() << endl; 
-  // auto expr = -my_deriv + 4.0 * my_deriv - my_deriv + 3 * my_deriv; 
-  // expr.setMesh(my_mesh); 
-  // fdm::CSRMatrix result = expr; 
-  // cout << result << endl; 
+  cout << executor.getInvCoeff() << endl; 
+  // cout << executor.getInvCoeff().toDenseMatrix() << endl; 
 
 };
 

@@ -30,7 +30,7 @@ class Mesh : public std::enable_shared_from_this<Mesh>
     // member data ----------------------------
     static constexpr std::size_t numDimsMax = 5; // fixed maximum.
     typename std::array<Eigen::VectorXd, numDimsMax> m_mesh_arr; // fixed size array of 1d axes.
-    std::size_t m_size; // runtime size that counts how many dims are used. 
+    const std::size_t m_size; // runtime size that counts how many dims are used. 
 
   public:
     // Constructors + Destructor =============================================================== 
@@ -51,10 +51,11 @@ class Mesh : public std::enable_shared_from_this<Mesh>
 
     template<typename... ArgType>
     Mesh(const Eigen::MatrixBase<ArgType>&... xpr)
-      : m_size(0)
+      : m_size(sizeof...(xpr))
     {
       static_assert(sizeof...(ArgType), "Can't construct mesh with given dims");
-      auto lam = [&](const auto& x){m_mesh_arr[m_size] = x; ++m_size; }; 
+      std::size_t ith_dim = 0; 
+      auto lam = [&](const auto& x){m_mesh_arr[ith_dim] = x; ++ith_dim; }; 
       std::apply(
         lam, 
         xpr... 

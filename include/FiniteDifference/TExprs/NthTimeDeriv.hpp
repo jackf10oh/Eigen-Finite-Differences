@@ -10,7 +10,7 @@
 #include "TimeDerivBase.hpp"
 
 namespace fdm{
-  namespace texprs{
+namespace texprs{
 
 // ===============================================================
 template<std::size_t N>
@@ -30,14 +30,14 @@ class NthTimeDeriv : public texprs::TimeDerivBase<NthTimeDeriv<N>, N>
 
     // Member Funcs =================================================== 
     template<std::size_t ithCol, std::size_t nCols, typename Cont>
-    decltype(auto) coeffAt(const Cont& v) const 
+    auto coeffAt(const Cont& v) const 
     {
       return v[nCols * order + ithCol]; 
     }
 
 }; 
 
-  } // end namespace texprs 
+} // end namespace texprs 
 } // end namespace fdm 
 
 #endif // NthTimeDeriv.hpp

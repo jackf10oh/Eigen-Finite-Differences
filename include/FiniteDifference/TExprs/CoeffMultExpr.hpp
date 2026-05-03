@@ -10,9 +10,10 @@
 #include "../LinOps/LinOpTraits.hpp" // linops::traits::Storage_t<>, is_linop_crtp<>
 #include "TimeDerivBase.hpp"
 #include "TExprTraits.hpp"
+#include "../Diffops/Traits.hpp"
 
 namespace fdm{
-  namespace texprs{
+namespace texprs{
 
 // ======================================================
 template<typename Coeff, typename TimeDeriv>
@@ -21,8 +22,8 @@ class CoeffMultExpr : public TimeDerivBase<CoeffMultExpr<Coeff,TimeDeriv>, std::
   public:
     // Type Defs --------------------- 
     /* if its an lvalue TimeDeriv store a reference. 
-    if its a rvalue NthTimeDeriv just store a copy. */ 
-    using LStorage = typename linops::traits::Storage<Coeff>::type; 
+    if its a rvalue NthTimeDeriv just store a copy. */  
+    using LStorage = typename fdm::linops::internal::NestedStorage<Coeff>::type; 
     using RStorage = typename texprs::traits::Storage<TimeDeriv>::type; 
 
     // Member Data ---------------
@@ -53,53 +54,23 @@ class CoeffMultExpr : public TimeDerivBase<CoeffMultExpr<Coeff,TimeDeriv>, std::
     template<std::size_t ithCol, std::size_t nCols, typename Cont>
     decltype(auto) coeffAt(const Cont& v) const 
     {
-      if constexpr(linops::traits::is_coeffop_crtp<LStorage>::value){
-        return m_coeff.asMatrix() * m_rhs.template coeffAt<ithCol,nCols,Cont>(v);  
-      }
-      else if constexpr(std::is_same<double, std::remove_cv_t<std::remove_reference_t<LStorage>>>::value){
-        return m_coeff * m_rhs.template coeffAt<ithCol,nCols,Cont>(v); 
-      }
-      else{
-        throw std::runtime_error("CoeffMultExpr error: LHS (Coeff) is not a double or CoeffOp."); 
-      }
+      return (m_rhs.template coeffAt<ithCol,nCols,Cont>(v)) * m_coeff;  
+      // return m_rhs.template coeffAt<ithCol,nCols,Cont>(v);  
     } 
+
 }; // end class CoeffMultExpr
 
-// Operator for CoeffOp c, TimeDeriv Ut making expression c*Ut 
-template<
-  typename Lhs, 
-  typename Rhs
->
-std::enable_if_t<
-  std::conjunction_v<
-    linops::traits::is_coeffop_crtp<Lhs>,
-    texprs::traits::is_timederiv_crtp<Rhs>
-  >, 
-  texprs::CoeffMultExpr<Lhs,Rhs>
-> operator*(Lhs&& c, Rhs&& rhs)
+// Operator for coeff c, TimeDeriv Ut making expression c*Ut 
+template<typename Lhs, typename Rhs, typename = std::enable_if_t<texprs::traits::is_timederiv_crtp<Rhs>::value>>
+auto operator*(Lhs&& c, Rhs&& rhs)
 {
   // false if Rhs is any form of SumExpr. We don't want to mess with expressions like c*(A+B)
   static_assert(std::tuple_size<decltype(rhs.toTuple())>::value == 1, "operator*(c,TimeDeriv) only meant for single TimeDeriv"); 
+  std::cout << "Product Made! lhs is lval? " << std::is_lvalue_reference<Lhs>::value << " rhs is lval? " << std::is_lvalue_reference<Rhs>::value << std::endl; 
   return CoeffMultExpr<Lhs,Rhs>(std::forward<Lhs>(c), std::forward<Rhs>(rhs)); 
 } 
 
-// Operator for Scalar c, TimeDeriv Ut making expression c*Ut 
-template<
-  typename Scalar, 
-  typename TimeDeriv, 
-  typename = std::enable_if_t<
-    std::conjunction_v<
-      texprs::traits::is_timederiv_crtp<TimeDeriv>,
-      std::is_arithmetic<std::remove_reference_t<std::remove_cv_t<Scalar>>>
-    >
-  > 
-> 
-auto operator*(Scalar&& c, TimeDeriv&& rhs)
-{
-  return CoeffMultExpr<Scalar,TimeDeriv>(std::forward<Scalar>(c), std::forward<TimeDeriv>(rhs)); 
-}
-
-  } // end namespace texprs 
+} // end namespace texprs 
 } // end namespace fdm 
 
 #endif // CoeffMultExpr.hpp 

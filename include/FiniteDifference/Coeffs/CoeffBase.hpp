@@ -10,6 +10,7 @@
 #ifndef FDM_COEFFS_BASE_H
 #define FDM_COEFFS_BASE_H 
 
+#include<memory>
 #include<Eigen/Core> // DiagonalMatrixBase 
 #include "../Diffops/Traits.hpp"
 #include "../Diffops/EvaluatorBase.hpp" // Coordinate struct 
