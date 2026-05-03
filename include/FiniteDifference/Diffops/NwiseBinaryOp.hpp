@@ -25,9 +25,10 @@ namespace internal{
 template<class BinaryOp, class LhsType, class RhsType>
 struct Evaluator<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> : public EvaluatorBase<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
 {
-  const fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>& m_xpr; 
-  Evaluator<LhsType> m_lhs_eval; 
-  Evaluator<RhsType> m_rhs_eval; 
+  using XprType = fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>; 
+  const XprType& m_xpr; 
+  Evaluator<typename XprType::Lhs> m_lhs_eval; 
+  Evaluator<typename XprType::Rhs> m_rhs_eval; 
   Evaluator(const fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>& xpr)
     : m_xpr(xpr), m_lhs_eval(xpr.lhs()), m_rhs_eval(xpr.rhs())
   {}
@@ -118,8 +119,13 @@ class NwiseBinaryOp : public fdm::linops::PartialDerivBase<NwiseBinaryOp<BinaryO
     EIGEN_SPARSE_PUBLIC_INTERFACE(NwiseBinaryOp)
     typedef typename std::remove_cv_t<std::remove_reference_t<LhsType>> Lhs; 
     typedef typename std::remove_cv_t<std::remove_reference_t<RhsType>> Rhs; 
-    typedef typename Eigen::internal::ref_selector<LhsType>::type LhsNested;
-    typedef typename Eigen::internal::ref_selector<RhsType>::type RhsNested;
+    typedef typename fdm::linops::internal::NestedStorage<LhsType>::type LhsNested;
+    typedef typename fdm::linops::internal::NestedStorage<RhsType>::type RhsNested;
+
+    // Friends 
+    friend Eigen::internal::evaluator<NwiseBinaryOp>; 
+    friend fdm::linops::internal::EvaluatorBase<NwiseBinaryOp>; 
+    friend fdm::linops::internal::Evaluator<NwiseBinaryOp>;
 
   protected:
     // Member data ----------------------------------- 
@@ -129,8 +135,8 @@ class NwiseBinaryOp : public fdm::linops::PartialDerivBase<NwiseBinaryOp<BinaryO
   
   public:
     // Constructors ====================== 
-    NwiseBinaryOp(const LhsType& lhs, const RhsType& rhs, const BinaryOp& func = BinaryOp())
-      : m_lhs(lhs), m_rhs(rhs), m_functor(func) 
+    NwiseBinaryOp(LhsType&& lhs, RhsType&& rhs, BinaryOp func = BinaryOp())
+      : m_lhs(std::forward<LhsType>(lhs)), m_rhs(std::forward<RhsType>(rhs)), m_functor(func) 
     {}
 
     // Member Funcs ----------------------------------- 
@@ -147,37 +153,41 @@ class NwiseBinaryOp : public fdm::linops::PartialDerivBase<NwiseBinaryOp<BinaryO
 }; 
 
 template<
-  typename LeftDerived,
-  typename RightDerived, 
+  typename LeftArg,
+  typename RightArg, 
   typename = std::enable_if_t<
+    fdm::linops::internal::is_partialderiv_crtp<LeftArg>::value &&
+    fdm::linops::internal::is_partialderiv_crtp<RightArg>::value &&  
     std::is_same<
-      typename linops::internal::traits<LeftDerived>::node_selector_tag, 
-      typename linops::internal::traits<RightDerived>::node_selector_tag
+      typename linops::internal::traits<LeftArg>::node_selector_tag, 
+      typename linops::internal::traits<RightArg>::node_selector_tag
     >::value &&  
-    (linops::internal::traits<LeftDerived>::is_timedep == linops::internal::traits<RightDerived>::is_timedep) && 
-    (linops::internal::traits<LeftDerived>::direction == linops::internal::traits<RightDerived>::direction)
+    (linops::internal::traits<LeftArg>::is_timedep == linops::internal::traits<RightArg>::is_timedep) && 
+    (linops::internal::traits<LeftArg>::direction == linops::internal::traits<RightArg>::direction)
   >
 >
-auto operator-(const PartialDerivBase<LeftDerived>& lhs, const PartialDerivBase<RightDerived>& rhs)
+auto operator-(LeftArg&& lhs, RightArg&& rhs)
 {
-  return NwiseBinaryOp(lhs.derived(), rhs.derived(), fdm::linops::internal::BinarySubtractionFO{}); 
+  return NwiseBinaryOp<fdm::linops::internal::BinarySubtractionFO, LeftArg, RightArg>(std::forward<LeftArg>(lhs), std::forward<RightArg>(rhs), fdm::linops::internal::BinarySubtractionFO{}); 
 }; 
 
 template<
-  typename LeftDerived,
-  typename RightDerived, 
+  typename LeftArg,
+  typename RightArg, 
   typename = std::enable_if_t<
+    fdm::linops::internal::is_partialderiv_crtp<LeftArg>::value &&
+    fdm::linops::internal::is_partialderiv_crtp<RightArg>::value &&  
     std::is_same<
-      typename linops::internal::traits<LeftDerived>::node_selector_tag, 
-      typename linops::internal::traits<RightDerived>::node_selector_tag
+      typename linops::internal::traits<LeftArg>::node_selector_tag, 
+      typename linops::internal::traits<RightArg>::node_selector_tag
     >::value &&  
-    (linops::internal::traits<LeftDerived>::is_timedep == linops::internal::traits<RightDerived>::is_timedep) && 
-    (linops::internal::traits<LeftDerived>::direction == linops::internal::traits<RightDerived>::direction)
+    (linops::internal::traits<LeftArg>::is_timedep == linops::internal::traits<RightArg>::is_timedep) && 
+    (linops::internal::traits<LeftArg>::direction == linops::internal::traits<RightArg>::direction)
   >
 >
-auto operator+(const PartialDerivBase<LeftDerived>& lhs, const PartialDerivBase<RightDerived>& rhs)
+auto operator+(LeftArg&& lhs, RightArg&& rhs)
 {
-  return NwiseBinaryOp(lhs.derived(), rhs.derived(), fdm::linops::internal::BinaryAdditionFO{}); 
+  return NwiseBinaryOp<fdm::linops::internal::BinaryAdditionFO, LeftArg, RightArg>(std::forward<LeftArg>(lhs), std::forward<RightArg>(rhs), fdm::linops::internal::BinaryAdditionFO{}); 
 }; 
 
 } // end namespace linops 

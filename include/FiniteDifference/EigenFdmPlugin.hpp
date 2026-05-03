@@ -16,30 +16,21 @@ void setMesh(const std::shared_ptr<const fdm::Mesh>& m)
   // TODO ternary operators? 
   if constexpr(fdm::linops::internal::traits<Derived>::is_binop){
     // binary expressions hook lhs/rhs
-    std::cout <<"binop SetMesh! "; 
     if constexpr(fdm::linops::internal::traits<typename Derived::Lhs>::is_linop){
-      std::cout <<"L hooked, "; 
       derived().lhs().const_cast_derived().setMesh(m);      
     }
     if constexpr(fdm::linops::internal::traits<typename Derived::Rhs>::is_linop){
-      std::cout <<"R Hooked" << std::endl;
-      std::cout << "RHS type: " << typeid(decltype(derived().rhs())).name() << std::endl; 
-      std::cout << "RHS  const cast type: " << typeid(decltype(derived().rhs().const_cast_derived())).name() << std::endl; 
       derived().rhs().const_cast_derived().setMesh(m);
     }
-    std::cout << std::endl;
   }
   else if constexpr(fdm::linops::internal::traits<Derived>::is_unarop){
     // unary expressions hook nestedExpression 
-    std::cout <<"unarop SetMesh!"; 
     if constexpr(fdm::linops::internal::traits<typename Derived::XprTypeNested>::is_linop){
-      std::cout << "nested hooked"; 
       derived().nestedExpression().const_cast_derived().setMesh(m); 
     }
-    std::cout << std::endl; 
   }
   else{
-    // leaf matrices resize... 
+    // leaf matrices resize?  
     // std::size_t s = m->sizesProduct(); 
     // const_cast<D&>(derived()).resize(s,s); 
   }

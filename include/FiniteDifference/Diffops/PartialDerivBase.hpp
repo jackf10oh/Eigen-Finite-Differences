@@ -74,10 +74,12 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
     typedef Eigen::SparseMatrixBase<Derived> Base;
     EIGEN_SPARSE_PUBLIC_INTERFACE(PartialDerivBase) 
 
-    // Friends
+    // Friends ------------------- 
     friend Eigen::internal::evaluator<PartialDerivBase>; 
+    friend fdm::linops::internal::EvaluatorBase<PartialDerivBase>; 
+    friend fdm::linops::internal::Evaluator<PartialDerivBase>; 
 
-  public: // TODO make private 
+  protected: // TODO make private 
     // Member Data ----------------------------------------------
     // const Mesh* m_mesh_raw = nullptr; // This is unused until I need time dependent operators....... 
     std::weak_ptr<const Mesh> m_mesh_observed = {/*nullptr*/}; 

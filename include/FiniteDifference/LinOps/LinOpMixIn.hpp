@@ -192,8 +192,8 @@ class LinOpMixIn : private internal::LinOpMixInData<Derived>
     }
     
     // friend declare c * L (lval + rval) -------------------------------------------
-    template<typename Scalar, typename R, typename>
-    friend auto operator*(Scalar&& scalar, R&& rhs); 
+    // template<typename Scalar, typename R, typename>
+    // friend auto operator*(Scalar&& scalar, R&& rhs); 
     template<typename T>
     friend struct traits::supports_left_scalar_mult;
 
@@ -218,21 +218,21 @@ class LinOpMixIn : private internal::LinOpMixInData<Derived>
 
 }; // end LinOpMixIn<> 
 
-// operator*(c,L) outside of class ....
-template<
-  typename Scalar, 
-  typename R, 
-  typename = std::enable_if_t<
-    std::conjunction_v<
-    traits::is_linop_crtp<R>, 
-    traits::supports_left_scalar_mult<R>, 
-    std::is_arithmetic<std::remove_cv_t<std::remove_reference_t<Scalar>>>
-    > // end conjuntion 
-  > // end enable_if
->
-auto operator*(Scalar&& c, R&& rhs){
-  return std::forward<R>(rhs).left_scalar_mult_impl( std::forward<Scalar>(c) ); 
-}
+// // operator*(c,L) outside of class ....
+// template<
+//   typename Scalar, 
+//   typename R, 
+//   typename = std::enable_if_t<
+//     std::conjunction_v<
+//     traits::is_linop_crtp<R>, 
+//     traits::supports_left_scalar_mult<R>, 
+//     std::is_arithmetic<std::remove_cv_t<std::remove_reference_t<Scalar>>>
+//     > // end conjuntion 
+//   > // end enable_if
+// >
+// auto operator*(Scalar&& c, R&& rhs){
+//   return std::forward<R>(rhs).left_scalar_mult_impl( std::forward<Scalar>(c) ); 
+// }
 
   } // end namespace linops 
 } // end namespace fdm  

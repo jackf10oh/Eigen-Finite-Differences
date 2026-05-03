@@ -23,7 +23,8 @@ namespace internal{
 template<std::size_t _nthOrder, int _direction>
 struct Evaluator<fdm::linops::NthPartialDeriv<_nthOrder,_direction>> : public EvaluatorBase< fdm::linops::NthPartialDeriv<_nthOrder,_direction> >
 {
-  Evaluator(const fdm::linops::NthPartialDeriv<_nthOrder,_direction>& xpr){}
+  const fdm::linops::NthPartialDeriv<_nthOrder,_direction>& m_xpr; 
+  Evaluator(const fdm::linops::NthPartialDeriv<_nthOrder,_direction>& xpr): m_xpr(xpr){}
   template<std::size_t N>
   auto evaluateWeightsAndCoords(const fdm::Scalar* weights, std::size_t weights_per_order, const fdm::linops::Coordinate<N>& coords) const 
   {
@@ -98,9 +99,19 @@ struct evaluator<fdm::linops::NthPartialDeriv<_nthOrder, _direction>>
 namespace fdm{ 
 namespace linops{
 
-template<std::size_t nthOrder, int direction>
-class NthPartialDeriv : public PartialDerivBase<NthPartialDeriv<nthOrder,direction>>
-{}; 
+template<std::size_t _nthOrder, int _direction>
+class NthPartialDeriv : public PartialDerivBase<NthPartialDeriv<_nthOrder,_direction>>
+{
+  public:
+    // Friends ----------------- 
+    friend Eigen::internal::evaluator<NthPartialDeriv>; 
+    friend fdm::linops::internal::EvaluatorBase<NthPartialDeriv>; 
+    friend fdm::linops::internal::Evaluator<NthPartialDeriv>;
+
+    // Member Data -------------- 
+    static constexpr int direction = _direction; 
+    static constexpr std::size_t order = _nthOrder; 
+}; 
 
 } // end namespace linops 
 } // end namespace fdm 

@@ -14,11 +14,12 @@ class Mesh;
 
 // helpful aliases ------
 using Scalar = double; // might use this more consistently in the future... 
-using RowMajorMatrix = Eigen::SparseMatrix<Scalar, Eigen::RowMajor>;
-using CSRMatrix = RowMajorMatrix; // Column Sparse Row (CSR) Matrix
-using StridedRef = typename Eigen::Ref<Eigen::VectorXd, 0, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>; 
+using Vector = Eigen::Matrix<fdm::Scalar, Eigen::Dynamic, 1>; 
+using CSRMatrix = Eigen::SparseMatrix<Scalar, Eigen::RowMajor>; // Compressed Sparse Row (CSR) Matrix
+using DiagMatrix = Eigen::DiagonalMatrix<fdm::Scalar,Eigen::Dynamic>; // Diagonal Matrix 
+using StridedRef = typename Eigen::Ref<fdm::Vector, 0, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>; 
 using Stride =  Eigen::Stride<0,Eigen::Dynamic>; 
-using StrideView =  Eigen::Map<Eigen::VectorXd, Eigen::Unaligned, Stride>;
+using StrideView =  Eigen::Map<fdm::Vector, Eigen::Unaligned, Stride>;
 
 } // end namespace fdm 
 

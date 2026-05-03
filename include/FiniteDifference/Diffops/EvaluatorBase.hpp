@@ -167,7 +167,7 @@ struct EvaluatorBase
     // constructor
     Row(const Evaluator<Xpr>& eval, const Mesh* m, std::size_t row_idx)
       : m_eval(eval), 
-      m_nodes(m->getAxis(traits_t::direction), (row_idx / m->sizesMiddleProduct(0,traits_t::direction)) % m->sizeOfDim(traits_t::direction)), 
+      m_nodes(m->getAxis(traits_t::direction), (row_idx / eval.m_xpr.m_prod_before) % m->sizeOfDim(traits_t::direction)), 
       m_calc(m_nodes.x_bar, m_nodes.nodeValues.cbegin(), std::next(m_nodes.nodeValues.cbegin(), m_nodes.numNodesUsed)), 
       m_coords(m, row_idx)
     {}

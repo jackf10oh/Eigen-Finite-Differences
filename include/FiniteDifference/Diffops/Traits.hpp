@@ -26,8 +26,13 @@
 // #include<Eigen/SparseCore> can't include before plugin macro takes effect! 
 
 namespace fdm{ 
-  namespace linops{
-    namespace internal{
+namespace linops{
+
+// Forward Declarations ------------------------ 
+template<class Derived>
+struct PartialDerivBase; 
+
+namespace internal{
 
 // Base of all traits_impl<>. specialized by individual classes 
 template<class T>
@@ -99,8 +104,32 @@ struct traits_impl< Eigen::CwiseUnaryOp<Op, T> >
 template<class T>
 using traits = traits_impl<std::remove_reference_t<std::remove_cv_t<T>>>; 
 
-    } // end namespace internal 
-  } // end namespace linops 
+// Given a type T detect if it is derived from PartialDerivBase<T> or is the same as PartialDerivBase<T>
+template<class T>
+struct is_partialderiv_crtp_helper : std::false_type{}; 
+
+template<class T>
+struct is_partialderiv_crtp_helper<fdm::linops::PartialDerivBase<T>> : std::true_type{}; 
+
+template<class T>
+struct is_partialderiv_crtp_impl : std::disjunction<std::is_base_of<fdm::linops::PartialDerivBase<T>,T>, is_partialderiv_crtp_helper<T>>{}; 
+
+template<class T>
+using is_partialderiv_crtp = is_partialderiv_crtp_impl<std::remove_cv_t<std::remove_reference_t<T>>>; 
+
+// Determine what type to use to nest any partial deriv 
+template<class T, typename = void>
+struct NestedStorage
+{
+  typedef typename std::conditional<
+    (Eigen::internal::traits<std::remove_cv_t<std::remove_reference_t<T>>>::Flags & Eigen::NestByRefBit) && (std::is_lvalue_reference<T>::value),
+    T,
+    typename std::remove_reference<T>::type
+  >::type type; 
+};
+
+} // end namespace internal 
+} // end namespace linops 
 } // end namespace fdm
 
 #endif // Traits.hpp 

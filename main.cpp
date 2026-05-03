@@ -3,10 +3,13 @@
 //
 //
 // JAF 12/8/2025
-
+#define eigen_assert(x)
 #include<FiniteDifference/Diffops/Traits.hpp> 
 #include<FiniteDifference/Mesh.hpp> 
 #define EIGEN_SPARSEMATRIXBASE_PLUGIN <FiniteDifference/EigenFdmPlugin.hpp> 
+
+// workaround to allow expressions of different rows/cols to be added 
+// before setMesh() sets their rows/cols to be equal
 
 #include<cstdint>
 #include<iostream>
@@ -36,24 +39,36 @@ using std::endl, std::cout;
 
 int main()
 {
-  auto my_mesh = fdm::make_Mesh(3); 
+  auto my_mesh = fdm::make_Mesh(2); 
   my_mesh->getAxis(0) = Eigen::VectorXd::LinSpaced(4,0.0,3.0); 
   my_mesh->getAxis(1) = Eigen::VectorXd::LinSpaced(4,0.0,3.0); 
-  my_mesh->getAxis(2) = Eigen::VectorXd::LinSpaced(4,0.0,3.0); 
-  utils::print_vec(my_mesh->getAxis(0)); 
+  // utils::print_vec(my_mesh->getAxis(0)); 
 
-  linops::NthPartialDeriv<1,1> my_deriv; 
+  auto deriv = linops::NthPartialDeriv<1,1>{} + linops::NthPartialDeriv<2,1>{}; 
+  deriv.setMesh(my_mesh); 
+  fdm::CSRMatrix result01 = deriv; 
+  cout << result01.toDense() << endl; 
+
 
   linops::TimeDepCoeff my_coeff = [](double t){ return t*t; }; 
 
-  auto mult = my_coeff * my_deriv; 
+  auto mult = my_coeff * deriv; 
   mult.setMesh(my_mesh); 
   mult.setTime(5.0); 
   fdm::CSRMatrix result = mult; 
-  // cout << result << endl; 
-  cout << result.block(0,0,16,16) << endl; 
-  cout << result.block(16,16,32,32) << endl; 
+  cout << result.toDense() << endl; 
 
+  auto messy = -mult + deriv; // time dep + non time dep 
+  messy.setMesh(my_mesh); 
+  messy.setTime(5.0); 
+  fdm::CSRMatrix result09 = messy; 
+  cout << result09.toDense() << endl; 
+
+  // my_coeff.setMesh(my_mesh); 
+  // my_coeff.setTime(5.0); 
+
+  // fdm::DiagMatrix result04 = my_coeff + 3 * my_coeff;  
+  // cout << result04.toDenseMatrix() << endl; 
   // auto expr = -my_deriv + 4.0 * my_deriv - my_deriv + 3 * my_deriv; 
   // expr.setMesh(my_mesh); 
   // fdm::CSRMatrix result = expr; 

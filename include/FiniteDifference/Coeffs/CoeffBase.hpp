@@ -72,7 +72,7 @@ namespace fdm{
 namespace linops{ 
 
 template<class Derived>
-class CoeffBase : public Eigen::DiagonalBase<Derived>
+class CoeffBase: public Eigen::DiagonalBase<Derived>
 {
   public:
     // Type Defs ------------------------
@@ -102,12 +102,18 @@ class CoeffBase : public Eigen::DiagonalBase<Derived>
     const auto& callable() const { return derived().callable(); }
 
     // Operators ------------
-    template<class OtherDerived>
-    auto operator*(const fdm::linops::PartialDerivBase<OtherDerived>& rhs)
+    template<class RhsDeriv, typename = std::enable_if_t<linops::internal::is_partialderiv_crtp<RhsDeriv>::value>>
+    auto operator*(RhsDeriv&& rhs) & 
     {
-      return CoeffProduct(derived(), rhs.derived()); 
+      return CoeffProduct<Derived&, RhsDeriv>(derived(), std::forward<RhsDeriv>(rhs)); 
     } 
-    
+
+    template<class RhsDeriv, typename = std::enable_if_t<linops::internal::is_partialderiv_crtp<RhsDeriv>::value>>
+    auto operator*(RhsDeriv&& rhs) && 
+    {
+      return CoeffProduct<Derived, RhsDeriv>(std::move(derived()), std::forward<RhsDeriv>(rhs)); 
+    }
+
   public: // TODO encapsulate this 
     // Implementations ---------------------
     void setMesh_impl(const Mesh* m)
@@ -125,7 +131,6 @@ class CoeffBase : public Eigen::DiagonalBase<Derived>
       // placement new shenanigans
       new (&m_cyclic_wrapper) DiagonalVectorType(1,end*m_prod_after,CyclicWrapper(m_diagonal, end)); 
     }
-  
 };
 
 } // end namespace linops

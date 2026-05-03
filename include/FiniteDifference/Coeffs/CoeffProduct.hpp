@@ -37,8 +37,9 @@ struct traits_impl<CoeffProduct<LeftCoeff, RightDeriv>>
 template<class LeftCoeff, class RightDeriv>
 struct Evaluator<CoeffProduct<LeftCoeff, RightDeriv>> : public EvaluatorBase<CoeffProduct<LeftCoeff, RightDeriv>>
 {
-  const fdm::linops::CoeffProduct<LeftCoeff, RightDeriv>& m_xpr; 
-  Evaluator<RightDeriv> m_rhs_eval; 
+  using XprType = fdm::linops::CoeffProduct<LeftCoeff, RightDeriv>; 
+  const XprType& m_xpr; 
+  Evaluator<typename XprType::Rhs> m_rhs_eval; 
   Evaluator(const fdm::linops::CoeffProduct<LeftCoeff, RightDeriv>& xpr)
     : m_xpr(xpr), m_rhs_eval(xpr.rhs())
   {}
@@ -113,8 +114,13 @@ class CoeffProduct : public fdm::linops::PartialDerivBase<CoeffProduct<LeftCoeff
     EIGEN_SPARSE_PUBLIC_INTERFACE(CoeffProduct)
     typedef typename std::remove_cv_t<std::remove_reference_t<LeftCoeff>> Lhs; 
     typedef typename std::remove_cv_t<std::remove_reference_t<RightDeriv>> Rhs; 
-    typedef typename Eigen::internal::ref_selector<LeftCoeff>::type LhsNested;
-    typedef typename Eigen::internal::ref_selector<RightDeriv>::type RhsNested;
+    typedef typename fdm::linops::internal::NestedStorage<LeftCoeff>::type LhsNested;
+    typedef typename fdm::linops::internal::NestedStorage<RightDeriv>::type RhsNested;
+
+    // Friends --------------------------- 
+    friend Eigen::internal::evaluator<CoeffProduct>; 
+    friend fdm::linops::internal::EvaluatorBase<CoeffProduct>; 
+    friend fdm::linops::internal::Evaluator<CoeffProduct>; 
 
   protected:
     // Member data ----------------------------------- 
@@ -124,7 +130,7 @@ class CoeffProduct : public fdm::linops::PartialDerivBase<CoeffProduct<LeftCoeff
   
   public:
     // Constructors ====================== 
-    CoeffProduct(const LeftCoeff& lhs, const RightDeriv& rhs)
+    CoeffProduct(LeftCoeff&& lhs, RightDeriv&& rhs)
       : m_lhs(lhs), m_rhs(rhs), m_functor() 
     {}
 
