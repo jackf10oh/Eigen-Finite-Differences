@@ -11,6 +11,8 @@
 
 public:
 // Member Functions ================================================================== 
+const auto& toEigen() const { return derived(); }
+
 void setMesh(const std::shared_ptr<const fdm::Mesh>& m) 
 {
   // TODO ternary operators? 

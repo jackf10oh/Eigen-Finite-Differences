@@ -10,7 +10,9 @@
 #ifndef PARTIALDERIVBASE_H
 #define PARTIALDERIVBASE_H
 
+#include<Eigen/SparseCore>
 #include "EvaluatorBase.hpp"
+#include "../Types.hpp"
 
 namespace fdm{
 namespace linops{
@@ -39,7 +41,7 @@ struct Evaluator<PartialDerivBase<Derived>> : public EvaluatorBase<PartialDerivB
   Evaluator(const PartialDerivBase<Derived>& xpr) : m_derived_eval(xpr.derived()){}
 
   template<std::size_t N>
-  auto evaluateWeightsAndCoords(const fdm::Scalar* weights, std::size_t weights_per_order, const Coordinate<N>& coords)
+  auto evaluateWeightsAndCoords(const fdm::Scalar* weights, std::size_t weights_per_order, const fdm::Coordinate<N>& coords)
   {
     return m_derived_eval.evaluateWeightsAndCoords(weights, weights_per_order, coords); 
   }
@@ -79,7 +81,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
     friend fdm::linops::internal::EvaluatorBase<PartialDerivBase>; 
     friend fdm::linops::internal::Evaluator<PartialDerivBase>; 
 
-  protected: // TODO make private 
+  public: // TODO make protected 
     // Member Data ----------------------------------------------
     // const Mesh* m_mesh_raw = nullptr; // This is unused until I need time dependent operators....... 
     std::weak_ptr<const Mesh> m_mesh_observed = {/*nullptr*/}; 
@@ -121,6 +123,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
     }
     
     // Eigen Interface ------- 
+    const auto& toEigen() const { return *static_cast<const Base*>(this); } // prevents custom operators from fdm library taking effect. 
     StorageIndex rows() const { return m_prod_before * m_prod_after * m_stencil.rows(); }
     StorageIndex cols() const { return m_prod_before * m_prod_after * m_stencil.cols(); }
     StorageIndex nonZerosEstimate() const {return m_prod_before * m_prod_after * m_stencil.nonZeros(); }

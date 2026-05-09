@@ -16,7 +16,7 @@ namespace fdm{
 namespace utils{
 
 template<class ForwardItIn, class BidItOut>
-BidItOut forberg2(
+BidItOut fornberg2(
   ForwardItIn start, ForwardItIn end, 
   const typename std::iterator_traits<ForwardItIn>::value_type& x_bar, std::size_t order, 
   BidItOut dest  
@@ -86,32 +86,38 @@ BidItOut forberg2(
           c3 = *node - *old_node; 
           c2 *= c3; 
           auto write02 = write01; 
+          if(counter <= order)
+          {
+              // Explicitly zero an entry 
+              *write02 = 0.0; 
+          }
           // if old_n == n-1 we must use the very last old column 
           // to update the newest nodes column
           if(old_node == penultimate_node)
           {
             auto write03 = std::next(write02); 
-            auto write04 = std::next(write03,num_nodes_used); 
+            // auto write04 = std::next(write03,num_nodes_used); 
             auto read = write02; 
             for(auto m=std::min(order,counter); m>0; --m)
             {
               // (3.9) -------------------------------------
               *write03 = (c1/c2) * ( *std::prev(read,num_nodes_used) * m - *read * (*old_node - x_bar));
-              if(counter+1 < order)
-              {
-                *write04 = 0.0; 
-                write04 = write03; 
-              }  
+              // if(counter+1 < order)
+              // {
+              //   *write04 = 0.0; 
+              //   write04 = write03; 
+              // }  
               std::advance(write03, -num_nodes_used); 
-              read = std::prev(write03);
+              read = std::prev(write03); 
             }
             // (3.7) -------------------------------------
             *write03 = *std::prev(write03) * (c1/c2) * (x_bar - *old_node);
-            if(counter+1 < order)
-            {
-              *write04 =0.0;
-            } 
+            // if(counter+1 < order)
+            // {
+            //   *write04 =0.0;
+            // } 
           }
+
           for(auto m=std::min(counter,order); m>0; --m)
           {
             // (3.8) ----------------------------------------

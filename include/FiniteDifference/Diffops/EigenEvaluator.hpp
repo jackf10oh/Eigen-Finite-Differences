@@ -14,9 +14,9 @@
 namespace Eigen {
 namespace internal {
 
-// implementation depends on if max_num_args_called == 0, <= maxOrder, or > maxOrder 
-template<class Derived, std::size_t max_num_args_called>
-struct EigenEvaluator_impl; 
+// // implementation depends on if max_num_args_called == 0, <= maxOrder, or > maxOrder 
+// template<class Derived, std::size_t max_num_args_called>
+// struct EigenEvaluator_impl; 
 
 // reads row iterators from double kronecker products I(n) D @ I(m)
 template<class Derived>
@@ -51,6 +51,13 @@ struct evaluator<fdm::linops::PartialDerivBase<Derived>> : public evaluator_base
     : m_xpr(xpr), 
     m_stencilKronecker(fdm::utils::make_BlockDiag(fdm::utils::make_HighDim(m_xpr.m_stencil, m_xpr.m_prod_before), m_xpr.m_prod_after)), 
     m_stencilKroneckerImpl(m_stencilKronecker)
+  {}
+
+  // Copy 
+  evaluator(const evaluator& other)
+    : m_xpr(other.m_xpr),
+      m_stencilKronecker(fdm::utils::make_BlockDiag(fdm::utils::make_HighDim(m_xpr.m_stencil, m_xpr.m_prod_before), m_xpr.m_prod_after)),
+      m_stencilKroneckerImpl(m_stencilKronecker) // Re-bind to local member!
   {}
 
   Index rows() const {return m_xpr.rows(); }

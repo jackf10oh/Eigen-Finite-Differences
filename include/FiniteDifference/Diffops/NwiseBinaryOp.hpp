@@ -34,7 +34,7 @@ struct Evaluator<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> : public 
   {}
 
   template<std::size_t N>
-  auto evaluateWeightsAndCoords(const fdm::Scalar* weights, std::size_t weights_per_order, const Coordinate<N>& coords) const 
+  auto evaluateWeightsAndCoords(const fdm::Scalar* weights, std::size_t weights_per_order, const fdm::Coordinate<N>& coords) const 
   {
     return m_xpr.functor()( 
       m_lhs_eval.evaluateWeightsAndCoords(weights, weights_per_order, coords), 
@@ -77,7 +77,7 @@ struct traits<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
     ColsAtCompileTime = Dynamic,
     MaxRowsAtCompileTime = Dynamic,
     MaxColsAtCompileTime = Dynamic,
-    Flags = Eigen::RowMajorBit,  /* no | NestByRefBit */ /* | no assignment LvalueBit  */ /* | not CompressedAccessBit*/ 
+    Flags = Eigen::RowMajorBit | NestByRefBit, /* | no assignment LvalueBit  */ /* | not CompressedAccessBit*/ 
     SupportedAccessPatterns = OuterRandomAccessPattern
   };
 }; 

@@ -28,7 +28,7 @@ struct Evaluator<fdm::linops::NwiseUnaryOp<UnaryOp,XprType>> : public EvaluatorB
   Evaluator<typename UnarXprType::NestedExpression> m_nested_eval; 
   Evaluator(const fdm::linops::NwiseUnaryOp<UnaryOp,XprType>& xpr) : m_xpr(xpr), m_nested_eval(xpr.nestedExpression()){} 
   template<std::size_t N>
-  auto evaluateWeightsAndCoords(const fdm::Scalar* weights, std::size_t weights_per_order, const Coordinate<N>& coords) const 
+  auto evaluateWeightsAndCoords(const fdm::Scalar* weights, std::size_t weights_per_order, const fdm::Coordinate<N>& coords) const 
   {
     return m_xpr.functor()( m_nested_eval.evaluateWeightsAndCoords(weights, weights_per_order, coords)); 
   }
@@ -68,7 +68,7 @@ struct traits<fdm::linops::NwiseUnaryOp<UnaryOp,XprType>>
     ColsAtCompileTime = Dynamic,
     MaxRowsAtCompileTime = Dynamic,
     MaxColsAtCompileTime = Dynamic,
-    Flags = Eigen::RowMajorBit,  /* no | NestByRefBit */ /* | no assignment LvalueBit  */ /* | not CompressedAccessBit*/ 
+    Flags = Eigen::RowMajorBit | NestByRefBit, /* | no assignment LvalueBit  */ /* | not CompressedAccessBit*/ 
     SupportedAccessPatterns = OuterRandomAccessPattern
   };
 }; 

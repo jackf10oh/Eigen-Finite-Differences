@@ -10,7 +10,7 @@
 #include<algorithm>
 #include<array>
 #include<Eigen/Core>
-#include "../Utilities/FornbergArrayCalc.hpp"
+#include "../Utilities/FornbergStackCalc.hpp"
 #include "TExprTraits.hpp" 
 #include "../Types.hpp" // Scalar, DiagMatrix
 
@@ -50,7 +50,7 @@ class Executor
     std::array<fdm::Vector, numStoredTimes-1> m_stored_sols; 
 
     // forberg weights calculator 
-    fdm::utils::FornArrayCalc<numStoredTimes, TimeDeriv::maxOrder> m_weights_calc; 
+    fdm::utils::FornbergStackCalc<numStoredTimes, TimeDeriv::maxOrder> m_weights_calc; 
     
     // result of buildInvCoeff.   
     InvCoeff m_inv_coeff; 
@@ -274,10 +274,7 @@ class Executor
 
     // gets 1 / c where c is coeff of U(n+1) in fdm equation 
     void buildInvCoeff()
-    {
-      std::cout << "scalar tup size: " << std::tuple_size<ScalarTup>::value << std::endl; 
-      std::cout << "matrix tup size: " << std::tuple_size<MatrixTup>::value << std::endl; 
-      std::cout << "invcoeff scalar? " << std::is_same<fdm::Scalar, InvCoeff>::value << std::endl; 
+    { 
       if constexpr(std::tuple_size<MatrixTup>::value == 0){
         // all coeffAt's evaluate to scalar -> return 1 / sum(coeffs) 
         fdm::Scalar s = std::apply(

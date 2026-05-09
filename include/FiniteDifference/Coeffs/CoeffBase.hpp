@@ -126,7 +126,7 @@ class CoeffBase: public Eigen::DiagonalBase<Derived>
       m_diagonal.resize(end); 
       for(std::size_t idx=0; idx<end; ++idx)
       {
-        fdm::linops::Coordinate<traits_t::max_num_args_called> coord(m,idx);
+        fdm::Coordinate<traits_t::max_num_args_called> coord(m,idx);
         m_diagonal[idx] = coord.apply(callable());  
       }
       // placement new shenanigans

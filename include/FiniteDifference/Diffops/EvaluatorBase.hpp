@@ -7,49 +7,16 @@
 #ifndef DIFFOP_EVALUATORBASE_H
 #define DIFFOP_EVALUATORBASE_H 
 
+#include "../Types.hpp"
 #include "../Traits.hpp"
+#include "../Mesh.hpp" 
+#include "../Coordinate.hpp"
+#include "../Utilities/Fornberg2.hpp"
+#include "../Utilities/FornbergStackCalc.hpp"
+#include<array>
 
 namespace fdm{
-  namespace linops{
-
-// Holds (x,y,z) coords in different dimmensions 
-template< std::size_t max_dims >
-struct Coordinate
-{
-  // Member Data ------------------------------
-  std::array<fdm::Scalar, max_dims> values; 
-
-  // Constructor ----------------------------
-  Coordinate(const Mesh* m, std::size_t row_idx)
-  {
-    if constexpr(max_dims > 0){
-      std::size_t rolling_product = m->sizeOfDim(0); 
-      values[0] = m->getAxis(0)[row_idx % rolling_product];  
-
-      for(std::size_t ith_dim=1; ith_dim < max_dims; ++ith_dim){
-        std::size_t s = m->sizeOfDim(ith_dim); 
-        values[ith_dim] = m->getAxis(ith_dim)[(row_idx/rolling_product) % s];  
-        rolling_product *= s; 
-      }
-    }
-  }
-
-  // Member Functions ------------------------
-  template<class Callable>
-  fdm::Scalar apply(const Callable& c) const {
-    constexpr std::size_t N = linops::traits::callable_traits<Callable>::num_args;
-    if constexpr(N == 0){
-      return c();
-    }  
-    else{
-      return apply_impl(c, std::make_index_sequence<N>{}); 
-    }
-  }
-
-  template<class Callable, std::size_t... idxs>
-  fdm::Scalar apply_impl(const Callable& c, std::index_sequence<idxs...>) const { return c(values[idxs]...); }
-};
-
+namespace linops{
 namespace internal{
 
 // declare as empty struct. specialized by individual types. should always inherit from EvaluatorBase<Xpr>  
@@ -160,19 +127,19 @@ struct EvaluatorBase
     // member data  
     const Evaluator<Xpr>& m_eval; 
     NodeSelector<typename traits_t::node_selector_tag, numNodesMin> m_nodes; 
-    typename fdm::utils::FornArrayCalc<NodeSelector<typename traits_t::node_selector_tag, numNodesMin>::numNodesMax, traits_t::maxOrder> m_calc; 
-    Coordinate<traits_t::max_num_args_called> m_coords; 
+    typename fdm::utils::FornbergStackCalc<NodeSelector<typename traits_t::node_selector_tag, numNodesMin>::numNodesMax, traits_t::maxOrder> m_calc; 
+    fdm::Coordinate<traits_t::max_num_args_called> m_coords; 
 
     public:
     // constructor
-    Row(const Evaluator<Xpr>& eval, const Mesh* m, std::size_t row_idx)
+    Row(const Evaluator<Xpr>& eval, const fdm::Mesh* m, std::size_t row_idx)
       : m_eval(eval), 
       m_nodes(m->getAxis(traits_t::direction), (row_idx / eval.m_xpr.m_prod_before) % m->sizeOfDim(traits_t::direction)), 
       m_calc(m_nodes.x_bar, m_nodes.nodeValues.cbegin(), std::next(m_nodes.nodeValues.cbegin(), m_nodes.numNodesUsed)), 
       m_coords(m, row_idx)
     {}
 
-    // Member Functions ======================================; 
+    // Member Functions ======================================
 
     inline const std::size_t& size() const { return m_nodes.numNodesUsed; } 
 

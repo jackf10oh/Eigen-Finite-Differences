@@ -23,6 +23,10 @@ namespace internal{
 template<class Callable>
 struct traits_impl<fdm::linops::AutonomousCoeff<Callable>>
 {
+  static constexpr bool is_linop = true; 
+  static constexpr bool is_unarop = false; 
+  static constexpr bool is_binop = false; 
+  static constexpr bool is_ternop = false; 
   static constexpr std::size_t max_num_args_called = fdm::internal::callable_traits<Callable>::num_args; 
   static constexpr bool is_timedep = false; 
 }; 

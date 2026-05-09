@@ -11,8 +11,6 @@
 #include<vector> // std::vector
 #include<memory> // std::shared_ptr
 #include<Eigen/Core> // Eigen::VectorXd 
-#include<iostream> // TODO remove this 
-// #include "LinOps/LinOpTraits.hpp"
 
 namespace fdm {
 
@@ -29,7 +27,7 @@ class Mesh : public std::enable_shared_from_this<Mesh>
     using StrideView =  Eigen::Map<Eigen::VectorXd, Eigen::Unaligned, Stride>;
     // member data ----------------------------
     static constexpr std::size_t numDimsMax = 5; // fixed maximum.
-    typename std::array<Eigen::VectorXd, numDimsMax> m_mesh_arr; // fixed size array of 1d axes.
+    typename std::array<fdm::Vector, numDimsMax> m_mesh_arr; // fixed size array of 1d axes.
     const std::size_t m_size; // runtime size that counts how many dims are used. 
 
   public:
@@ -70,8 +68,21 @@ class Mesh : public std::enable_shared_from_this<Mesh>
 
     // Member Functions ===============================================================
 
-    // get list of stored 1d mesh pointers. uses NullaryExpr + Converter to propragate constness 
+    // get list of stored 1d mesh pointers. 
     auto& getAxesList(){ return m_mesh_arr; } 
+
+    // swap all axes with another mesh 
+    void swap(Mesh& other) noexcept
+    {
+      assert(m_size==other.m_size && "Swapping Mesh with # of Dims != is not allowed."); 
+      for(std::size_t idx=0; idx<m_size; ++idx)
+      {
+        m_mesh_arr[idx].swap(other.m_mesh_arr[idx]); 
+      }
+    }
+
+    // argument dependent lookup for 
+    friend void swap(Mesh& lhs, Mesh& rhs) noexcept { lhs.swap(rhs); }
     
     // number of dimensions 
     std::size_t numDims() const {return m_size; } 
@@ -149,19 +160,49 @@ class Mesh : public std::enable_shared_from_this<Mesh>
       return result; 
     } 
 
-  private:
-    // Nested FO Structs
-    struct Converter
-    {
-      const std::vector<std::shared_ptr<Eigen::VectorXd>>& m_wrapped; 
-      const Eigen::VectorXd* operator()(Eigen::Index i) const { return m_wrapped[i].get(); }
-    }; 
 };
 
 template<typename... Args> 
 auto make_Mesh(Args... args)
 {
   return std::make_shared<Mesh>(args...); 
+}
+
+} // end namespace fdm 
+
+#include "Coordinate.hpp" 
+
+auto make_Discretization(const fdm::Mesh* m, fdm::Scalar a)
+{
+  std::size_t s = m->sizesProduct(); 
+  auto lam = [a](std::size_t i){ return a; }; 
+  return Eigen::CwiseNullaryOp<decltype(lam), fdm::Vector>(s, 1, lam); 
+}
+
+namespace fdm{ 
+template<class Callable>
+auto make_Discretization(const fdm::Mesh* m, const Callable& func)
+{
+  std::size_t s = m->sizesProduct(); 
+  constexpr std::size_t N = fdm::internal::callable_traits<Callable>::num_args; 
+  auto lam = [func, m](std::size_t i){ return fdm::Coordinate<N>(m, i).apply(func); }; 
+  return Eigen::CwiseNullaryOp<decltype(lam), fdm::Vector>(s, 1, lam); 
+}
+
+auto make_Discretization(std::shared_ptr<const fdm::Mesh> mesh, fdm::Scalar a)
+{
+  std::size_t s = mesh->sizesProduct(); 
+  auto lam = [a](std::size_t i){ return a; }; 
+  return Eigen::CwiseNullaryOp<decltype(lam), fdm::Vector>(s, 1, std::move(lam)); 
+}
+
+template<class Callable>
+auto make_Discretization(std::shared_ptr<const fdm::Mesh> mesh, const Callable& func)
+{
+  std::size_t s = mesh->sizesProduct(); 
+  constexpr std::size_t N = fdm::internal::callable_traits<Callable>::num_args; 
+  auto lam = [func, m = std::move(mesh)](std::size_t i){ return fdm::Coordinate<N>(m.get(), i).apply(func); }; 
+  return Eigen::CwiseNullaryOp<decltype(lam), fdm::Vector>(s, 1, std::move(lam)); 
 }
 
 } // end namespace fdm 
