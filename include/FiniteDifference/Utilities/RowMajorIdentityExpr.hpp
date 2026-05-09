@@ -1,4 +1,4 @@
-// SparseDiagExpr.hpp
+// RowMajorIdentityExpr.hpp
 //
 // takes a Eigen::SparseMatrix<double,Eigen::RowMajor> matrix of rows==1 and makes it into a diagonal matrix 
 // tightly based on eigen docs for make circulant
@@ -56,6 +56,7 @@ class RowMajorIdentity : public Eigen::SparseMatrixBase< RowMajorIdentity > {
     // member functions 
     Index rows() const { return m_rows; }
     Index cols() const { return m_cols; }
+    void resize(std::size_t m, std::size_t n){m_rows=m; m_cols=n;}
 
     // member data 
     std::size_t m_rows; 

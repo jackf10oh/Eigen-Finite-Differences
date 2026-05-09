@@ -32,7 +32,7 @@ struct traits<fdm::utils::BlockDiag<ArgType> > {
   typedef typename ArgType::StorageIndex StorageIndex;
   typedef typename ArgType::Scalar Scalar;
   enum {
-    Flags = Eigen::RowMajor,
+    Flags = Eigen::RowMajorBit,
     RowsAtCompileTime = Eigen::Dynamic,
     ColsAtCompileTime = Eigen::Dynamic,
     MaxRowsAtCompileTime = Eigen::Dynamic,

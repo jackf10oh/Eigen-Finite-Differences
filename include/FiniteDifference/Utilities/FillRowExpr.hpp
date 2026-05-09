@@ -9,15 +9,21 @@
 #ifndef FILLROWSEXPR_H
 #define FILLROWSEXPR_H 
 
+namespace fdm{
+namespace utils{ 
+
 // Forward declarations ---------------------------------------------
 template<typename ArgType01, typename ArgType02>
 class FillRow;
+
+} // end namespace utils 
+} // end namespace fdm 
 
 // type traits =======================================================================
 namespace Eigen {
 namespace internal {
 template<typename ArgType01, typename ArgType02>
-struct traits< FillRow<ArgType01, ArgType02> > {
+struct traits< fdm::utils::FillRow<ArgType01, ArgType02> > {
   typedef Eigen::Sparse StorageKind;
   typedef Eigen::MatrixXpr XprKind;
   typedef typename ArgType01::StorageIndex StorageIndex;
@@ -32,6 +38,9 @@ struct traits< FillRow<ArgType01, ArgType02> > {
 };
 }  // namespace internal
 }  // namespace Eigen
+
+namespace fdm{
+namespace utils { 
 
 // expression class ======================================================================= 
 template<typename ArgType01, typename ArgType02>
@@ -59,14 +68,17 @@ class FillRow : public Eigen::SparseMatrixBase< FillRow<ArgType01,ArgType02> > {
     ArgTypeNested02 m_arg02;
 };
 
+} // end namespace utils 
+} // end namespace fdm 
+
 // the evaluator =======================================================================
 namespace Eigen {
 namespace internal {
 template<typename ArgType01, typename ArgType02>
-struct evaluator< FillRow<ArgType01,ArgType02> > : evaluator_base< FillRow<ArgType01,ArgType02> > {
+struct evaluator< fdm::utils::FillRow<ArgType01,ArgType02> > : evaluator_base< fdm::utils::FillRow<ArgType01,ArgType02> > {
 
   // typedefs -------------------------------------------------- 
-  typedef FillRow<ArgType01,ArgType02> XprType;
+  typedef fdm::utils::FillRow<ArgType01,ArgType02> XprType;
   typedef typename nested_eval<ArgType01, XprType::ColsAtCompileTime>::type ArgTypeNested01;
   typedef typename nested_eval<ArgType02, XprType::ColsAtCompileTime>::type ArgTypeNested02;
   // using ArgTypeNested = ArgTypeNested01; // does eigen need to have the ArgTypeNested type defined?  
@@ -132,6 +144,9 @@ struct evaluator< FillRow<ArgType01,ArgType02> > : evaluator_base< FillRow<ArgTy
 }  // namespace internal
 }  // namespace Eigen
 
+namespace fdm{
+namespace utils{ 
+
 // the entry point ======================================================================= 
 template<class ArgType01, class ArgType02>
 FillRow<ArgType01,ArgType02> make_FillRow(const Eigen::SparseMatrixBase<ArgType01>& A,const Eigen::SparseMatrixBase<ArgType02>& B) {
@@ -154,5 +169,8 @@ auto make_FillRow_fold(T&& A, U&& B, Args&&... rest){
     return make_FillRow_fold(std::move(combined), std::forward<Args>(rest)...); 
   }
 }
+
+} // end namespac utils 
+} // end namespace fdm
 
 #endif 

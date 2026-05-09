@@ -19,7 +19,7 @@ namespace fdm{
 
 // stateful Fornberg weight calculator. owns a fixed size array  
 template<std::size_t M, std::size_t N>
-class FornArrayCalc
+class FornbergStackCalc
 {
   public:
     // Member Data ----------------------------------------------------------
@@ -30,22 +30,22 @@ class FornArrayCalc
     std::size_t m_nodes_used; // stores how many nodes were actually used in the algorithm
   public:
     // Constructors + Destructor =========================================================
-    FornArrayCalc()
+    FornbergStackCalc()
     { 
-      static_assert(M+1 >= N, "FornbergArrayCalc requires NUM_NODES + 1 >= ORDER"); 
+      static_assert(M >= N + 1, "FornbergArrayCalc requires NUM_NODES >= ORDER + 1"); 
     }
     
     template<typename Iter>
-    FornArrayCalc(double x_bar, Iter start, Iter end)
+    FornbergStackCalc(double x_bar, Iter start, Iter end)
     { 
-      static_assert(M+1 >= N, "FornbergArrayCalc requires NUM_NODES + 1 >= ORDER"); 
+      static_assert(M >= N + 1, "FornbergArrayCalc requires NUM_NODES >= ORDER + 1"); 
       calculate(x_bar,start,end); 
     }
     
-    FornArrayCalc(const FornArrayCalc& other)=default; 
+    FornbergStackCalc(const FornbergStackCalc& other)=default; 
     
     // destructor 
-    ~FornArrayCalc()=default; 
+    ~FornbergStackCalc()=default; 
     
     // Member Funcs ======================================================================================
     
