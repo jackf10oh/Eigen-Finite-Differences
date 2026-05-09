@@ -1,6 +1,6 @@
 // All.hpp
 //
-//
+// includes all files from OutsideSteps subdirectory
 //
 // JAF 1/31/2026
 
@@ -10,11 +10,12 @@
 #include "StepContexts.hpp" 
 #include "OStepBase.hpp" 
 
-#include "BoundaryConds1D/BCPair.hpp"
-#include "BoundaryConds1D/DirichletBC.hpp"
-#include "BoundaryConds1D/NeumannBC.hpp"
-#include "BoundaryConds1D/RobinBC.hpp"
+#include "ForcingTerm.hpp"
 
-#include "BoundaryCondsXD/BCList.hpp"
+#include "BoundaryConds/BCPair.hpp"
+#include "BoundaryConds/DirichletBC.hpp"
+#include "BoundaryConds/NeumannBC.hpp"
+#include "BoundaryConds/RobinBC.hpp"
+#include "BoundaryConds/BCList.hpp"
 
 #endif 

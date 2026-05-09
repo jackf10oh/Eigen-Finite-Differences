@@ -27,25 +27,25 @@ class DirichletBC
 
     // Member Funcs ----------------------------------------------
     // change first/last (left/right boundary) row of the fdm stencil matrix
-    void SetStencilL(double t, const fdm::SharedConstMesh1D& mesh, fdm::Matrix& Mat) const 
+    void SetStencilL(double t, const fdm::Vector& mesh, fdm::Matrix& Mat) const 
     {
       Mat.topRows(1) *= 0; Mat.coeffRef(0,0)=1;
     }
-    void SetStencilR(double t, const fdm::SharedConstMesh1D& mesh, fdm::Matrix& Mat) const 
+    void SetStencilR(double t, const fdm::Vector& mesh, fdm::Matrix& Mat) const 
     {
       Mat.bottomRows(1) *= 0; Mat.coeffRef(Mat.rows()-1, Mat.cols()-1)=1;
     }
 
     // change the first/last (left/right boundary) entry of a vector to implicit solution   
-    void SetImpSolL(double t, const fdm::SharedConstMesh1D& mesh, fdm::StridedRef Sol) const 
+    void SetImpSolL(double t, const fdm::Vector& mesh, fdm::StridedRef Sol) const 
     {Sol[0] = boundary_val;}
-    void SetImpSolR(double t, const fdm::SharedConstMesh1D& mesh, fdm::StridedRef Sol) const 
+    void SetImpSolR(double t, const fdm::Vector& mesh, fdm::StridedRef Sol) const 
     {Sol[Sol.size()-1] = boundary_val;}
     
     // change the first/last (left/right boundary) entry of a vector  
-    void SetSolL(double t, const fdm::SharedConstMesh1D& mesh, fdm::StridedRef Sol) const 
+    void SetSolL(double t, const fdm::Vector& mesh, fdm::StridedRef Sol) const 
     { Sol[0] = boundary_val;}
-    void SetSolR(double t, const fdm::SharedConstMesh1D& mesh, fdm::StridedRef Sol) const 
+    void SetSolR(double t, const fdm::Vector& mesh, fdm::StridedRef Sol) const 
     {Sol[Sol.size()-1] = boundary_val;}
 };
 

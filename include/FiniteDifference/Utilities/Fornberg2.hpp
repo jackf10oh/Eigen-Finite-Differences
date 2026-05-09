@@ -67,7 +67,6 @@ BidItOut fornberg2(
       break; 
 
     default: // num_nodes_used >= 3
-      // for(auto it=dest; it!=std::next(dest,num_nodes_used*(order+1)); ++it) *it = 0.0; 
       *dest = 1.0; 
       Scalar c1=1.0, c2, c3; 
       std::size_t counter=1;
@@ -96,26 +95,18 @@ BidItOut fornberg2(
           if(old_node == penultimate_node)
           {
             auto write03 = std::next(write02); 
-            // auto write04 = std::next(write03,num_nodes_used); 
-            auto read = write02; 
+            auto read01 = write02; 
+            auto read02 = std::prev(read01,num_nodes_used); 
             for(auto m=std::min(order,counter); m>0; --m)
             {
               // (3.9) -------------------------------------
-              *write03 = (c1/c2) * ( *std::prev(read,num_nodes_used) * m - *read * (*old_node - x_bar));
-              // if(counter+1 < order)
-              // {
-              //   *write04 = 0.0; 
-              //   write04 = write03; 
-              // }  
-              std::advance(write03, -num_nodes_used); 
-              read = std::prev(write03); 
+              *write03 = (c1/c2) * ( *read02 * m - *read01 * (*old_node - x_bar));
+              read01 = read02; // jumps read01 back -num_nodes_used
+              write03 = std::next(read01); // jumps write03 back -num_nodes_used 
+              std::advance(read02, -num_nodes_used); 
             }
             // (3.7) -------------------------------------
             *write03 = *std::prev(write03) * (c1/c2) * (x_bar - *old_node);
-            // if(counter+1 < order)
-            // {
-            //   *write04 =0.0;
-            // } 
           }
 
           for(auto m=std::min(counter,order); m>0; --m)
@@ -128,8 +119,12 @@ BidItOut fornberg2(
           *write02 = *write02 * ((*node - x_bar)/(*node - *old_node));
           ++write01; 
         }
-        c1 = c2; 
-        std::advance(dest, (counter<order) ? num_nodes_used : 0); 
+        c1 = c2;  
+        if(counter<order)
+        {
+          // std::advance(dest, num_nodes_used);
+          dest = std::next(write01, num_nodes_used - counter); // copy back from write01 uses less increments. 
+        } 
         ++counter; 
         ++penultimate_node; 
       }

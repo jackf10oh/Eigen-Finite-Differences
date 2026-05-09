@@ -7,47 +7,47 @@
 #ifndef BCLIST_H
 #define BCLIST_H 
 
-#include<iostream>
-#include<vector>
+#include<cassert>
 #include<tuple>
 #include<Eigen/Dense>
+#include<utility>
+#include "../../Mesh.hpp"
 #include "../../Utilities/FillRowExpr.hpp"
 #include "../../Utilities/FillStencil.hpp"
 #include "../../Utilities/BlockDiagExpr.hpp"
 #include "../../Utilities/SparseDiagExpr.hpp"
 #include "../OStepBase.hpp"
-#include "../BoundaryConds1D/BCPair.hpp"
+#include "BCPair.hpp"
 
 namespace fdm{
   namespace osteps{
-
-namespace traits{ 
-template<typename T>
-struct is_bc_pair_impl : public std::false_type{}; 
-
-template<typename L, typename R>
-struct is_bc_pair_impl<BCPair<L,R>> : public std::true_type{}; 
-
-template<typename T>
-using is_bc_pair = is_bc_pair_impl<std::remove_reference_t<std::remove_cv_t<T>>>; 
-
-template<typename T, std::size_t ignore=0>
-using repeat_type = T; 
-
-template<typename T, std::size_t... Is>
-auto make_repeat_tuple(std::index_sequence<Is...>){
-  return std::tuple< repeat_type<T,Is>... >{}; 
-}
-} // end namespace traits 
 
 template<typename... BCPairs_Ts>
 class BCList : public OStepBase<BCList<BCPairs_Ts...>>
 {
   private:
+    // Type Traits + Utils ----------------
+    template<typename T>
+    struct is_bc_pair_impl : public std::false_type{}; 
+
+    template<typename L, typename R>
+    struct is_bc_pair_impl<BCPair<L,R>> : public std::true_type{}; 
+
+    template<typename T>
+    using is_bc_pair = is_bc_pair_impl<std::remove_reference_t<std::remove_cv_t<T>>>; 
+
+    template<typename T, std::size_t ignore=0>
+    using repeat_type = T; 
+
+    template<typename T, std::size_t... Is>
+    static auto make_repeat_tuple(std::index_sequence<Is...>)
+    {
+      return std::tuple< repeat_type<T,Is>... >{}; 
+    }
     // member data. -------------------------------------------------
     // list of boundary conditions. 1 per Dimension 
     std::tuple< std::remove_reference_t<BCPairs_Ts>... > m_bcs_list; 
-    using MATS_T = decltype(osteps::traits::make_repeat_tuple<fdm::Matrix>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{})); 
+    using MATS_T = decltype(make_repeat_tuple<fdm::Matrix>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{})); 
     MATS_T m_mats; 
     
   public:
@@ -56,13 +56,13 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
     
     template<typename = std::enable_if_t<
       std::conjunction_v<
-          osteps::traits::is_bc_pair<BCPairs_Ts> ...
+          is_bc_pair<BCPairs_Ts> ...
         >
       >
     >
     BCList(BCPairs_Ts... args) 
       : m_bcs_list(args...), 
-      m_mats(osteps::traits::make_repeat_tuple<fdm::Matrix>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{}))
+      m_mats(make_repeat_tuple<fdm::Matrix>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{}))
     { 
       // reserves 10 entries inside of a fdm::Matrix
       auto reserve_lam = [](auto& mat){mat.reserve(10);}; 
@@ -77,14 +77,14 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
     BCList(const BCList& other)=default;
     
     // destructor 
-    virtual ~BCList()=default; 
+    ~BCList()=default; 
 
     // Member Funcs =================================================
     template<StepType STEP, typename TIMECTX = TimeContext<>, typename CONSTCTX = Context<> >
     void MatBeforeStep(fdm::Matrix& Mat, const TIMECTX& t = {}, const CONSTCTX& ctx = {})
     {      
       // check args are compaitble 
-      if(ctx.getMesh()->dims() != sizeof...(BCPairs_Ts)) throw std::runtime_error("BCList SolAfterStep error: MeshXD.dims() != size of tuple / list of 1D BCs "); 
+      assert((ctx.getMesh()->numDims() == sizeof...(BCPairs_Ts)) && "BCList MatBeforeStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
 
       if constexpr(STEP == StepType::Implicit)
       {    
@@ -93,13 +93,13 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
         prepare_flat_stencils(t.next, ctx.getMesh(), std::make_index_sequence<N>{}); 
 
         // resize + set first matrix in m_mats 
-        std::get<0>(m_mats).resize(ctx.getMesh()->dim_size(0), ctx.getMesh()->dim_size(0)); 
+        std::get<0>(m_mats).resize(ctx.getMesh()->sizeOfDim(0), ctx.getMesh()->sizeOfDim(0)); 
         std::get<0>(m_mats).setZero();
-        std::get<0>(m_bcs_list).m_left.SetStencilL(t.next,ctx.getMesh()->GetMesh(0), std::get<0>(m_mats));  
-        std::get<0>(m_bcs_list).m_right.SetStencilR(t.next,ctx.getMesh()->GetMesh(0), std::get<0>(m_mats));  
+        std::get<0>(m_bcs_list).m_left.SetStencilL(t.next,ctx.getMesh()->getAxis(0), std::get<0>(m_mats));  
+        std::get<0>(m_bcs_list).m_right.SetStencilR(t.next,ctx.getMesh()->getAxis(0), std::get<0>(m_mats));  
 
-        auto mask = make_overwrite_mask(ctx.getMesh(), std::make_index_sequence<N>{}); 
-        overwrite_stencil(Mat, mask); 
+        decltype(auto) mask = make_overwrite_mask(ctx.getMesh(), std::make_index_sequence<N>{}); 
+        fdm::utils::overwrite_stencil(Mat, mask); 
       }
     } // end MatBeforeStep 
 
@@ -107,8 +107,8 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
     void VecBeforeStep(fdm::StridedRef u, const TCtx& t, const Ctx& ctx)
     {
       // check args are compaitble 
-      const auto& mesh = ctx.getMesh(); 
-      if(mesh->dims() != sizeof...(BCPairs_Ts)) throw std::runtime_error("BCList SolAfterStep error: MeshXD.dims() != size of tuple / list of 1D BCs "); 
+      auto mesh = ctx.getMesh(); 
+      assert((mesh->numDims() == sizeof...(BCPairs_Ts)) && "BCList VecBeforeStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
 
       if constexpr(STEP == StepType::Implicit)
       {
@@ -117,13 +117,13 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
 
         auto set_dim_boundaries_imp = [&](const auto& bc_pair, std::size_t dim){
           // Mesh1D that this bc_pair operates on  
-          const auto& mesh_1dim = mesh->getMesh1D(dim); 
+          const auto& mesh_1dim = mesh->getAxis(dim); 
           // vector of eigen stride views that "look" like Discretization1Ds along mesh_1dim 
           using Stride_t = typename Eigen::Stride<0,Eigen::Dynamic>; 
           using StrideView_t = typename Eigen::Map<Eigen::VectorXd, Eigen::Unaligned, Stride_t>; 
           std::size_t mod = mesh->sizesMiddleProduct(0,dim); 
-          std::size_t num_copies = mod * mesh->sizesMiddleProduct(dim+1, mesh->dims()); 
-          std::size_t s0 = mesh->dim_size(dim); 
+          std::size_t num_copies = mod * mesh->sizesMiddleProduct(dim+1, mesh->numDims()); 
+          std::size_t s0 = mesh->sizeOfDim(dim); 
           std::size_t scale = mod * s0;  
           Stride_t stride(0, mod); 
           
@@ -143,7 +143,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
             }
             // if it hasn't, use BC on it. 
             if(!set_by_low_dim){
-              std::size_t offset = (mod ? i % mod : i) + (scale * (i/mod));
+              std::size_t offset = (i % mod) + (scale * (i/mod)); // note: was previously using (mod? i%mod : i). shouldn't need it if mod is never == 0
               StrideView_t view(u.data()+offset, s0, stride); 
               bc_pair.m_left.SetImpSolL(t.next, mesh_1dim, view); 
               bc_pair.m_right.SetImpSolR(t.next, mesh_1dim, view); 
@@ -166,8 +166,8 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
     void VecAfterStep(fdm::StridedRef u, const TCtx& t, const Ctx& ctx)
     {
       
-      const auto& mesh = ctx.getMesh(); // get the MeshXD 
-      if(mesh->dims() != sizeof...(BCPairs_Ts)) throw std::runtime_error("BCList SolAfterStep error: MeshXD.dims() != size of tuple / list of 1D BCs "); 
+      auto mesh = ctx.getMesh(); // get the MeshXD 
+      assert((mesh->numDims() == sizeof...(BCPairs_Ts)) && "BCList VecAfterStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
       
       if constexpr(STEP == StepType::Explicit)
       {
@@ -178,11 +178,11 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
           using Stride_t = typename Eigen::Stride<0,Eigen::Dynamic>; 
           using StrideView_t = typename Eigen::Map<Eigen::VectorXd, Eigen::Unaligned, Stride_t>; 
           // Mesh1D that this bc_pair operates on  
-          const auto& mesh_1dim = mesh->GetMesh(dim); // get the Mesh1D 
+          const auto& mesh_1dim = mesh->getAxis(dim); // get the Mesh1D 
           // vector of eigen stride views that "look" like Discretization1Ds along mesh_1dim 
           std::size_t mod = mesh->sizesMiddleProduct(0,dim); 
-          std::size_t num_copies = mod * mesh->sizesMiddleProduct(dim+1, mesh->dims()); 
-          std::size_t s0 = mesh->dim_size(dim); 
+          std::size_t num_copies = mod * mesh->sizesMiddleProduct(dim+1, mesh->numDims()); 
+          std::size_t s0 = mesh->sizeOfDim(dim); 
           std::size_t scale = mod * s0;  
           Stride_t stride(0, mod); 
 
@@ -225,17 +225,17 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
   private:
     // Unreachable =========================================================== 
     template<std::size_t Idx>
-    void flat_stencil(double t, const fdm::SharedConstMeshXD& m)
+    void flat_stencil(double t, const fdm::Mesh* m)
     {
       // !!! uses first entry in m_mats as temp storage !!! 
       if constexpr( Idx > 0 ){
         // using ith 1D mesh out of MeshXD 
-        const auto& mesh = m->getMesh1D(Idx); 
+        const auto& mesh = m->getAxis(Idx); 
 
-        // resize 1st matrix + ith matrix to 1 x N where N == mesh->size() 
-        std::get<0>(m_mats).resize(1,mesh->size()); 
+        // resize 1st matrix + ith matrix to 1 x N where N == mesh.size() 
+        std::get<0>(m_mats).resize(1,mesh.size()); 
         std::get<0>(m_mats).setZero(); 
-        std::get<Idx>(m_mats).resize(1,mesh->size()); 
+        std::get<Idx>(m_mats).resize(1,mesh.size()); 
         std::get<Idx>(m_mats).setZero(); 
 
         // set ith matrix to be top row of stencil, 1st matrix to bottom row of stencil 
@@ -249,30 +249,37 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
     }
 
     template<std::size_t... Is>
-    void prepare_flat_stencils(double t, const fdm::SharedConstMeshXD& m, std::index_sequence<Is...>){
+    void prepare_flat_stencils(double t, const fdm::Mesh* m, std::index_sequence<Is...>){
       (flat_stencil<Is>(t,m), ...); 
     } 
 
     template<std::size_t Idx>
-    auto highdim_stencil(const fdm::SharedConstMeshXD& m)
+    auto highdim_stencil(const fdm::Mesh* m)
     {
       if constexpr(Idx == 0){
         // first matrix just gets kronecker product into high dim.
-        return make_BlockDiag(std::get<Idx>(m_mats), m->sizesMiddleProduct(1, sizeof...(BCPairs_Ts))); 
+        return fdm::utils::make_BlockDiag(std::get<Idx>(m_mats), m->sizesMiddleProduct(1, sizeof...(BCPairs_Ts))); 
       }
       else{
         // other dimensions have to be taken 
         // flat stencil -> sparse diag (repeats) -> kronecker product 
         std::size_t s1 = m->sizesMiddleProduct(0, Idx);
         std::size_t s2 = m->sizesMiddleProduct(Idx+1, sizeof...(BCPairs_Ts)); 
-        return fdm::utils::make_BlockDiag(fdm::utils::make_SparseDiag<fdm::Matrix, fdm::utils::SparseDiagPattern::REPEAT>(std::get<Idx>(m_mats), s1), s2); 
+        return fdm::utils::make_BlockDiag(fdm::utils::make_SparseDiag<fdm::utils::SparseDiagPattern::REPEAT>(std::get<Idx>(m_mats), s1), s2); 
       }
     }
 
     template<std::size_t... Is>
-    auto make_overwrite_mask(const fdm::SharedConstMeshXD& m, std::index_sequence<Is...>)
+    decltype(auto) make_overwrite_mask(const fdm::Mesh* m, std::index_sequence<Is...>)
     {
-      return make_FillRow_fold( highdim_stencil<Is>(m) ...); 
+      if constexpr(sizeof...(Is)==1)
+      {
+        return std::as_const(std::get<0>(m_mats)); 
+      }
+      else
+      {
+        return fdm::utils::make_FillRow_fold( highdim_stencil<Is>(m) ...); 
+      }
     }
 }; // end class BCList 
 

@@ -7,8 +7,7 @@
 #ifndef BCPAIR_H
 #define BCPAIR_H
 
-#include "../../LinOps/LinOpTraits.hpp" // StrideView, SharedConstMesh1D, etc 
-#include "../../Mesh1D.hpp" 
+#include "../../Types.hpp"
 #include "../OStepBase.hpp"
 
 namespace fdm{
@@ -40,34 +39,35 @@ class BCPair: public OStepBase<BCPair<LBC_T,RBC_T>>
 
     // Member Functions ==================================================================
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void MatBeforeStep(fdm::Matrix& Mat, const TCtx& t, const Ctx& ctx) const
+    void MatBeforeStep(fdm::CSRMatrix& Mat, const TCtx& t, const Ctx& ctx) const
     {
-      using M = std::remove_cv_t<std::remove_reference_t<decltype(ctx.getMesh())>>; 
-      static_assert(std::is_same_v<M,std::shared_ptr<const fdm::Mesh1D>>, "error in OSteps::BCPair. Domain is not Mesh1D"); 
+      auto m = ctx.getMesh(); 
+      if (m->numDims() != 1) throw std::runtime_error("incorrect # of dims passed to 1D boundary condition"); 
       if constexpr(STEP == StepType::Implicit){ 
-        m_left.SetStencilL(t.next, ctx.getMesh(), Mat); 
-        m_right.SetStencilR(t.next, ctx.getMesh(), Mat); 
+        m_left.SetStencilL(t.next, m->getAxis(0), Mat); 
+        m_right.SetStencilR(t.next, m->getAxis(0), Mat); 
       }
     }
 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
     void VecBeforeStep(fdm::StridedRef u, const TCtx& t, const Ctx& ctx) const
     {
-      using M = std::remove_cv_t<std::remove_reference_t<decltype(ctx.getMesh())>>; 
-      static_assert(std::is_same_v<M,std::shared_ptr<const fdm::Mesh1D>>, "error in OSteps::BCPair. Domain is not Mesh1D");       if constexpr(STEP == StepType::Implicit){
-        m_left.SetImpSolL(t.next, ctx.getMesh(), u); 
-        m_right.SetImpSolR(t.next, ctx.getMesh(), u); 
+      auto m = ctx.getMesh(); 
+      if (m->numDims() != 1) throw std::runtime_error("incorrect # of dims passed to 1D boundary condition");        
+      if constexpr(STEP == StepType::Implicit){
+        m_left.SetImpSolL(t.next, m->getAxis(0), u); 
+        m_right.SetImpSolR(t.next, m->getAxis(0), u); 
       }
     }
 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
     void VecAfterStep(fdm::StridedRef u, const TCtx& t, const Ctx& ctx) const 
     {
-      using M = std::remove_cv_t<std::remove_reference_t<decltype(ctx.getMesh())>>; 
-      static_assert(std::is_same_v<M,std::shared_ptr<const fdm::Mesh1D>>, "error in OSteps::BCPair. Domain is not Mesh1D"); 
+      auto m = ctx.getMesh(); 
+      if (m->numDims() != 1) throw std::runtime_error("incorrect # of dims passed to 1D boundary condition"); 
       if constexpr(STEP == StepType::Explicit){
-        m_left.SetSolL(t.next, ctx.getMesh(), u); 
-        m_right.SetSolR(t.next, ctx.getMesh(), u); 
+        m_left.SetSolL(t.next, m->getAxis(0), u); 
+        m_right.SetSolR(t.next, m->getAxis(0), u); 
       }  
     }
 };
