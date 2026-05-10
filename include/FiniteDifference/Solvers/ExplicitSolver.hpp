@@ -12,7 +12,6 @@
 #ifndef EXPLICITSOLVER_H
 #define EXPLICITSOLVER_H 
 
-#include "../LinOps/LinOpTraits.hpp" // check RHS is 1D or XD LinOp + fdm::Matrix 
 #include "../TExprs/TExprTraits.hpp" // check LHS is time derivatives 
 #include "../TExprs/Executor.hpp" // marches through time 
 #include "../OutsideSteps/StepContexts.hpp"  // feed to outside steps tuple 
@@ -52,13 +51,12 @@ class ExplicitSolver
     // moveable
     ExplicitSolver(ExplicitSolver&& other)=default;  
 
-
     // destructor  
     ~ExplicitSolver()=default; 
 
     // Member Functions ======================================================
-    template<typename M, typename C, typename Pred = LastSaver>
-    auto calculate(SolverArgs<M,C> args, Pred save_policy = {}) 
+    template<class M, class C, class Pred = LastSaver>
+    auto calculate(SolverArgs<M, C> args, Pred save_policy = {}) 
     {
       // setup time context 
       auto it = std::next(args.times->cbegin(), args.initialConditions.size()-1); 
@@ -78,9 +76,9 @@ class ExplicitSolver
       auto ctx = fdm::osteps::make_context(std::move(args.mesh), &executor, &m_rhs, this); 
 
       // store allocated memory between steps in solver hot loop  
-      fdm::Matrix stencil; 
-      Eigen::VectorXd rhs_vector;  
-      Eigen::VectorXd solution_u;  
+      fdm::CSRMatrix stencil; 
+      fdm::Vector rhs_vector;  
+      fdm::Vector solution_u;  
 
       // hot loop through times
       auto end = time_ctx.container->cend();
@@ -88,7 +86,7 @@ class ExplicitSolver
       { 
         time_ctx.next = *it; 
 
-        if constexpr(m_rhs.isTimeDep){
+        if constexpr(fdm::linops::internal::traits<RhsExpression>::is_timedep){
           // set the operator to the left side of the step [t(n), t(n+1)] for explicit steps 
           m_rhs.setTime(time_ctx.now); 
           // should build an autonomous solver for these linops, since it evaluate the 
@@ -102,18 +100,20 @@ class ExplicitSolver
 
         // outside steps before any type of linear algebra is performed... 
         std::apply(
-          [&](auto&... lam_args){ 
+          [&](auto&&... lam_args){ 
             ((lam_args.template BeforeLinAlgebra<fdm::osteps::StepType::Explicit>(time_ctx, ctx)), ...); 
           }, 
           m_osteps
         ); 
         
         // store the matrix into stencil 
-        stencil = executor.getInvCoeff() * m_rhs.asMatrix();
+        // using Cleaned = std::remove_cv_t<std::remove_reference_t<decltype(m_rhs)>>; 
+        // const auto& tmp = static_cast<const Eigen::SparseMatrixBase<Cleaned>&>(m_rhs);
+        stencil = executor.getInvCoeff() * m_rhs.toEigen();
         
         // outside steps matrix before step
         std::apply(
-          [&](const auto&... lam_args){ ((lam_args.template MatBeforeStep<fdm::osteps::StepType::Explicit>(stencil, time_ctx, ctx)), ...); }, 
+          [&](auto&&... lam_args){ ((lam_args.template MatBeforeStep<fdm::osteps::StepType::Explicit>(stencil, time_ctx, ctx)), ...); }, 
           m_osteps
         ); 
 
@@ -122,7 +122,7 @@ class ExplicitSolver
 
         // outside steps vector before step 
         std::apply(
-          [&](const auto&... lam_args){ ((lam_args.template VecBeforeStep<fdm::osteps::StepType::Explicit>(rhs_vector, time_ctx, ctx)), ...); }, 
+          [&](auto&&... lam_args){ ((lam_args.template VecBeforeStep<fdm::osteps::StepType::Explicit>(rhs_vector, time_ctx, ctx)), ...); }, 
           m_osteps
         ); 
 
@@ -131,7 +131,7 @@ class ExplicitSolver
         
         // outside steps solution after step(next_sol) 
         std::apply(
-          [&](const auto&... lam_args){ ((lam_args.template VecAfterStep<fdm::osteps::StepType::Explicit>(solution_u, time_ctx, ctx)), ...); }, 
+          [&](auto&... lam_args){ ((lam_args.template VecAfterStep<fdm::osteps::StepType::Explicit>(solution_u, time_ctx, ctx)), ...); }, 
           m_osteps
         );
 
@@ -139,7 +139,8 @@ class ExplicitSolver
         save_policy.saveSolution(executor.getExpiringSolution()); 
 
         // push solution into executor
-        executor.pushSolution(std::move(solution_u));
+        executor.rotateStoredSolutions(1); 
+        executor.getStoredSolutions().back().swap(solution_u); 
 
         // advance time_ctx 1 step in time 
         time_ctx.now = time_ctx.next; 

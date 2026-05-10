@@ -1,6 +1,9 @@
 // Coordinate.hpp 
 //
-//
+// Given an index from 0,1,2,...,N 
+// where N = x_axis.size * ... * z_axis.size 
+// packs coordinate of first N dimension 
+// into an array 
 //
 // JAF 5/6/2026 
 
@@ -12,14 +15,25 @@ namespace fdm{
 class Mesh; 
 
 // Holds (x,y,z) coords in different dimmensions 
-template< std::size_t max_dims >
+template< std::size_t numDimsMax >
 struct Coordinate
 {
   // Member Data ------------------------------
-  std::array<fdm::Scalar, max_dims> values; 
+  std::array<fdm::Scalar, numDimsMax> values; 
 
-  // Constructor ----------------------------
+  // Constructors ----------------------------
+
+  // from Mesh + row_idx in flattened idx space  
   Coordinate(const Mesh* m, std::size_t row_idx);
+
+  // from x,y,z values 
+  template<typename... Xs>
+  Coordinate(Xs&&... xs)
+    : values{ {std::forward<Xs>(xs)...} }
+  {
+    static_assert(sizeof...(Xs)<=numDimsMax, "Must construct from <= numDimsMax in Coordinate"); 
+    static_assert((std::is_convertible_v<Xs, fdm::Scalar> && ...), "All args must be convertible to fdm::Scalar"); 
+  }
 
   // Member Functions ------------------------
   template<class Callable>
@@ -35,14 +49,14 @@ struct Coordinate
 
 namespace fdm{ 
 
-template<std::size_t max_dims>
-Coordinate<max_dims>::Coordinate(const Mesh* m, std::size_t row_idx)
+template<std::size_t numDimsMax>
+Coordinate<numDimsMax>::Coordinate(const Mesh* m, std::size_t row_idx)
 {
-  if constexpr(max_dims > 0){
+  if constexpr(numDimsMax > 0){
     std::size_t rolling_product = m->sizeOfDim(0); 
     values[0] = m->getAxis(0)[row_idx % rolling_product];  
 
-    for(std::size_t ith_dim=1; ith_dim < max_dims; ++ith_dim){
+    for(std::size_t ith_dim=1; ith_dim < numDimsMax; ++ith_dim){
       std::size_t s = m->sizeOfDim(ith_dim); 
       values[ith_dim] = m->getAxis(ith_dim)[(row_idx/rolling_product) % s];  
       rolling_product *= s; 
@@ -50,9 +64,9 @@ Coordinate<max_dims>::Coordinate(const Mesh* m, std::size_t row_idx)
   }
 }
 
-template<std::size_t max_dims>
+template<std::size_t numDimsMax>
 template<class Callable>
-fdm::Scalar Coordinate<max_dims>::apply(const Callable& c) const 
+fdm::Scalar Coordinate<numDimsMax>::apply(const Callable& c) const 
 {
   constexpr std::size_t N = fdm::internal::callable_traits<Callable>::num_args;
   if constexpr(N == 0){
@@ -63,14 +77,12 @@ fdm::Scalar Coordinate<max_dims>::apply(const Callable& c) const
   }
 }
 
-template<std::size_t max_dims>
+template<std::size_t numDimsMax>
 template<class Callable, std::size_t... idxs>
-fdm::Scalar Coordinate<max_dims>::apply_impl(const Callable& c, std::index_sequence<idxs...>) const 
+fdm::Scalar Coordinate<numDimsMax>::apply_impl(const Callable& c, std::index_sequence<idxs...>) const 
 {
   return c(values[idxs]...); 
 }
-
-
 
 } // end namespace fdm 
 

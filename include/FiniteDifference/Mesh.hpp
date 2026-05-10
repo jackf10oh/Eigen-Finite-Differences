@@ -14,10 +14,12 @@
 
 namespace fdm {
 
-// forward declaration + alias
+// forward declaration + aliases
 class Mesh; 
 using SharedMesh = std::shared_ptr<Mesh>; 
 using SharedConstMesh = std::shared_ptr<const Mesh>; 
+using WeakMesh = std::weak_ptr<Mesh>; 
+using WeakConstMesh = std::weak_ptr<const Mesh>;
 
 class Mesh : public std::enable_shared_from_this<Mesh>
 {
@@ -51,12 +53,11 @@ class Mesh : public std::enable_shared_from_this<Mesh>
     Mesh(const Eigen::MatrixBase<ArgType>&... xpr)
       : m_size(sizeof...(xpr))
     {
-      static_assert(sizeof...(ArgType), "Can't construct mesh with given dims");
-      std::size_t ith_dim = 0; 
-      auto lam = [&](const auto& x){m_mesh_arr[ith_dim] = x; ++ith_dim; }; 
-      std::apply(
-        lam, 
-        xpr... 
+      static_assert(sizeof...(ArgType) > 0, "Can't construct mesh with 0 dims");
+      std::size_t ith_dim = 0;
+      (
+        (m_mesh_arr[ith_dim++]=xpr),
+        ...
       ); 
     }
 
@@ -172,6 +173,7 @@ auto make_Mesh(Args... args)
 
 #include "Coordinate.hpp" 
 
+namespace fdm{ 
 auto make_Discretization(const fdm::Mesh* m, fdm::Scalar a)
 {
   std::size_t s = m->sizesProduct(); 
@@ -179,7 +181,6 @@ auto make_Discretization(const fdm::Mesh* m, fdm::Scalar a)
   return Eigen::CwiseNullaryOp<decltype(lam), fdm::Vector>(s, 1, lam); 
 }
 
-namespace fdm{ 
 template<class Callable>
 auto make_Discretization(const fdm::Mesh* m, const Callable& func)
 {
@@ -203,6 +204,12 @@ auto make_Discretization(std::shared_ptr<const fdm::Mesh> mesh, const Callable& 
   constexpr std::size_t N = fdm::internal::callable_traits<Callable>::num_args; 
   auto lam = [func, m = std::move(mesh)](std::size_t i){ return fdm::Coordinate<N>(m.get(), i).apply(func); }; 
   return Eigen::CwiseNullaryOp<decltype(lam), fdm::Vector>(s, 1, std::move(lam)); 
+}
+
+auto linspaced(std::size_t n, fdm::Scalar x0, fdm::Scalar x1)
+{
+  auto lam = [d = static_cast<double>(n)-1.0,x0,x1](std::size_t idx){ return (idx/d)*(x1-x0)+x0; };
+  return Eigen::CwiseNullaryOp<decltype(lam), fdm::Vector>(n, 1, std::move(lam)); 
 }
 
 } // end namespace fdm 

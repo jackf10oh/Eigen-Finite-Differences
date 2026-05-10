@@ -10,11 +10,11 @@
 #define IMPLICITSOLVER_H 
 
 #include<Eigen/IterativeLinearSolvers> // BiCGSTAB sparse iterative solver  
-#include "../LinOps/LinOpTraits.hpp" // check RHS is 1D or XD LinOp + fdm::Matrix 
 #include "../TExprs/TExprTraits.hpp" // check LHS is time derivatives 
 #include "../TExprs/Executor.hpp" // marches through time 
 #include "../OutsideSteps/StepContexts.hpp"  // feed to outside steps tuple 
 #include "../OutsideSteps/OStepBase.hpp" // StepType scoped enumeration 
+#include "../Utilities/RowMajorIdentityExpr.hpp"
 #include "SolverArgs.hpp"
 #include "SavePolicies.hpp"
 
@@ -86,7 +86,7 @@ class ImplicitSolver
       executor.pushTimeRange(time_ctx.container->cbegin(), it); 
 
       // set up operators. 
-      fdm::linops::IOp identity; 
+      fdm::utils::RowMajorIdentity identity(0,0); // will resize later  
       m_rhs.setMesh(args.mesh); 
       executor.setMesh(args.mesh); 
 
@@ -95,8 +95,8 @@ class ImplicitSolver
 
       // store allocated memory between steps in solver hot loop  
       fdm::Matrix stencil; 
-      Eigen::VectorXd rhs_vector;  
-      Eigen::VectorXd solution_u;  
+      fdm::Vector rhs_vector;  
+      fdm::Vector solution_u;  
 
       // hot loop through times
       auto end = time_ctx.container->cend();
@@ -104,7 +104,7 @@ class ImplicitSolver
       { 
         time_ctx.next = *it; 
 
-        if constexpr(m_rhs.isTimeDep){
+        if constexpr(fdm::linops::internal::traits<RhsExpression>::is_timedep){
           // set the operator to the right side of the step [t(n), t(n+1)] for implicit steps 
           m_rhs.setTime(time_ctx.next); 
           // should build an autonomous solver for these linops, since it evaluate the 
@@ -125,14 +125,13 @@ class ImplicitSolver
         ); 
         
         // store the matrix into stencil 
-        decltype(auto) xpr = m_rhs.asMatrix(); // could be expensive if rhs just gives a matrix
-        std::size_t s = xpr.rows(); 
+        std::size_t s = m_rhs.rows(); 
         identity.resize(s,s); 
-        stencil = identity.asMatrix() - executor.getInvCoeff() * xpr;
+        stencil = identity - (executor.getInvCoeff() * m_rhs.toEigen());
         
         // outside steps matrix before step
         std::apply(
-          [&](const auto&... lam_args){ ((lam_args.template MatBeforeStep<fdm::osteps::StepType::Implicit>(stencil, time_ctx, ctx)), ...); }, 
+          [&](auto&&... lam_args){ ((lam_args.template MatBeforeStep<fdm::osteps::StepType::Implicit>(stencil, time_ctx, ctx)), ...); }, 
           m_osteps
         ); 
 
@@ -141,17 +140,17 @@ class ImplicitSolver
 
         // outside steps vector before step 
         std::apply(
-          [&](const auto&... lam_args){ ((lam_args.template VecBeforeStep<fdm::osteps::StepType::Implicit>(rhs_vector, time_ctx, ctx)), ...); }, 
+          [&](auto&&... lam_args){ ((lam_args.template VecBeforeStep<fdm::osteps::StepType::Implicit>(rhs_vector, time_ctx, ctx)), ...); }, 
           m_osteps
         ); 
 
         // Implicit Step (I - D(t+1))*U(n+1) = rhs 
         m_iterative_solver->compute(stencil); 
-        Eigen::VectorXd solution_u = m_iterative_solver->solveWithGuess(rhs_vector,rhs_vector);
+        solution_u = m_iterative_solver->solveWithGuess(rhs_vector,rhs_vector);
         
         // outside steps vector after step(next_sol) 
         std::apply(
-          [&](const auto&... lam_args){ ((lam_args.template VecAfterStep<fdm::osteps::StepType::Implicit>(solution_u, time_ctx, ctx)), ...); }, 
+          [&](auto&&... lam_args){ ((lam_args.template VecAfterStep<fdm::osteps::StepType::Implicit>(solution_u, time_ctx, ctx)), ...); }, 
           m_osteps
         );
 
@@ -159,7 +158,8 @@ class ImplicitSolver
         save_policy.saveSolution(executor.getExpiringSolution()); 
 
         // push solution into executor
-        executor.pushSolution(std::move(solution_u));
+        executor.rotateStoredSolutions(1); 
+        executor.getStoredSolutions().back().swap(solution_u); 
 
         // advance time_ctx 1 step in time 
         time_ctx.now = time_ctx.next; 

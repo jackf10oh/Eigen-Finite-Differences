@@ -13,6 +13,7 @@
 #define WRITEPOLICY_H 
 
 #include<chrono>
+#include "../Types.hpp"
 
 namespace fdm{
   namespace solvers{ 
@@ -22,23 +23,23 @@ struct EmptySaver
 {
   // no member data 
   EmptySaver()=default; 
-  void saveSolution(Eigen::VectorXd sol){}; 
-  void saveLastSolution(Eigen::VectorXd sol){}; 
+  void saveSolution(const fdm::Vector& sol){}; 
+  void saveLastSolution(const fdm::Vector& sol){}; 
 };
 
 struct LastSaver
 {
   // no member data 
   LastSaver()=default; 
-  void saveSolution(const Eigen::VectorXd& sol={}){}; 
-  auto saveLastSolution(Eigen::VectorXd sol){ return sol; }; 
+  void saveSolution(const fdm::Vector& sol={}){}; 
+  auto saveLastSolution(fdm::Vector sol){ return sol; }; 
 };
 
 struct PrintSaver
 {
   bool first_entry=true; 
   PrintSaver()=default; 
-  void saveSolution(const Eigen::VectorXd& sol)
+  void saveSolution(const fdm::Vector& sol)
   {
     if(first_entry){
       std::cout << "[";
@@ -52,7 +53,7 @@ struct PrintSaver
     }
     std::cout << *it << "],\n";  
   }; 
-  void saveLastSolution(const Eigen::VectorXd& sol)
+  void saveLastSolution(const fdm::Vector& sol)
   {
     std::cout << "["; 
     auto it=sol.cbegin(); 
@@ -72,9 +73,9 @@ struct TimerSaver
 
   TimerSaver()=default; 
 
-  void saveSolution(const Eigen::VectorXd& sol={}){}; 
+  void saveSolution(const fdm::Vector& sol={}){}; 
 
-  auto saveLastSolution(const Eigen::VectorXd& sol={})
+  auto saveLastSolution(const fdm::Vector& sol={})
   { 
     return std::chrono::duration_cast<Units>(std::chrono::system_clock::now() - time_started); 
   }; 

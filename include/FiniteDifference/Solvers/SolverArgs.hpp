@@ -11,15 +11,18 @@
 #include<memory>
 #include<vector>
 #include<Eigen/Core> 
+#include "../Types.hpp"
+#include "../Mesh.hpp"
+
 
 namespace fdm{
   namespace solvers{ 
 
-template<typename AnyMesh, typename Container>
+template<class M, class Container>
 struct SolverArgs
 {
   // Mesh1D or MeshXD the PDE operates on 
-  std::shared_ptr<AnyMesh> mesh; 
+  std::shared_ptr<M> mesh; 
 
   // list of times the solver marches through 
   std::shared_ptr<const Container> times; 
@@ -28,17 +31,17 @@ struct SolverArgs
   // ! has to be atleast >= maxOrder + 1. 
   // where maxOrder is the highest order in the LHS time derivatives expression (texprs)  
   // defaulted to empty so it can be assigned later... 
-  std::vector<Eigen::VectorXd> initialConditions = {};
+  std::vector<fdm::Vector> initialConditions = {};
 };
 
 // CTAD guideline ... 
-template<typename M, typename C>
-SolverArgs(std::shared_ptr<M>, std::shared_ptr<const C>, std::vector<Eigen::VectorXd>)
-  ->SolverArgs<M,C>; 
+template<class M, class C>
+SolverArgs(std::shared_ptr<M>, std::shared_ptr<const C>, std::vector<fdm::Vector>)
+  ->SolverArgs<M, C>; 
 
-template<typename M, typename C>
+template<class M, class C>
 SolverArgs(std::shared_ptr<M>, std::shared_ptr<const C>)
-  ->SolverArgs<M,C>; 
+  ->SolverArgs<M, C>; 
 
   } // end namespace solvers
 } // end namespace fdm 

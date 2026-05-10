@@ -1,19 +1,19 @@
 // Interpolator.hpp
 //
-// ! Update: haven't redone linear interpolation. 
-// this class hasn't been ported to the new interfaces yet
-// plan on moving linear interpolation being in fdm::utils  
+// Lazy calculator that uses a one of fdm's solvers 
+// to write solutions at each time step into a stored vector
+// and later interpolate any point  in time + space 
 //
 // JAF 4/12/2026 
 
 #ifndef SOLUTIONINTERPOLATOR_H
 #define SOLUTIONINTERPOLATOR_H 
 
+#include<cassert>
 #include<memory>
 #include<vector>
-#include<utility> // std::pair
 #include<Eigen/Core>
-#include "../MeshXD.hpp"
+#include "../Mesh.hpp"
 #include "../LinOps/LinOpTraits.hpp" 
 #include "../Utilities/LinearInterpolation.hpp"
 
@@ -24,8 +24,7 @@ namespace fdm{
 
 template<
   typename StoredSolver, 
-  typename M = std::conditional_t<fdm::linops::traits::is_1dim_linop_crtp<typename StoredSolver::LinOp>::value, const fdm::Mesh1D, const fdm::MeshXD>, 
-  typename C = std::vector<double>
+  typename C = Eigen::VectorXd // container of times 
 >
 class Interpolator
 {
@@ -33,21 +32,17 @@ class Interpolator
     // Type Defs ----------------------------- 
     struct BackInserterSaver
     {
-      std::vector<Eigen::VectorXd>& m_vec; 
+      std::vector<fdm::Vector>& m_vec; 
       BackInserterSaver()=delete; 
       BackInserterSaver(std::vector<Eigen::VectorXd>& v_init) : m_vec(v_init){}; 
-      BackInserterSaver(const BackInserterSaver& other) : m_vec(other.m_vec){}; 
-      void saveSolution(const Eigen::VectorXd& sol){ m_vec.push_back(sol); }; 
-      void saveSolution(Eigen::VectorXd&& sol){ m_vec.push_back(std::move(sol)); }; 
-      void saveLastSolution(const Eigen::VectorXd& sol){ m_vec.push_back(sol); }; 
-      void saveLastSolution(Eigen::VectorXd&& sol){ m_vec.push_back(std::move(sol)); }; 
+      void saveSolution(Eigen::VectorXd sol){ m_vec.emplace_back(std::move(sol)); }; 
+      void saveLastSolution(Eigen::VectorXd sol){ m_vec.emplace_back(std::move(sol)); }; 
     }; 
 
     // Member Data ------------------------------
     std::vector<Eigen::VectorXd> m_data; 
     StoredSolver m_solver; 
-    SolverArgs<M,C> m_args; 
-    fdm::SharedConstMeshXD m_high_dim_mesh; 
+    SolverArgs<const fdm::Mesh,C> m_args; 
     bool m_calculated; 
 
   public: 
@@ -57,10 +52,9 @@ class Interpolator
     Interpolator()=delete; 
 
     // from solver + args 
-    Interpolator(StoredSolver s, SolverArgs<M,C> args = {})
+    Interpolator(StoredSolver s, SolverArgs<const fdm::Mesh,const C> args = {})
       : m_data(0), 
       m_args(std::move(args)), 
-      m_high_dim_mesh(fdm::make_MeshXD(m_args.mesh)), 
       m_solver(std::move(s)),
       m_calculated(false) 
     {}
@@ -75,39 +69,9 @@ class Interpolator
     ~Interpolator()=default; 
 
     // Member Funcs ====================================================
-    
-    // get value of Solution at any point t,x1,x2,...xn in time/space 
-    template<typename... Scalars>
-    double SolAt(double t, Scalars... coords)
-    {
-      std::array<double, sizeof...(coords)> c{coords...};
-      return SolAt(t, c); 
-    }
-    
-    // specialization for 1D case 
-    double SolAt(double t, double x)
-    {
-      std::array<double,1> c{x}; 
-      return SolAt(t,c); 
-    }
-    
-    // ... with container of spatial coords
-    template<typename Container>
-    double SolAt(double t, const Container& coords){
-      // if m_data is empty... 
-      if(!m_calculated) fillStoredSolutions(); 
 
-      // find index in m_args.times
-      auto time_interval = fdm::utils::make_subinterval(t, m_args.times->cbegin(), m_args.times->cend());
-      auto offset = std::distance(m_args.times->cbegin(), time_interval.first); 
-
-      // find left / right value in linear interpolation 
-      double y1 =  interpolateSolution(coords, m_data[offset].cbegin(), m_data[offset].cend()); 
-      double y2 =  interpolateSolution(coords, m_data[offset+1].cbegin(), m_data[offset+1].cbegin());
-      
-      // linear interpolation (t-t1) * (y2 - y1) / (t2 - t1) 
-      return y1 + (t - *time_interval.first) * (y2 - y1) / (*time_interval.second - *time_interval.first); 
-    }
+    // getter to m_calculated
+    inline bool isCalculated() const { return m_calculated; }
 
     // resets m_calculated to false. resize m_data
     void clearStoredSolutions()
@@ -119,36 +83,52 @@ class Interpolator
     // getters to m_args
     const auto& getArgs() const { return m_args; }; 
 
+    // set m_args to a new input
+    void setArgs(SolverArgs<const fdm::Mesh,const C> args_switch)
+    {
+      m_args = std::move(args_switch); 
+      clearStoredSolutions(); 
+    }
+
     // getters to m_solver 
     auto& getSolver(){return m_solver;} // non const allows access to solvers internals. i.e. SetMaxIterations 
     const auto& getSolver() const {return m_solver;}
     
-    // set m_args to a new input
-    void setArgs(SolverArgs<M,C> args_switch)
-    {
-      m_args = std::move(args_switch); 
-      m_high_dim_mesh = fdm::make_MeshXD(m_args.mesh); 
-      clearStoredSolutions(); 
-    }
-
     // Getters to m_data 
     const auto& getStoredSolutions() const { return m_data; }; 
 
     // Populate m_data with solutions at each step in time 
     void fillStoredSolutions()
     {
-      if(!m_calculated)
-      {
-        // resize + reserve data 
-        m_data.resize(0); 
-        m_data.reserve(m_args.times->size());
+      if(m_calculated) return; 
+      // resize + reserve data 
+      m_data.resize(0); 
+      m_data.reserve(m_args.times->size());
 
-        // WritePolicy moves all solutions at each time step to m_data
-        m_solver.calculate(m_args, BackInserterSaver(m_data)); 
+      // WritePolicy moves all solutions at each time step to m_data
+      m_solver.calculate(m_args, BackInserterSaver(m_data)); 
 
-        // update status of interp 
-        m_calculated = true; 
-      }
+      // update status of interp 
+      m_calculated = true; 
+    }
+
+    // get value of Solution at any point t,{x1,x2,...xn} in time/space 
+    template<std::size_t numDimsMax>
+    double solAt(double t, const fdm::Coordinate<numDimsMax>& coords){
+      assert((numDimsMax == m_args.mesh->numDims()) && "error in Interpolator.solAt() : # of dims in coordinate must == # of dims in stored mesh");
+      // if m_data is empty... 
+      if(!m_calculated) fillStoredSolutions(); 
+
+      // find index in m_args.times
+      auto time_interval = fdm::utils::make_subinterval(t, m_args.times->cbegin(), m_args.times->cend());
+      auto offset = std::distance(m_args.times->cbegin(), time_interval.first); 
+
+      // find left / right value in linear interpolation 
+      double y1 =  interpolateSolution(coords.values, m_data[offset].cbegin(), m_data[offset].cend()); 
+      double y2 =  interpolateSolution(coords.values, m_data[offset+1].cbegin(), m_data[offset+1].cend());
+      
+      // linear interpolation (t-t1) * (y2 - y1) / (t2 - t1) 
+      return y1 + (t - *time_interval.first) * (y2 - y1) / (*time_interval.second - *time_interval.first); 
     }
 
   private:
@@ -156,7 +136,7 @@ class Interpolator
     template<typename Container, typename Iterator>
     double interpolateSolution(const Container& coords, Iterator start, Iterator stop)
     {
-      return LinearInterp_recursive_impl(coords, start, stop, m_high_dim_mesh, coords.size()-1);
+      return LinearInterp_recursive_impl(coords, start, stop, m_args.mesh, coords.size()-1);
     }; 
 
     template<typename Container, typename Iterator>
@@ -164,15 +144,15 @@ class Interpolator
       const Container& coords, 
       Iterator start, 
       Iterator stop,  
-      const std::shared_ptr<const fdm::MeshXD>& m,
+      const std::shared_ptr<const fdm::Mesh>& m,
       std::size_t ith_dim,
       std::size_t cumulative_offset = 0)
     {
-      const auto& sub_dim_m = m->getMesh1DSafe(ith_dim); 
-      auto subinterval = fdm::utils::make_subinterval(coords[ith_dim], sub_dim_m->cbegin(), sub_dim_m->cend());  
+      const auto& sub_dim_m = m->getAxis(ith_dim); 
+      auto subinterval = fdm::utils::make_subinterval(coords[ith_dim], sub_dim_m.cbegin(), sub_dim_m.cend());  
 
       if(ith_dim == 0){
-        std::size_t final_offset = cumulative_offset + std::distance(sub_dim_m->cbegin(), subinterval.first); 
+        std::size_t final_offset = cumulative_offset + std::distance(sub_dim_m.cbegin(), subinterval.first); 
         auto it = std::next(start, final_offset); 
         double y1 = *it; ++it; 
         double y2 = *it; 
@@ -181,7 +161,7 @@ class Interpolator
       }
       else{
         std::size_t stride = m->sizesMiddleProduct(0,ith_dim); 
-        std::size_t idx = std::distance(sub_dim_m->cbegin(), subinterval.first); 
+        std::size_t idx = std::distance(sub_dim_m.cbegin(), subinterval.first); 
         std::size_t next_offset = cumulative_offset + stride * (idx); 
         double y1 = LinearInterp_recursive_impl(coords, start, stop, m, ith_dim-1, next_offset); 
         double y2 = LinearInterp_recursive_impl(coords, start, stop, m, ith_dim-1, next_offset + stride);

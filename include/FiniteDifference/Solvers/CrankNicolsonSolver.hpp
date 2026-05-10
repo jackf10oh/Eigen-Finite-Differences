@@ -14,6 +14,7 @@
 #include "../TExprs/Executor.hpp" // marches through time 
 #include "../OutsideSteps/StepContexts.hpp"  // feed to outside steps tuple 
 #include "../OutsideSteps/OStepBase.hpp" // StepType scoped enumeration 
+#include "../Utilities/RowMajorIdentityExpr.hpp"
 #include "SolverArgs.hpp"
 #include "SavePolicies.hpp"
 
@@ -84,7 +85,7 @@ class CrankNicolsonSolver
       executor.pushTimeRange(time_ctx.container->cbegin(), it); 
 
       // set up operators. 
-      fdm::linops::IOp identity; 
+      fdm::utils::RowMajorIdentity identity(0,0); // will resize later  
       m_rhs.setMesh(args.mesh); 
       executor.setMesh(args.mesh); 
 
@@ -94,14 +95,15 @@ class CrankNicolsonSolver
       // store allocated memory between steps in solver hot loop  
       fdm::Matrix stencil; 
       fdm::Matrix linop_untouched; 
-      Eigen::VectorXd rhs_vector;  
-      Eigen::VectorXd solution_u;  
+      fdm::Vector rhs_vector;  
+      fdm::Vector solution_u;  
 
       // need to get first linop at time.now before it caches the next time steps... 
-      if constexpr(m_rhs.isTimeDep){
+      
+      if constexpr(fdm::linops::internal::traits<RhsExpression>::is_timedep){
         m_rhs.setTime(time_ctx.now); 
       }
-      linop_untouched = 0.5 * m_rhs.asMatrix(); 
+      linop_untouched = 0.5 * m_rhs.toEigen(); 
 
       // hot loop through times
       auto end = time_ctx.container->cend();
@@ -115,7 +117,7 @@ class CrankNicolsonSolver
 
         // outside steps before any type of linear algebra is performed... 
         std::apply(
-          [&](auto&... lam_args){ 
+          [&](auto&&... lam_args){ 
             ((lam_args.template BeforeLinAlgebra<fdm::osteps::StepType::Implicit>(time_ctx, ctx)), ...); 
           }, 
           m_osteps
@@ -126,26 +128,26 @@ class CrankNicolsonSolver
 
         // outside steps vector before step 
         std::apply(
-          [&](const auto&... lam_args){ ((lam_args.template VecBeforeStep<fdm::osteps::StepType::Implicit>(rhs_vector, time_ctx, ctx)), ...); }, 
+          [&](auto&&... lam_args){ ((lam_args.template VecBeforeStep<fdm::osteps::StepType::Implicit>(rhs_vector, time_ctx, ctx)), ...); }, 
           m_osteps
         ); 
         
         // store the matrix into stencil 
-        if constexpr(m_rhs.isTimeDep){
+        if constexpr(fdm::linops::internal::traits<RhsExpression>::is_timedep){
           // set the operator to the right side of the step [t(n), t(n+1)] for implicit steps 
           m_rhs.setTime(time_ctx.next); 
           // should build an autonomous solver for these linops, since it evaluate the 
           // expression at every step. but still save a little time
           // we also can't check that outside steps won't change the mesh we operate on.  
         }
-        linop_untouched = 0.5 * m_rhs.asMatrix(); 
+        linop_untouched = 0.5 * m_rhs.toEigen(); 
         std::size_t s = linop_untouched.rows(); 
         identity.resize(s,s); 
-        stencil = identity.asMatrix() - executor.getInvCoeff() * linop_untouched; 
+        stencil = identity - executor.getInvCoeff() * linop_untouched; 
         
         // outside steps matrix before step
         std::apply(
-          [&](const auto&... lam_args){ ((lam_args.template MatBeforeStep<fdm::osteps::StepType::Implicit>(stencil, time_ctx, ctx)), ...); }, 
+          [&](auto&&... lam_args){ ((lam_args.template MatBeforeStep<fdm::osteps::StepType::Implicit>(stencil, time_ctx, ctx)), ...); }, 
           m_osteps
         ); 
 
@@ -155,7 +157,7 @@ class CrankNicolsonSolver
         
         // outside steps vector after step(next_sol) 
         std::apply(
-          [&](const auto&... lam_args){ ((lam_args.template VecAfterStep<fdm::osteps::StepType::Implicit>(solution_u, time_ctx, ctx)), ...); }, 
+          [&](auto&&... lam_args){ ((lam_args.template VecAfterStep<fdm::osteps::StepType::Implicit>(solution_u, time_ctx, ctx)), ...); }, 
           m_osteps
         );
 
@@ -163,7 +165,8 @@ class CrankNicolsonSolver
         save_policy.saveSolution(executor.getExpiringSolution()); 
 
         // push solution into executor
-        executor.pushSolution(std::move(solution_u));
+        executor.rotateStoredSolutions(1); 
+        executor.getStoredSolutions().back().swap(solution_u); 
 
         // advance time_ctx 1 step in time 
         time_ctx.now = time_ctx.next; 
