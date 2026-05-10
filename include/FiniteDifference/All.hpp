@@ -1,18 +1,23 @@
 // All.hpp 
 //
-//
+// Includs all files from every subdirectory,
+// except for utilitis. 
 //
 // JAF 4/11/2026 
 
-#ifndef FDMALL_H
-#define FDMALL_H
+#ifndef FDM_ALL_H
+#define FDM_ALL_H
 
-#include "Mesh1D.hpp"
-#include "Vector1D.hpp"
-#include "MeshXD.hpp"
-#include "VectorXD.hpp"
+#ifndef EIGEN_SPARSEMATRIXBASE_PLUGIN
+  #define EIGEN_SPARSEMATRIXBASE_PLUGIN <FiniteDifference/EigenFdmPlugin.hpp> 
+#endif 
 
-#include "LinOps/All.hpp"
+#include "Types.hpp"
+#include "Traits.hpp"
+#include "Mesh.hpp" 
+
+#include "Diffops/All.hpp"
+#include "Coeffs/All.hpp"
 #include "OutsideSteps/All.hpp"
 #include "TExprs/All.hpp"
 #include "Solvers/All.hpp"

@@ -4,8 +4,8 @@
 //
 // JAF 4/24/2026 
 
-#ifndef FDM_COEFF_PRODUCT_H
-#define FDM_COEFF_PRODUCT_H
+#ifndef FDM_COEFFS_COEFFPRODUCT_H
+#define FDM_COEFFS_COEFFPRODUCT_H
 
 #include "../Diffops/EvaluatorBase.hpp"
 
@@ -150,4 +150,4 @@ class CoeffProduct : public fdm::linops::PartialDerivBase<CoeffProduct<LeftCoeff
 } // end namespace linops  
 } // end namespace fdm 
 
-#endif 
+#endif // CoeffProduct.hpp 

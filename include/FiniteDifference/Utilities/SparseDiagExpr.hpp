@@ -6,8 +6,8 @@
 // 
 // JAF 1/2/2026 
 
-#ifndef SPARSEDIAGEXPR_H
-#define SPARSEDIAGEXPR_H
+#ifndef FDM_UTILS_SPARSEDIAGEXPR_H
+#define FDM_UTILS_SPARSEDIAGEXPR_H
 
 #include<cstdint>
 #include<Eigen/Core>

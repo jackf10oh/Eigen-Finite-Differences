@@ -5,6 +5,9 @@
 //
 // JAF 4/12/2026 
 
+#ifndef FDM_UTILS_LINEARINTERPOLATION_H
+#define FDM_UTILS_LINEARINTERPOLATION_H 
+
 #include<utility> // std::pair
 #include<algorithm> // std::lower_bound
 
@@ -61,3 +64,5 @@ double linear_interpolation(
 
   } // end namespace utils 
 } // end namespace fdm 
+
+#endif // LinearInterpolation.hpp 

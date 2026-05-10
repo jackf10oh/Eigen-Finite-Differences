@@ -7,8 +7,8 @@
 // 
 // JAF 4/24/2026 
 
-#ifndef FDM_COEFFS_BASE_H
-#define FDM_COEFFS_BASE_H 
+#ifndef FDM_COEFFS_COEFFSBASE_H
+#define FDM_COEFFS_COEFFSBASE_H
 
 #include<memory>
 #include<Eigen/Core> // DiagonalMatrixBase 

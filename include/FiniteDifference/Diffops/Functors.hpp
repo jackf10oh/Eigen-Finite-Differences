@@ -4,8 +4,8 @@
 //
 // JAF 4/23/2026 
 
-#ifndef FDM_DIFFOP_FUNCTORS_H
-#define FDM_DIFFOP_FUNCTORS_H 
+#ifndef FDM_DIFFOPS_FUNCTORS_H
+#define FDM_DIFFOPS_FUNCTORS_H 
 
 namespace fdm{
 namespace linops{

@@ -6,8 +6,8 @@
 // 
 // JAF 1/2/2026 
 
-#ifndef ROWMAJORIDENTITYEXPR_H
-#define ROWMAJORIDENTITYEXPR_H
+#ifndef FDM_UTILS_ROWMAJORIDENTITYEXPR_H
+#define FDM_UTILS_ROWMAJORIDENTITYEXPR_H
 
 #include<cstdint>
 #include<Eigen/Sparse>

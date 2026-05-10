@@ -1,11 +1,13 @@
 // SumExpr.hpp
 //
-//
+// Expressions of Utt + Ut + Uttt 
+// that manages a tuple of each sum term 
+// to be easily filtered later 
 //
 // JAF 1/15/2026 
 
-#ifndef LHSSUMEXPR_H
-#define LHSSUMEXPR_H 
+#ifndef FDM_TEXPRS_SUMEXPR_H
+#define FDM_TEXPRS_SUMEXPR_H
 
 #include "TExprTraits.hpp"
 #include "TimeDerivBase.hpp"

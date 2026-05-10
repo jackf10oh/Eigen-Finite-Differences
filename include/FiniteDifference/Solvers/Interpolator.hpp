@@ -6,15 +6,14 @@
 //
 // JAF 4/12/2026 
 
-#ifndef SOLUTIONINTERPOLATOR_H
-#define SOLUTIONINTERPOLATOR_H 
+#ifndef FDM_SOLVERS_INTERPOLATOR_H
+#define FDM_SOLVERS_INTERPOLATOR_H
 
 #include<cassert>
 #include<memory>
 #include<vector>
 #include<Eigen/Core>
 #include "../Mesh.hpp"
-#include "../LinOps/LinOpTraits.hpp" 
 #include "../Utilities/LinearInterpolation.hpp"
 
 #include "ImplicitSolver.hpp"

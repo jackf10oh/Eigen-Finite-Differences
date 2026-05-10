@@ -8,8 +8,8 @@
 //
 // JAF 5/7/2026 
 
-#ifndef FDM_FORCINGTERM_H
-#define FDM_FORCINGTERM_H
+#ifndef FDM_OSTEPS_FORCINGTERM_H
+#define FDM_OSTEPS_FORCINGTERM_H
 
 #include "../Traits.hpp" // callable_traits 
 #include "../Coordinate.hpp"

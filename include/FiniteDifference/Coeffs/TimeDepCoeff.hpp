@@ -5,8 +5,8 @@
 //
 // JAF 4/24/2026 
 
-#ifndef FDM_TIMEDEP_COEFF_H
-#define FDM_TIMEDEP_COEFF_H 
+#ifndef FDM_COEFFS_TIMEDEPCOEFF_H
+#define FDM_COEFFS_TIMEDEPCOEFF_H
 
 #include "CoeffBase.hpp"
 

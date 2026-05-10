@@ -1,11 +1,13 @@
 // NthTimeDeriv.hpp
 //
-//
+// Concrete class derived from TimeDerivBase 
+// That represent operator like Ut, Utt, etc 
+// for time derivative template expressions 
 //
 // JAF 1/15/2026 
 
-#ifndef NTHTIMEDERIV_H
-#define NTHTIMEDERIV_H 
+#ifndef FDM_TEXPRS_NTHTIMEDERIV_H
+#define FDM_TEXPRS_NTHTIMEDERIV_H
 
 #include "TimeDerivBase.hpp"
 

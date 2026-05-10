@@ -6,8 +6,8 @@
 //
 // JAF 3/27/2026 
 
-#ifndef FILLROWSEXPR_H
-#define FILLROWSEXPR_H 
+#ifndef FDM_UTILS_FILLROWEXPR_H
+#define FDM_UTILS_FILLROWEXPR_H
 
 namespace fdm{
 namespace utils{ 

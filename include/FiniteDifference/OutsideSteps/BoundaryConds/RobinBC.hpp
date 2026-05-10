@@ -5,8 +5,8 @@
 //
 // JAF 12/8/2025
 
-#ifndef ROBINBCS_H
-#define ROBINBCS_H 
+#ifndef FDM_OSTEPS_ROBINBC_H
+#define FDM_OSTEPS_ROBINBC_H
 
 #include "../../Utilities/FornbergCalc.hpp"
 #include "BCPair.hpp"
@@ -35,7 +35,7 @@ class RobinBC
 
     // Member Funcs ----------------------------------------------
     // change first/last (left/right boundary) row of the fdm stencil matrix
-    void SetStencilL(double t, const fdm::Vector& mesh, fdm::Matrix& Mat) const 
+    void SetStencilL(double t, const fdm::Vector& mesh, fdm::CSRMatrix& Mat) const 
     {
       Mat.topRows(1) *= 0;
       // first order derivative approximation 
@@ -43,7 +43,7 @@ class RobinBC
       Mat.coeffRef(0,0)=  val_coeff + deriv_coeff*(-1.0/h);
       Mat.coeffRef(0,1)=  deriv_coeff*(1.0/h);
     }; 
-    void SetStencilR(double t, const fdm::Vector& mesh, fdm::Matrix& Mat) const 
+    void SetStencilR(double t, const fdm::Vector& mesh, fdm::CSRMatrix& Mat) const 
     {
       Mat.bottomRows(1) *= 0; 
       // first order derivative approximation 

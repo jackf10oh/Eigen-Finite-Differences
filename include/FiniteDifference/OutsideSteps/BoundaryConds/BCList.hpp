@@ -1,11 +1,12 @@
 // BCList.hpp
 //
-//
+// holds a tuple of BCLists and applies them 
+// in order to each dimension 
 //
 // JAF 2/1/2026  
 
-#ifndef BCLIST_H
-#define BCLIST_H 
+#ifndef FDM_OSTEPS_BCLIST_H
+#define FDM_OSTEPS_BCLIST_H
 
 #include<cassert>
 #include<tuple>
@@ -47,7 +48,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
     // member data. -------------------------------------------------
     // list of boundary conditions. 1 per Dimension 
     std::tuple< std::remove_reference_t<BCPairs_Ts>... > m_bcs_list; 
-    using MATS_T = decltype(make_repeat_tuple<fdm::Matrix>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{})); 
+    using MATS_T = decltype(make_repeat_tuple<fdm::CSRMatrix>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{})); 
     MATS_T m_mats; 
     
   public:
@@ -62,7 +63,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
     >
     BCList(BCPairs_Ts... args) 
       : m_bcs_list(args...), 
-      m_mats(make_repeat_tuple<fdm::Matrix>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{}))
+      m_mats(make_repeat_tuple<fdm::CSRMatrix>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{}))
     { 
       // reserves 10 entries inside of a fdm::Matrix
       auto reserve_lam = [](auto& mat){mat.reserve(10);}; 
@@ -81,7 +82,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
 
     // Member Funcs =================================================
     template<StepType STEP, typename TIMECTX = TimeContext<>, typename CONSTCTX = Context<> >
-    void MatBeforeStep(fdm::Matrix& Mat, const TIMECTX& t = {}, const CONSTCTX& ctx = {})
+    void MatBeforeStep(fdm::CSRMatrix& Mat, const TIMECTX& t = {}, const CONSTCTX& ctx = {})
     {      
       // check args are compaitble 
       assert((ctx.getMesh()->numDims() == sizeof...(BCPairs_Ts)) && "BCList MatBeforeStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
@@ -243,7 +244,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
         std::get<Idx>(m_bcs_list).m_right.SetStencilR(t,mesh,std::get<0>(m_mats));
 
         // copy values from "bottom" row into "top" row. 
-        fdm::Matrix::InnerIterator it(std::get<0>(m_mats),0); 
+        fdm::CSRMatrix::InnerIterator it(std::get<0>(m_mats),0); 
         for(; it; ++it) std::get<Idx>(m_mats).coeffRef(it.row(),it.col()) = it.value();  
       }
     }
@@ -286,7 +287,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
   } // end namespace osteps
 } // end namespace fdm 
 
-#endif // BCListXD.hpp 
+#endif // BCList.hpp 
 
 /* // order of priority for BCListXD.list to be applied 
 corners / edges of XDim space are given priority to whichever BC would cover it first 

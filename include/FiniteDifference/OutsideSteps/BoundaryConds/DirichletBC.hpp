@@ -5,8 +5,8 @@
 //
 // JAF 12/8/2025
 
-#ifndef DIRICHLETBCS_H
-#define DIRICHLETBCS_H 
+#ifndef FDM_OSTEPS_DIRICHLETBC_H
+#define FDM_OSTEPS_DIRICHLETBC_H
 
 #include "BCPair.hpp" 
 
@@ -27,11 +27,11 @@ class DirichletBC
 
     // Member Funcs ----------------------------------------------
     // change first/last (left/right boundary) row of the fdm stencil matrix
-    void SetStencilL(double t, const fdm::Vector& mesh, fdm::Matrix& Mat) const 
+    void SetStencilL(double t, const fdm::Vector& mesh, fdm::CSRMatrix& Mat) const 
     {
       Mat.topRows(1) *= 0; Mat.coeffRef(0,0)=1;
     }
-    void SetStencilR(double t, const fdm::Vector& mesh, fdm::Matrix& Mat) const 
+    void SetStencilR(double t, const fdm::Vector& mesh, fdm::CSRMatrix& Mat) const 
     {
       Mat.bottomRows(1) *= 0; Mat.coeffRef(Mat.rows()-1, Mat.cols()-1)=1;
     }

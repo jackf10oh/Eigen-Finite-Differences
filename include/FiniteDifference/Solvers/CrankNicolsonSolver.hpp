@@ -5,11 +5,10 @@
 //
 // JAF 4/12/2026 
 
-#ifndef CRANKNICOLSONSOLVER_H
-#define CRANKNICOLSONSOLVER_H 
+#ifndef FDM_SOLVERS_CRANKNICOLSONSOLVER_H
+#define FDM_SOLVERS_CRANKNICOLSONSOLVER_H
 
 #include<Eigen/IterativeLinearSolvers> // BiCGSTAB sparse iterative solver  
-#include "../LinOps/LinOpTraits.hpp" // check RHS is 1D or XD LinOp + fdm::Matrix 
 #include "../TExprs/TExprTraits.hpp" // check LHS is time derivatives 
 #include "../TExprs/Executor.hpp" // marches through time 
 #include "../OutsideSteps/StepContexts.hpp"  // feed to outside steps tuple 
@@ -25,7 +24,7 @@ template<
   typename LhsExpression, 
   typename RhsExpression, 
   typename OutsideStepsTuple, 
-  class SparseIterativeSolver=Eigen::BiCGSTAB<fdm::Matrix>
+  class SparseIterativeSolver=Eigen::BiCGSTAB<fdm::CSRMatrix>
 >
 class CrankNicolsonSolver
 {
@@ -55,7 +54,7 @@ class CrankNicolsonSolver
     )
       : m_lhs(l_init), m_rhs(r_init), m_osteps(ostep_init), m_iterative_solver(std::move(s_init))
     {
-      static_assert(std::is_same_v<typename SparseIterativeSolver::MatrixType, fdm::Matrix>, "must use iterative solver on fmd::Matrix"); 
+      static_assert(std::is_same_v<typename SparseIterativeSolver::MatrixType, fdm::CSRMatrix>, "must use iterative solver on fmd::Matrix"); 
     }
 
     // not copyable! 
@@ -93,8 +92,8 @@ class CrankNicolsonSolver
       auto ctx = fdm::osteps::make_context(std::move(args.mesh), &executor, &m_rhs, this); 
 
       // store allocated memory between steps in solver hot loop  
-      fdm::Matrix stencil; 
-      fdm::Matrix linop_untouched; 
+      fdm::CSRMatrix stencil; 
+      fdm::CSRMatrix linop_untouched; 
       fdm::Vector rhs_vector;  
       fdm::Vector solution_u;  
 
@@ -180,7 +179,7 @@ class CrankNicolsonSolver
   
 }; 
 
-template<typename L, typename R, typename O, class S=Eigen::BiCGSTAB<fdm::Matrix>>
+template<typename L, typename R, typename O, class S=Eigen::BiCGSTAB<fdm::CSRMatrix>>
 using CNSolver = CrankNicolsonSolver<L,R,O,S>; 
 
   } // end namespace solvers

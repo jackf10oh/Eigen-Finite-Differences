@@ -1,11 +1,11 @@
 // Traits.hpp
 //
-// Traits used by linops sub directory 
+// Traits used by Diffops subdirectory 
 //
 // JAF 4/14/2026 
 
-#ifndef FDM_LINOP_TRAITS_H
-#define FDM_LINOP_TRAITS_H
+#ifndef FDM_DIFFOPS_TRAITS_H
+#define FDM_DIFFOPS_TRAITS_H
 
 #include<cstdint>
 #include<string>
@@ -152,4 +152,4 @@ struct NestedStorage<T, std::void_t<decltype(fdm::linops::internal::traits<T>::i
 } // end namespace linops 
 } // end namespace fdm
 
-#endif // Traits.hpp 
+#endif // Traits.hpp (Diffops)

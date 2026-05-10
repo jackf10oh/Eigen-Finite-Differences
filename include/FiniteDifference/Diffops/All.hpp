@@ -20,4 +20,4 @@
 #include "NwiseUnaryOp.hpp" 
 #include "NthPartialDeriv.hpp" 
 
-#endif // All.hpp
+#endif // All.hpp (Diffops)

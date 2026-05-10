@@ -125,8 +125,6 @@ else()
   add_subdirectory(tests)
 endif()
 
-add_subdirectory(Bindings)
-
 add_executable(main 
   main.cpp
 )

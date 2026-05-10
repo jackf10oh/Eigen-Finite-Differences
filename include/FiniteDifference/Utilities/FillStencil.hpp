@@ -4,8 +4,8 @@
 //
 // JAF 1/2/2025 
 
-#ifndef FILLSTENCIL_H
-#define FILLSTENCIL_H 
+#ifndef FDM_UTILS_FILLSTENCIL_H
+#define FDM_UTILS_FILLSTENCIL_H
 
 #include<Eigen/Sparse> 
 

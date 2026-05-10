@@ -9,8 +9,8 @@
 //
 // JAF 3/4/2026 
 
-#ifndef EXPLICITSOLVER_H
-#define EXPLICITSOLVER_H 
+#ifndef FDM_SOLVERS_EXPLICITSOLVER_H
+#define FDM_SOLVERS_EXPLICITSOLVER_H
 
 #include "../TExprs/TExprTraits.hpp" // check LHS is time derivatives 
 #include "../TExprs/Executor.hpp" // marches through time 

@@ -13,8 +13,8 @@
 // 
 // JAF 3/21/2026 
 
-#ifndef STEPCONTEXTS_H
-#define STEPCONTEXTS_H
+#ifndef FDM_OSTEPS_STEPCONTEXTS_H
+#define FDM_OSTEPS_STEPCONTEXTS_H
 
 #include<cstddef>
 #include "../Types.hpp"

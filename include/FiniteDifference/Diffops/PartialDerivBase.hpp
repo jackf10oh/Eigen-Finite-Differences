@@ -7,8 +7,8 @@
 //
 // JAF 4/17/2026 
 
-#ifndef PARTIALDERIVBASE_H
-#define PARTIALDERIVBASE_H
+#ifndef FDM_DIFFOPS_PARTIALDERIVBASE_H
+#define FDM_DIFFOPS_PARTIALDERIVBASE_H
 
 #include<Eigen/SparseCore>
 #include "EvaluatorBase.hpp"
@@ -246,4 +246,4 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
 } // end namespace linops
 } // end namespace fdm 
 
-#endif // DiffOpBase.hpp  
+#endif // PartialDerivBase.hpp  

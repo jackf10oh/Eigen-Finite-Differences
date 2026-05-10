@@ -1,14 +1,13 @@
 // TimeDerivBase.hpp
 //
-//
+// Base class that all time expressions deriv from
+// implements operators +,-,* etc 
 //
 // JAF 1/15/2026 
 
-#ifndef TIMEDERIVBASE_H
-#define TIMEDERIVBASE_H 
+#ifndef FDM_TEXPRS_TIMEDERIVBASE_H
+#define FDM_TEXPRS_TIMEDERIVBASE_H
 
-#include<memory>
-#include "../LinOps/LinOpTraits.hpp" // fdm::Matrix
 #include "TExprTraits.hpp"
 
 namespace fdm{
@@ -42,12 +41,10 @@ class TimeDerivBase
     // packs this pointer into iterable tuple object. note: SumExpr will override it
     auto toTuple() &
     {
-      std::cout << "Lvalue Base .toTuple()" << std::endl; 
       return std::tie(*static_cast<Derived*>(this)); // lvalue -> reference
     }
     auto toTuple() &&
     {
-      std::cout << "Rvalue Base .toTuple()" << std::endl; 
       return std::make_tuple(std::move(*static_cast<Derived*>(this))); // rvalue -> move
     }
 
@@ -69,14 +66,12 @@ class TimeDerivBase
     auto operator-() &
     {
       // delegate to Operator*() from CoeffMultExpr.hpp
-      std::cout << "Lval operator-() called!" << std::endl; 
       return (-1.0) * static_cast<Derived&>(*this); 
     }
     // (Rvalue) 
     auto operator-() &&
     {
       // delegate to Operator*() from CoeffMultExpr.hpp 
-      std::cout << "Rval operator-() called!" << std::endl; 
       return (-1.0) * std::move(static_cast<Derived&&>(*this)); 
     }
 

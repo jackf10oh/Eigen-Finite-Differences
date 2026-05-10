@@ -1,14 +1,12 @@
 // OStepBase.hpp 
 //
-// CRTP bases for 1D / XD Outside Step. 
+// CRTP bases for Outside Step. 
 // Boundary Conditions will be viewed as another type of OStep in the new framework 
 //
 // JAF 1/31/2026 
 
-#ifndef OSTEPBASE_H
-#define OSTEPBASE_H
-
-#include "../LinOps/LinOpTraits.hpp" 
+#ifndef FDM_OSTEPS_OSTEPBASE_H
+#define FDM_OSTEPS_OSTEPBASE_H
 
 #include "../Types.hpp"
 #include "StepContexts.hpp"

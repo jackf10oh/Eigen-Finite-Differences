@@ -1,187 +1,84 @@
 // main.cpp
 //
-//
-//
 // JAF 12/8/2025
-#define eigen_assert(x)
-#include<FiniteDifference/Diffops/Traits.hpp> 
-#include<FiniteDifference/Mesh.hpp> 
-#define EIGEN_SPARSEMATRIXBASE_PLUGIN <FiniteDifference/EigenFdmPlugin.hpp> 
 
 // workaround to allow expressions of different rows/cols to be added 
 // before setMesh() sets their rows/cols to be equal
+#define eigen_assert(x)
+#include<FiniteDifference/All.hpp>
+#define EIGEN_SPARSEMATRIXBASE_PLUGIN <FiniteDifference/EigenFdmPlugin.hpp> 
 
-#include<cstdint>
 #include<iostream>
 #include<iomanip>
-#include<vector>
-#include<memory>
-#include<FiniteDifference/All.hpp> 
 #include<FiniteDifference/Utilities/PrintVec.hpp> 
-#include<Eigen/Dense>
-#include<Eigen/Core>
+#include<FiniteDifference/Utilities/BumpFunc.hpp>
 #include<Eigen/SparseCore> // macro plugin takes effect. 
- 
-#include<FiniteDifference/Diffops/PartialDerivBase.hpp> 
-#include<FiniteDifference/Diffops/NthPartialDeriv.hpp> 
-#include<FiniteDifference/Diffops/NwiseUnaryOp.hpp> 
-#include<FiniteDifference/Diffops/NwiseBinaryOp.hpp> 
-#include<FiniteDifference/Diffops/EigenEvaluator.hpp> 
 
-#include<FiniteDifference/Coeffs/CoeffBase.hpp>
-#include<FiniteDifference/Coeffs/CoeffProduct.hpp> 
-#include<FiniteDifference/Coeffs/AutonomousCoeff.hpp>
-#include<FiniteDifference/Coeffs/TimeDepCoeff.hpp>
-  
 using namespace fdm; 
 
 using std::endl, std::cout; 
 
 int main()
 {
-  std::cout << std::setprecision(4); 
+ // iomanip 
+  std::cout << std::setprecision(3); 
+  
+  // Domain + Time  
+  fdm::solvers::SolverArgs args{
+    .mesh = make_Mesh(fdm::linspaced(41,-5.0,5.0), 2), 
+    .times = std::make_shared<const fdm::Vector>(fdm::linspaced(101,0.0,3.0))
+  }; 
 
-  auto my_mesh = fdm::make_Mesh(2); 
-  my_mesh->getAxis(0) = Eigen::VectorXd::LinSpaced(4,0.0,3.0); 
-  my_mesh->getAxis(1) = Eigen::VectorXd::LinSpaced(4,0.0,3.0); 
+  // Initial Conditions  
+  auto v = make_Discretization(args.mesh, 0.0); 
+  args.initialConditions = { v, v }; 
 
-  std::vector<fdm::Vector> ics = { Eigen::VectorXd::LinSpaced(my_mesh->sizesProduct(), 0.0, 11.0) };
+  // LHS in time 
+  auto Utt = texprs::NthTimeDeriv<2>{}; 
 
-  fdm::linops::AutonomousCoeff a = [](double x){ return x + 5.0; }; 
-  cout << &a << endl; 
-  fdm::linops::TimeDepCoeff b = [](double t){ return t*t; };
-  // auto xpr = a * texprs::NthTimeDeriv<1>{} - b * texprs::NthTimeDeriv<1>{};// + texprs::NthTimeDeriv<1>{}; 
-  auto xpr = texprs::NthTimeDeriv<1>{}; 
-  // auto xpr = b * texprs::NthTimeDeriv<1>{}; 
+  // RHS in space 
+  auto Uxx = linops::NthPartialDeriv<2,0>{}; 
+  auto Uyy = linops::NthPartialDeriv<2,1>{}; 
+  auto expr = Uxx + Uyy; 
 
-  auto executor = texprs::make_Executor(xpr); 
-  executor.pushTimeRange(my_mesh->getAxis(0).cbegin(), my_mesh->getAxis(0).cend()); 
-  executor.pushSolution(ics[0]); 
-  executor.setMesh(my_mesh); 
-  executor.calculate(3.0);  
+  // Boundary Conditions 
+  auto left = osteps::RobinBC(1.0,-1.0,0.0); 
+  auto right = osteps::RobinBC(1.0,1.0,0.0);
+  osteps::BCPair bc_pair(left,right); 
+  osteps::BCList bcs(bc_pair,bc_pair); 
 
-  utils::print_vec(executor.getStoredTimes(), "times"); 
+  // Forcing Terms 
+  fdm::utils::BumpFunc bump{.L = -1.0, .R = 1.0, .c =0.0, .h = std::sqrt(5), .focus=10}; 
+  osteps::ForcingTerm forcing = [bump](double t, double x, double y)
+  {
+    return std::sin(6.28318*t) * bump(x) * bump(y);
+  }; 
 
-  cout << "numStoredSols: " << executor.numStoredSols << endl; 
-  cout << "sol[0]: " << executor.getStoredSolutions()[0].transpose().eval() << endl; 
-  cout << executor.getRhsExpression().transpose() << endl; 
+  // Solving ...
+  // solvers::ExplicitSolver my_solver(Utt,expr,std::tie(bcs)); 
+  // solvers::ImplicitSolver my_solver(Utt,expr,std::tie(forcing, bcs)); 
+  solvers::CrankNicolsonSolver my_solver(Utt,expr,std::tie(forcing, bcs)); 
 
-  cout << executor.getInvCoeff() << endl; 
-  // cout << executor.getInvCoeff().toDenseMatrix() << endl; 
+  // 1D through time 
+  // my_solver.calculate(args, solvers::PrintSaver{}); 
 
+  // 1D Print 
+  // auto sol = my_solver.calculate(args, solvers::LastSaver{}); 
+  // utils::print_vec(args.initialConditions[0],"ICs"); 
+  // utils::print_vec(sol, "Sol"); 
+
+  // 2D print 
+  auto sol = my_solver.calculate(args, solvers::LastSaver{}); 
+  utils::print_mat(args.mesh->makeOneDimViews(args.initialConditions[0], 0), "Init"); 
+  utils::print_mat(args.mesh->makeOneDimViews(sol, 0), "solution"); 
+ 
+  // Time to last sol
+  // auto time_taken = my_solver.calculate(args, solvers::TimerSaver{}); 
+  // cout << "milliseconds: " << time_taken.count() << endl;  
+
+  // Average time to last sol
+  // std::size_t N = 40; 
+  // double sum = 0; 
+  // for(auto i=0; i<N; ++i) sum += my_solver.calculate(args, solvers::TimerSaver{}).count(); 
+  // cout << "Average time: " << (sum/N) << " ms" << endl; 
 };
-
-
-// using MyArray = Eigen::Matrix<fdm::Scalar, 1, Eigen::Dynamic>; 
-// MyArray weights(10); 
-// weights << 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0;
-
-// Eigen::Map<MyArray> map(weights.data(), 5); 
-// cout << map << endl; 
-
-// Eigen::Map<MyArray> map2(weights.data()+5, 5); 
-// cout << map2 << endl; 
-
-// using Mapped = Eigen::Map<Eigen::Matrix<fdm::Scalar, 1, Eigen::Dynamic>>;
-// Mapped(weights.data(), 5) = Mapped(weights.data()+5, 5); 
-// cout << weights << endl;  
-
-
-// Future interfaces inside of diffops 
-
-// Keep Mesh1D in the interface ? 
-// adding a modulo + division to every InnerIterator might be costly ...
-
-// template<int order, int dir, template<int minNodes> class NodeSelector>
-// class NthDerivBase
-// {
-//   const Mesh* mesh_observed; 
-//   std::weak_ptr<const Mesh> handle_observed; 
-// }; 
-
-// template<int order>
-// class NodeSelector
-// {
-//   // constructor 
-//   template<int dir>
-//   NodeSelector(const NthDerivBase<order, dir, NodeSelector>& diffop)
-//   {
-
-//   }
-
-//   // Fornberg algo needs order+1 nodes for finite difference weights 
-//   static constexpr int numNodesMin = order+1; 
-//   // possibly more nodes...  
-//   static constexpr int numNodesMax = numNodesMin; 
-//   // runtime int that lands in [numNodesMin, numNodesMax]
-//   int numNodes; 
-
-//   // offset where to write the innerIdxs into innerIndexPtr(), fornberg weights into valuePtr()
-//   int ptr_offset;  
-  
-//   // Array of idxs that will be written into innerIndexPtr()[ptr_offset] 
-//   std::array<std::size_t, numNodesMax> innerIdxs; 
-
-//   // Array of doubles that will given to fornberg algorithm  
-//   std::array<double, numNodesMax> nodes; 
-// }; 
-
-// // evaluator forward declaration ---------------- 
-// template<int order, int dir, template<int minNodes> class NodeSelector, bool isNested>
-// class evaluator{}; 
-
-// // evaluator when it is the root of an expression 
-// template<int order, int dir, template<int minNodes> class NodeSelector>
-// struct evaluator<order,dir,NodeSelector, true>
-// {
-//   using Calculator = fdm::utils::FornArrayCalc<NodeSelector<order>::numNodesMax, order>; 
-//   // Constructor  
-//   evaluator(const NthDerivBase<order,dir,NodeSelector>& xpr)
-
-//   // Member Functions ------------------------------------- 
-//   void reseatMap(const Calculator& c, const int& numNodes)
-//   {
-//     new (&m_vals) = Eigen::::Map< Eigen::VectorXd>( c.getArray().data() + order * numNodes, numNodes);     
-//   }
-
-//   // Member Data --------------------------------------------  
-//   // holds nodes + innerIdxs 
-//   NodeSelector<order> m_selector; 
-
-//   // fornberg calculator. use memory on the stack. 
-//   Calculator m_calc; 
-
-//   // Eigen expression of m_calc's weights 
-//   Eigen::::Map< Eigen::VectorXd> m_vals; 
-
-// }; 
-
-// // evaluator when its nested in a parent evaluator 
-// template<int order, int dir, template<int minNodes> class NodeSelector>
-// struct evaluator<order,dir,NodeSelector, false>
-// {
-//   // Constructor: Use Parent's Fornberg Calc  
-//   evaluator( 
-//     const NthDerivBase<order,dir,NodeSelector>& xpr
-//     const fdm::utils::FornArrayCalc<NodeSelector<order>::numNodesMax, order>& parent_calc, 
-//     const int& numNodes)
-//   {
-//     // initialize reference to NthDerivBase<...> before this call? 
-//     reseatMap(parent_calc, numNodes)
-//   }
-
-//   // Member Data ------------------------ 
-//   // doesn't need it's own NodeSelector or FornArrayCalc
-
-//   // Member Functions ------------------------------------- 
-//   void reseatMap(const Calculator& c, const int& numNodes)
-//   {
-//     new (&m_vals) = Eigen::::Map< Eigen::VectorXd>( c.getArray().data() + order * numNodes, numNodes);     
-//   }
-  
-//   // TODO Eigen expression of parent_calc's weights 
-//   Eigen::Map<Eigen::VectorXd> m_vals; 
-// }; 
-
-// // --------------------------------------------
-

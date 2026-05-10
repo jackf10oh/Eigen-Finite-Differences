@@ -3,9 +3,15 @@
 // header file that adds functionality to 
 // ALL eigen sparse matrices to be able to 
 //
-// 1. ) take in a shared_ptr to a mesh discretization of a spatial domain 
+// 1a. ) take in a shared_ptr to a mesh discretization of a spatial domain 
+// 1b. ) return a shared_ptr<const Mesh> to the last mesh set 
 // 
-// 2. ) take in a double representing the current time 
+// 2a. ) take in a double representing the current time 
+// 2b. ) return the last double set as time  
+// 2c. ) observer a new time. but don't trigger any calculation  
+//
+// 3 ) cast to const Derived&. 
+// -- Used by fdm expression to explicitly use Eigen operators. i.e. +,-,* over fdm operators 
 // 
 // JAF 4/13/2026 
 

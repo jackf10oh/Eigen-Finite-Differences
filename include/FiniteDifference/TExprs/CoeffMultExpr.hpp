@@ -1,13 +1,12 @@
 // CoeffMultExpr.hpp
 //
-//
+// binary expressions like c*Ut 
 //
 // JAF 1/15/2026 
 
-#ifndef LHSCOEFFMULTEXPR_H
-#define LHSCOEFFMULTEXPR_H
+#ifndef FDM_TEXPRS_COEFFMULTEXPR_H
+#define FDM_TEXPRS_COEFFMULTEXPR_H
 
-#include "../LinOps/LinOpTraits.hpp" // linops::traits::Storage_t<>, is_linop_crtp<>
 #include "TimeDerivBase.hpp"
 #include "TExprTraits.hpp"
 #include "../Diffops/Traits.hpp"

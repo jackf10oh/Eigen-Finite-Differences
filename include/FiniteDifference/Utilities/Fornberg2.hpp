@@ -6,8 +6,8 @@
 //
 // JAF 5/8/2026 
 
-#ifndef FDM_FORNBERG2_H
-#define FDM_FORNBERG2_H 
+#ifndef FDM_UTILS_FORNBERG2_H
+#define FDM_UTILS_FORNBERG2_H
 
 #include<cassert>
 #include<iterator> 

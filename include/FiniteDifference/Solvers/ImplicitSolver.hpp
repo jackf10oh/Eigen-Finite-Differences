@@ -6,8 +6,8 @@
 //
 // JAF 3/4/2026 
 
-#ifndef IMPLICITSOLVER_H
-#define IMPLICITSOLVER_H 
+#ifndef FDM_SOLVERS_IMPLICITSOLVER_H
+#define FDM_SOLVERS_IMPLICITSOLVER_H
 
 #include<Eigen/IterativeLinearSolvers> // BiCGSTAB sparse iterative solver  
 #include "../TExprs/TExprTraits.hpp" // check LHS is time derivatives 
@@ -26,7 +26,7 @@ template<
   typename LhsExpression, 
   typename RhsExpression, 
   typename OutsideStepsTuple, 
-  class SparseIterativeSolver=Eigen::BiCGSTAB<fdm::Matrix>
+  class SparseIterativeSolver=Eigen::BiCGSTAB<fdm::CSRMatrix>
 >
 class ImplicitSolver
 {
@@ -56,7 +56,7 @@ class ImplicitSolver
     )
       : m_lhs(l_init), m_rhs(r_init), m_osteps(ostep_init), m_iterative_solver(std::move(s_init))
     {
-      static_assert(std::is_same_v<typename SparseIterativeSolver::MatrixType, fdm::Matrix>, "must use iterative solver on fmd::Matrix"); 
+      static_assert(std::is_same_v<typename SparseIterativeSolver::MatrixType, fdm::CSRMatrix>, "must use iterative solver on fmd::Matrix"); 
     }
 
     // not copyable!
@@ -94,7 +94,7 @@ class ImplicitSolver
       auto ctx = fdm::osteps::make_context(std::move(args.mesh), &executor, &m_rhs, this); 
 
       // store allocated memory between steps in solver hot loop  
-      fdm::Matrix stencil; 
+      fdm::CSRMatrix stencil; 
       fdm::Vector rhs_vector;  
       fdm::Vector solution_u;  
 

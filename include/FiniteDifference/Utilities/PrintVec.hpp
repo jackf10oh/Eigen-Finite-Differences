@@ -5,8 +5,8 @@
 //
 // JAF 1/4/2026 
 
-#ifndef PRINTVEC_H
-#define PRINTVEC_H
+#ifndef FDM_UTILS_PRINTVEC_H
+#define FDM_UTILS_PRINTVEC_H
 
 #include<iostream>
 #include<Eigen/Core> 

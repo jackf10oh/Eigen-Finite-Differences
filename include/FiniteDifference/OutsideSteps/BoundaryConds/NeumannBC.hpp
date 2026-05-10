@@ -5,8 +5,8 @@
 //
 // JAF 12/8/2025
 
-#ifndef NEUMANNBCS_H
-#define NEUMANNBCS_H 
+#ifndef FDM_OSTEPS_NEUMANNBC_H
+#define FDM_OSTEPS_NEUMANNBC_H
 
 #include "../../Utilities/FornbergStackCalc.hpp"
 #include "BCPair.hpp" 
@@ -28,7 +28,7 @@ class NeumannBC
     ~NeumannBC()=default; 
     // Member Funcs ----------------------------------------------
     // change first/last (left/right boundary) row of the fdm stencil matrix
-    void SetStencilL(double t, const fdm::Vector& mesh, fdm::Matrix& Mat) const 
+    void SetStencilL(double t, const fdm::Vector& mesh, fdm::CSRMatrix& Mat) const 
     {
       Mat.topRows(1) *= 0;
       // first order derivative approximation 
@@ -36,7 +36,7 @@ class NeumannBC
       Mat.coeffRef(0,0)= -1.0/h;
       Mat.coeffRef(0,1)=  1.0/h;
     }; 
-    void SetStencilR(double t, const fdm::Vector& mesh, fdm::Matrix& Mat) const 
+    void SetStencilR(double t, const fdm::Vector& mesh, fdm::CSRMatrix& Mat) const 
     {
       Mat.bottomRows(1) *= 0; 
       // first order derivative approximation 

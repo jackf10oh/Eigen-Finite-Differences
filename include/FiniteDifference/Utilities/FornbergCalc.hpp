@@ -4,8 +4,8 @@
 //
 // JAF 10/29/2025
 
-#ifndef FORNBERGCALC_H
-#define FORNBERGCALC_H
+#ifndef FDM_UTILS_FORNBERGCALC_H
+#define FDM_UTILS_FORNBERGCALC_H
 
 #include<cmath>
 #include<vector>

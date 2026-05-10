@@ -5,9 +5,10 @@
 // 
 // JAF 4/13/2026 
 
-#ifndef ANYDIMENSIONALMESH_H
-#define ANYDIMENSIONALMESH_H 
+#ifndef FDM_MESH_H
+#define FDM_MESH_H 
 
+#include<array> // std::array
 #include<vector> // std::vector
 #include<memory> // std::shared_ptr
 #include<Eigen/Core> // Eigen::VectorXd 
@@ -38,7 +39,7 @@ class Mesh : public std::enable_shared_from_this<Mesh>
     // from number of axes. stops shared_ptr from initializing to nullptr. 
     Mesh(std::size_t dims) : m_size(dims){} 
 
-    // forward args to std::vector
+    // forward args to std::array
     template<typename ArgType>
     Mesh(const Eigen::MatrixBase<ArgType>& xpr, std::size_t dims=1)
       : m_size(dims)

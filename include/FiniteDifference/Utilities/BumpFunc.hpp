@@ -4,8 +4,8 @@
 //
 // JAF 1/13/2026
 
-#ifndef BUMPFUNC_H
-#define BUMPFUNC_H 
+#ifndef FDM_UTILS_BUMPFUNC_H
+#define FDM_UTILS_BUMPFUNC_H 
 
 namespace fdm{
   namespace utils{

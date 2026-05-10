@@ -1,4 +1,4 @@
-// WritePolicies.hpp 
+// SavePolicies.hpp 
 //
 // Instructs a SolverClass how to handle Solutions U(0), U(1), ..., U(n-1), U(n) 
 // after they have been calculated. 
@@ -9,8 +9,8 @@
 //
 // JAF 3/4/2025 
 
-#ifndef WRITEPOLICY_H
-#define WRITEPOLICY_H 
+#ifndef FDM_SOLVERS_SAVEPOLICIES_H
+#define FDM_SOLVERS_SAVEPOLICIES_H
 
 #include<chrono>
 #include "../Types.hpp"
@@ -84,4 +84,4 @@ struct TimerSaver
   } // end namespace solvers
 } // end namespace fdm  
 
-#endif // WritePolicies.hpp 
+#endif // SavePolicies.hpp 

@@ -6,8 +6,8 @@
 //
 // 2/7/2026 
 
-#ifndef BLOCKDIAGEXPR_H
-#define BLOCKDIAGEXPR_H
+#ifndef FDM_UTILS_BLOCKDIAGEXPR_H
+#define FDM_UTILS_BLOCKDIAGEXPR_H
 
 #include<Eigen/Sparse>
 

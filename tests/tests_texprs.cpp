@@ -288,13 +288,13 @@ TEST(GenSolverSuite, UtilityMethods)
   texprs::GenInterp interp(time_expr, space_expr, args); 
 
   // t=0, x=1, y=1
-  double val_01 = interp.SolAt(0.0,1.0,1.0); 
+  double val_01 = interp.solAt(0.0,1.0,1.0); 
 
   // t=1, x=1, y=1
-  double val_02 = interp.SolAt(1.0,1.0,1.0); 
+  double val_02 = interp.solAt(1.0,1.0,1.0); 
 
   // t=2, x=1, y=1
-  double val_03 = interp.SolAt(2.0,1.0,1.0); 
+  double val_03 = interp.solAt(2.0,1.0,1.0); 
 }
 
 */ 
@@ -340,13 +340,13 @@ TEST(GenSolverSuite, UtilityMethods)
   texprs::GenInterp interp(time_expr, space_expr, args); 
 
   // t=0, x=1
-  double val_01 = interp.SolAt(0.0,1.0); 
+  double val_01 = interp.solAt(0.0,1.0); 
 
   // t=1, x=1
-  double val_02 = interp.SolAt(1.0,1.0); 
+  double val_02 = interp.solAt(1.0,1.0); 
 
   // t=2, x=1
-  double val_03 = interp.SolAt(2.0,1.0); 
+  double val_03 = interp.solAt(2.0,1.0); 
 }
 
 */ 

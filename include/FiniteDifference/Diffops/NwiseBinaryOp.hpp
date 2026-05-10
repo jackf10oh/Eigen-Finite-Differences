@@ -4,8 +4,8 @@
 //
 // JAF 4/23/2026 
 
-#ifndef DIFFOPS_NWISEBINARYOP_H
-#define DIFFOPS_NWISEBINARYOP_H
+#ifndef FDM_DIFFOPS_NWISEBINARYOP_H
+#define FDM_DIFFOPS_NWISEBINARYOP_H
 
 #include "../Traits.hpp"
 #include "Traits.hpp"
@@ -193,4 +193,4 @@ auto operator+(LeftArg&& lhs, RightArg&& rhs)
 } // end namespace linops 
 } // end namespace fdm 
 
-#endif 
+#endif // NwiseBinaryOp.hpp

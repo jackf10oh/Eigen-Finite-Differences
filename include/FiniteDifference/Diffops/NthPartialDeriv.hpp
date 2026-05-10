@@ -4,8 +4,8 @@
 // 
 // JAF 4/17/2026 
 
-#ifndef NTHPARTIALDERIV_H
-#define NTHPARTIALDERIV_H
+#ifndef FDM_DIFFOPS_NTHPARTIALDERIV_H
+#define FDM_DIFFOPS_NTHPARTIALDERIV_H
 
 #include "EvaluatorBase.hpp"
 #include "../Traits.hpp"

@@ -5,8 +5,8 @@
 //
 // JAF 4/3/2026
 
-#ifndef FORNBERGARRAYCALC_H
-#define FORNBERGARRAYCALC_H
+#ifndef FDM_UTILS_FORNBERGSTACKCALC_H
+#define FDM_UTILS_FORNBERGSTACKCALC_H
 
 #include<cmath>
 #include<cassert>

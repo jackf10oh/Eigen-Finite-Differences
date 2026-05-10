@@ -4,8 +4,8 @@
 //
 // JAF 4/4/2026 
 
-#ifndef TEXPRTRAITS_H
-#define TEXPRTRAITS_H 
+#ifndef FDM_TEXPR_TRAITS_H
+#define FDM_TEXPR_TRAITS_H
 
 namespace fdm{
   namespace texprs{

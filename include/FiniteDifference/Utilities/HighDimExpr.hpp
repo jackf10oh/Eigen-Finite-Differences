@@ -6,8 +6,8 @@
 //
 // 2/7/2026 
 
-#ifndef HIGHDIMEXPR_H
-#define HIGHDIMEXPR_H
+#ifndef FDM_UTILS_HIGHDIMEXPR_H
+#define FDM_UTILS_HIGHDIMEXPR_H
 
 #include<Eigen/Sparse>
 

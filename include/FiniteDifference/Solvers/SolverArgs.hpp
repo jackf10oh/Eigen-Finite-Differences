@@ -5,8 +5,8 @@
 //
 // JAF 3/4/2026 
 
-#ifndef SOLVERARGS_H
-#define SOLVERARGS_H
+#ifndef FDM_SOLVERS_SOLVERARGS_H
+#define FDM_SOLVERS_SOLVERARGS_H
 
 #include<memory>
 #include<vector>

@@ -1,11 +1,13 @@
 // BCPair.hpp
 //
-// 
+// Holds 2 BCs that are applied 
+// to left/right side of vector 
+// and top/bottom rows of CSRMatrix 
 //
 // JAF 12/8/2025
 
-#ifndef BCPAIR_H
-#define BCPAIR_H
+#ifndef FDM_OSTEPS_BCPAIR_H
+#define FDM_OSTEPS_BCPAIR_H
 
 #include "../../Types.hpp"
 #include "../OStepBase.hpp"

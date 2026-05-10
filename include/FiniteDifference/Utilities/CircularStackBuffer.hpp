@@ -4,8 +4,8 @@
 //
 // JAF 5/2/2026 
 
-#ifndef CIRCULARSTACKBUFFER_H
-#define CIRCULARSTACKBUFFER_H 
+#ifndef FDM_UTILS_CIRCULARSTACKBUFFER_H
+#define FDM_UTILS_CIRCULARSTACKBUFFER_H 
 
 namespace fdm{
 namespace utils{

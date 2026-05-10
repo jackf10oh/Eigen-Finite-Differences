@@ -4,8 +4,8 @@
 //
 // JAF 4/21/2026 
 
-#ifndef DIFFOP_EVALUATORBASE_H
-#define DIFFOP_EVALUATORBASE_H 
+#ifndef FDM_DIFFOPS_EVALUATORBASE_H
+#define FDM_DIFFOPS_EVALUATORBASE_H
 
 #include "../Types.hpp"
 #include "../Traits.hpp"

@@ -1,11 +1,11 @@
-// All.hpp (LhsExpressions)
+// All.hpp
 // 
-// 
+// Includes all files from TExprs subdirectory 
 // 
 // JAF 1/15/2026 
 
-#ifndef LHSEXPRALL_H
-#define LHSEXPRALL_H 
+#ifndef FDM_TEXPRS_ALL_H
+#define FDM_TEXPRS_ALL_H
 
 #include "TExprTraits.hpp"
 #include "TimeDerivBase.hpp" 
@@ -14,4 +14,4 @@
 #include "SumExpr.hpp"
 #include "Executor.hpp"
 
-#endif // All.hpp 
+#endif // All.hpp (TExprs)

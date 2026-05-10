@@ -5,8 +5,8 @@
 //
 // JAF 4/17/2026 
 
-#ifndef DIFFOPSEIGENEVALUATOR_H
-#define DIFFOPSEIGENEVALUATOR_H 
+#ifndef FDM_DIFFOPS_EIGENEVALUATOR_H
+#define FDM_DIFFOPS_EIGENEVALUATOR_H
 
 #include<FiniteDifference/Utilities/BlockDiagExpr.hpp>
 #include<FiniteDifference/Utilities/HighDimExpr.hpp>
@@ -77,13 +77,7 @@ struct evaluator<fdm::linops::PartialDerivBase<Derived>> : public evaluator_base
 }  // namespace internal
 }  // namespace Eigen
 
-
-
-
-
-
-
-
+#endif // EigenEvaluator.hpp
 
 // template<class Derived>
 // struct diffop_evaluator_base
@@ -109,6 +103,4 @@ struct evaluator<fdm::linops::PartialDerivBase<Derived>> : public evaluator_base
 //   // inline Derived& const_cast_derived() const /* not necessary? */  
 //   // { return *static_cast<Derived*>(const_cast<SparseMatrixBase*>(this)); }
 
-// }
-
-#endif // Evaluator.hpp 
+// } 

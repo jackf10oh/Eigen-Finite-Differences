@@ -4,8 +4,8 @@
 //
 // JAF 4/22/2026 
 
-#ifndef DIFFOPS_NWISEUNARYOP_H
-#define DIFFOPS_NWISEUNARYOP_H
+#ifndef FDM_DIFFOPS_NWISEUNARYOP_H
+#define FDM_DIFFOPS_NWISEUNARYOP_H
 
 #include "EvaluatorBase.hpp"
 #include "Functors.hpp"
@@ -152,4 +152,4 @@ auto operator*(C&& c, XprType&& xpr)
 } // end namespace linops 
 } // end namespace fdm 
 
-#endif 
+#endif // NwiseUnaryOp.hpp

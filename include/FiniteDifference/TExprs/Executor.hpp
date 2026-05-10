@@ -1,14 +1,16 @@
 // LhsExecutor.hpp
 //
-//
+// class to manage circular buffer of time + solutions 
+// also implements various Eigen expressions using c++17 folds  
 //
 // JAF 1/16/2025 
 
-#ifndef LHSTEXPREXECUTOR_H
-#define LHSTEXPREXECUTOR_H 
+#ifndef FDM_TEXPRS_EXECUTOR_H
+#define FDM_TEXPRS_EXECUTOR_H
 
 #include<algorithm>
 #include<array>
+#include<memory>
 #include<Eigen/Core>
 #include "../Utilities/FornbergStackCalc.hpp"
 #include "TExprTraits.hpp" 
