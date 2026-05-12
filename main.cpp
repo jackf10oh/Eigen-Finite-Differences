@@ -37,8 +37,8 @@ int main()
   auto Utt = texprs::NthTimeDeriv<2>{}; 
 
   // RHS in space 
-  auto Uxx = linops::NthPartialDeriv<2,0>{}; 
-  auto Uyy = linops::NthPartialDeriv<2,1>{}; 
+  auto Uxx = linops::NthPartialDeriv<2,0,fdm::linops::Centered<5>>{}; 
+  auto Uyy = linops::NthPartialDeriv<2,1,fdm::linops::Centered<5>>{}; 
   auto expr = Uxx + Uyy; 
 
   // Boundary Conditions 
@@ -55,7 +55,7 @@ int main()
   }; 
 
   // Solving ...
-  // solvers::ExplicitSolver my_solver(Utt,expr,std::tie(bcs)); 
+  // solvers::ExplicitSolver my_solver(Utt,expr,std::tie(forcing, bcs)); 
   // solvers::ImplicitSolver my_solver(Utt,expr,std::tie(forcing, bcs)); 
   solvers::CrankNicolsonSolver my_solver(Utt,expr,std::tie(forcing, bcs)); 
 

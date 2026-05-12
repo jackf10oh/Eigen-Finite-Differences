@@ -109,6 +109,19 @@ class callable_traits
   using BindFirst = std::conditional_t<num_args, BindFirst_impl<num_args-1, F>, void>;
 }; // end callable_traits
 
+// detect if two classes are the same. irregardless of non class template params 
+template<class A, class B>
+struct is_matching_impl : std::is_same<A,B>{}; 
+
+// template<class A>
+// struct is_matching_impl<A,A> : std::true_type{}; 
+
+template<template< auto... > class T, auto... Ls, auto... Rs>
+struct is_matching_impl<T<Ls...>, T<Rs...>> : std::true_type{};
+
+template<class A, class B>
+using is_matching = is_matching_impl<std::remove_cv_t<std::remove_reference_t<A>>, std::remove_cv_t<std::remove_reference_t<B>>>; 
+
 } // end namespace internal 
 } // end namespace fdm
 

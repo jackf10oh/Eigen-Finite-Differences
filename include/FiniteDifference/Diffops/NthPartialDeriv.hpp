@@ -8,23 +8,24 @@
 #define FDM_DIFFOPS_NTHPARTIALDERIV_H
 
 #include "EvaluatorBase.hpp"
+#include "CenteredNodeSelector.hpp"
 #include "../Traits.hpp"
 
 namespace fdm{
 namespace linops{
 
   // Forward Declaration ------------------------------------------------- 
-template<std::size_t nthOrder, int direction>
+template<std::size_t nthOrder, int direction, class selector_tag>
 class NthPartialDeriv; 
 
 namespace internal{
 
 // Evaluator  
-template<std::size_t _nthOrder, int _direction>
-struct Evaluator<fdm::linops::NthPartialDeriv<_nthOrder,_direction>> : public EvaluatorBase< fdm::linops::NthPartialDeriv<_nthOrder,_direction> >
+template<std::size_t _nthOrder, int _direction, class selector_tag>
+struct Evaluator<fdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_tag>> : public EvaluatorBase< fdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_tag> >
 {
-  const fdm::linops::NthPartialDeriv<_nthOrder,_direction>& m_xpr; 
-  Evaluator(const fdm::linops::NthPartialDeriv<_nthOrder,_direction>& xpr): m_xpr(xpr){}
+  const fdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_tag>& m_xpr; 
+  Evaluator(const fdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_tag>& xpr): m_xpr(xpr){}
   template<std::size_t N>
   auto evaluateWeightsAndCoords(const fdm::Scalar* weights, std::size_t weights_per_order, const fdm::Coordinate<N>& coords) const 
   {
@@ -34,8 +35,8 @@ struct Evaluator<fdm::linops::NthPartialDeriv<_nthOrder,_direction>> : public Ev
 
 
 // Traits
-template<std::size_t _nthOrder, int _direction>
-struct traits_impl<fdm::linops::NthPartialDeriv<_nthOrder,_direction>>
+template<std::size_t _nthOrder, int _direction, class selector_tag>
+struct traits_impl<fdm::linops::NthPartialDeriv<_nthOrder,_direction, selector_tag>>
 {
   static constexpr bool is_linop = true; 
   static constexpr bool is_unarop = false; 
@@ -45,7 +46,7 @@ struct traits_impl<fdm::linops::NthPartialDeriv<_nthOrder,_direction>>
   static constexpr bool is_timedep = false; 
   static constexpr int direction = _direction; 
   static constexpr std::size_t maxOrder = _nthOrder; 
-  typedef centered_selector_tag node_selector_tag; 
+  typedef selector_tag node_selector_tag; 
 }; 
 
 } // end namespace internal 
@@ -55,8 +56,8 @@ struct traits_impl<fdm::linops::NthPartialDeriv<_nthOrder,_direction>>
 namespace Eigen{
 namespace internal{
 
-template<std::size_t _nthOrder, int _direction>
-struct traits<fdm::linops::NthPartialDeriv<_nthOrder, _direction>>
+template<std::size_t _nthOrder, int _direction, class selector_tag>
+struct traits<fdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>>
 {
   typedef fdm::Scalar Scalar;
   typedef Eigen::Index StorageIndex;
@@ -72,22 +73,22 @@ struct traits<fdm::linops::NthPartialDeriv<_nthOrder, _direction>>
   };
 }; 
 
-template<std::size_t _nthOrder, int _direction>
-struct evaluator<fdm::linops::NthPartialDeriv<_nthOrder, _direction>> 
-  : public evaluator<fdm::linops::PartialDerivBase<fdm::linops::NthPartialDeriv<_nthOrder, _direction>>>, 
-  public evaluator_base<fdm::linops::NthPartialDeriv<_nthOrder, _direction>> 
+template<std::size_t _nthOrder, int _direction, class selector_tag>
+struct evaluator<fdm::linops::NthPartialDeriv<_nthOrder, _direction, selector_tag>> 
+  : public evaluator<fdm::linops::PartialDerivBase<fdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>>>, 
+  public evaluator_base<fdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>> 
 {
   struct InnerIterator
-    : public evaluator<fdm::linops::PartialDerivBase<fdm::linops::NthPartialDeriv<_nthOrder, _direction>>>::InnerIterator
+    : public evaluator<fdm::linops::PartialDerivBase<fdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>>>::InnerIterator
   {
-    enum { CoeffReadCost = evaluator<fdm::linops::PartialDerivBase<fdm::linops::NthPartialDeriv<_nthOrder, _direction>>>::CoeffReadCost, Flags = evaluator<fdm::linops::PartialDerivBase<fdm::linops::NthPartialDeriv<_nthOrder, _direction>>>::Flags };
+    enum { CoeffReadCost = evaluator<fdm::linops::PartialDerivBase<fdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>>>::CoeffReadCost, Flags = evaluator<fdm::linops::PartialDerivBase<fdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>>>::Flags };
 
     InnerIterator(const evaluator& eval, Index row_idx)
-      : evaluator<fdm::linops::PartialDerivBase<fdm::linops::NthPartialDeriv<_nthOrder, _direction>>>::InnerIterator(eval, row_idx)
+      : evaluator<fdm::linops::PartialDerivBase<fdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>>>::InnerIterator(eval, row_idx)
     {}
   }; 
-  evaluator(const fdm::linops::NthPartialDeriv<_nthOrder, _direction>& xpr_d)
-    : evaluator<fdm::linops::PartialDerivBase<fdm::linops::NthPartialDeriv<_nthOrder, _direction>>>(xpr_d)
+  evaluator(const fdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>& xpr_d)
+    : evaluator<fdm::linops::PartialDerivBase<fdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>>>(xpr_d)
   {}
 }; 
 
@@ -99,8 +100,8 @@ struct evaluator<fdm::linops::NthPartialDeriv<_nthOrder, _direction>>
 namespace fdm{ 
 namespace linops{
 
-template<std::size_t _nthOrder, int _direction>
-class NthPartialDeriv : public PartialDerivBase<NthPartialDeriv<_nthOrder,_direction>>
+template<std::size_t _nthOrder, int _direction, class selector_tag = fdm::linops::Centered<0>>
+class NthPartialDeriv : public PartialDerivBase<NthPartialDeriv<_nthOrder,_direction,selector_tag>>
 {
   public:
     // Friends ----------------- 

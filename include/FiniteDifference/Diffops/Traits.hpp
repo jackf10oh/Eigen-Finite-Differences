@@ -148,6 +148,18 @@ struct NestedStorage<T, std::void_t<decltype(fdm::linops::internal::traits<T>::i
   >::type type; 
 };
 
+// Given two tags for NodeSelector, promote them to guarantee both minimum nodes. 
+template<class T, class U>
+struct promote_node_selector_type
+{using type =  void; }; 
+
+template<class T>
+struct promote_node_selector_type<T,T>
+{ using type = T; }; 
+
+template<template<std::size_t> class T, std::size_t min01, std::size_t min02>
+struct promote_node_selector_type<T<min01>,T<min02>> 
+{using type = T<std::max(min01,min02)>; }; 
 } // end namespace internal 
 } // end namespace linops 
 } // end namespace fdm

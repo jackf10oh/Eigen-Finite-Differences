@@ -55,7 +55,7 @@ struct traits_impl<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
   static constexpr bool is_timedep = traits<LhsType>::is_timedep || traits<RhsType>::is_timedep; // if either L/R is timedep the xpr is time dep 
   static constexpr int direction = traits<LhsType>::direction; // by default mixing operators results in undefined direction... 
   static constexpr std::size_t maxOrder = std::max(traits<LhsType>::maxOrder,traits<RhsType>::maxOrder); // highest order of derivative in the expression 
-  typedef typename traits<LhsType>::node_selector_tag node_selector_tag; // give priority to lhs 
+  typedef typename promote_node_selector_type<typename traits<LhsType>::node_selector_tag,typename traits<RhsType>::node_selector_tag>::type node_selector_tag; // gurantees both minimum are fulfilled
 }; 
 
 } // end namespace internal 
@@ -158,7 +158,7 @@ template<
   typename = std::enable_if_t<
     fdm::linops::internal::is_partialderiv_crtp<LeftArg>::value &&
     fdm::linops::internal::is_partialderiv_crtp<RightArg>::value &&  
-    std::is_same<
+    fdm::internal::is_matching<
       typename linops::internal::traits<LeftArg>::node_selector_tag, 
       typename linops::internal::traits<RightArg>::node_selector_tag
     >::value &&  
@@ -177,7 +177,7 @@ template<
   typename = std::enable_if_t<
     fdm::linops::internal::is_partialderiv_crtp<LeftArg>::value &&
     fdm::linops::internal::is_partialderiv_crtp<RightArg>::value &&  
-    std::is_same<
+    fdm::internal::is_matching<
       typename linops::internal::traits<LeftArg>::node_selector_tag, 
       typename linops::internal::traits<RightArg>::node_selector_tag
     >::value &&  
