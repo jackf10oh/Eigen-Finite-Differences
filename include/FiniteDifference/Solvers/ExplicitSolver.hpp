@@ -16,33 +16,27 @@
 #include "../TExprs/Executor.hpp" // marches through time 
 #include "../OutsideSteps/StepContexts.hpp"  // feed to outside steps tuple 
 #include "../OutsideSteps/OStepBase.hpp" // StepType scoped enumeration 
+#include "SolverBase.hpp"
 #include "SolverArgs.hpp"
 #include "SavePolicies.hpp"
 
 namespace fdm{
   namespace solvers{ 
 
-template<typename LhsExpression, typename RhsExpression, typename OutsideStepsTuple>
-class ExplicitSolver
+template<typename LhsType, typename RhsType, typename OStepTup>
+class ExplicitSolver : public SolverBase<ExplicitSolver<LhsType, RhsType, OStepTup>, LhsType, RhsType, OStepTup> 
 {
-  public:
-    // Type Defs -------------------------------------- 
-    using TExpr = LhsExpression; 
-    using Linop = RhsExpression; 
   private:
-    // Member Data -------------------------------------
-    LhsExpression& m_lhs; // expression of time derivatives 
-    RhsExpression& m_rhs; // expression of spatial derivatives 
-    using TupleCleaned = typename std::remove_reference<OutsideStepsTuple>::type; 
-    TupleCleaned m_osteps; // std::tuple<> of outside steps 
-
-  public:
+    // Type Defs -------
+    using Base = SolverBase<ExplicitSolver<LhsType, RhsType, OStepTup>, LhsType, RhsType, OStepTup>; 
+  
+    public:
     // Constructors + Destructor ==============================================
 
     ExplicitSolver()=delete; 
 
-    ExplicitSolver(LhsExpression& l_init, RhsExpression& r_init, OutsideStepsTuple ostep_init)
-      : m_lhs(l_init), m_rhs(r_init), m_osteps(ostep_init)
+    ExplicitSolver(LhsType& l_init, RhsType& r_init, OStepTup ostep_init)
+      : Base(l_init, r_init, std::move(ostep_init))
     {}
 
     // not copyable! 
@@ -64,16 +58,21 @@ class ExplicitSolver
       ++it; 
 
       // setup executor 
-      auto executor = fdm::texprs::make_Executor(m_lhs); 
-      executor.pushSolutionRange(args.initialConditions.begin(), args.initialConditions.end()); 
+      auto executor = fdm::texprs::make_Executor(this->m_lhs); 
       executor.pushTimeRange(time_ctx.container->cbegin(), it); 
+      auto sol_end = executor.pushSolutionRange(args.initialConditions.begin(), args.initialConditions.end()); 
+      for(auto sol_it=args.initialConditions.begin(); sol_it != sol_end; ++sol_it)
+      {
+        // Eventually want save policies to take by (solution, time) 
+        save_policy.saveSolution(std::move(*sol_it)); 
+      }
 
       // set up operators. 
-      m_rhs.setMesh(args.mesh); 
+      this->m_rhs.setMesh(args.mesh); 
       executor.setMesh(args.mesh); 
 
       // set up context 
-      auto ctx = fdm::osteps::make_context(std::move(args.mesh), &executor, &m_rhs, this); 
+      auto ctx = fdm::osteps::make_context(std::move(args.mesh), &executor, &(this->m_rhs), this); 
 
       // store allocated memory between steps in solver hot loop  
       fdm::CSRMatrix stencil; 
@@ -86,9 +85,9 @@ class ExplicitSolver
       { 
         time_ctx.next = *it; 
 
-        if constexpr(fdm::linops::internal::traits<RhsExpression>::is_timedep){
+        if constexpr(fdm::linops::internal::traits<RhsType>::is_timedep){
           // set the operator to the left side of the step [t(n), t(n+1)] for explicit steps 
-          m_rhs.setTime(time_ctx.now); 
+          this->m_rhs.setTime(time_ctx.now); 
           // should build an autonomous solver for these linops, since it evaluate the 
           // expression at every step. but still save a little time
           // we also can't check that outside steps won't change the mesh we operate on.  
@@ -99,41 +98,25 @@ class ExplicitSolver
         executor.calculate(time_ctx.now); 
 
         // outside steps before any type of linear algebra is performed... 
-        std::apply(
-          [&](auto&&... lam_args){ 
-            ((lam_args.template BeforeLinAlgebra<fdm::osteps::StepType::Explicit>(time_ctx, ctx)), ...); 
-          }, 
-          m_osteps
-        ); 
+        this->template tupleBeforeLinAlgebra<fdm::osteps::StepType::Explicit>(time_ctx,ctx); 
         
         // store the matrix into stencil 
-        // using Cleaned = std::remove_cv_t<std::remove_reference_t<decltype(m_rhs)>>; 
-        // const auto& tmp = static_cast<const Eigen::SparseMatrixBase<Cleaned>&>(m_rhs);
-        stencil = executor.getInvCoeff() * m_rhs.toEigen();
+        stencil = executor.getInvCoeff() * this->m_rhs.toEigen();
         
         // outside steps matrix before step
-        std::apply(
-          [&](auto&&... lam_args){ ((lam_args.template MatBeforeStep<fdm::osteps::StepType::Explicit>(stencil, time_ctx, ctx)), ...); }, 
-          m_osteps
-        ); 
+        this->template tupleMatBeforeStep<fdm::osteps::StepType::Explicit>(stencil, time_ctx, ctx); 
 
         // store the expression into a vector 
         rhs_vector = executor.getRhsExpression(); 
 
         // outside steps vector before step 
-        std::apply(
-          [&](auto&&... lam_args){ ((lam_args.template VecBeforeStep<fdm::osteps::StepType::Explicit>(rhs_vector, time_ctx, ctx)), ...); }, 
-          m_osteps
-        ); 
+        this->template tupleVecBeforeStep<fdm::osteps::StepType::Explicit>(rhs_vector, time_ctx, ctx); 
 
         // Explicit Step 
         solution_u = stencil * executor.getCurrentSolution() + rhs_vector; 
         
         // outside steps solution after step(next_sol) 
-        std::apply(
-          [&](auto&... lam_args){ ((lam_args.template VecAfterStep<fdm::osteps::StepType::Explicit>(solution_u, time_ctx, ctx)), ...); }, 
-          m_osteps
-        );
+        this->template tupleVecAfterStep<fdm::osteps::StepType::Explicit>(solution_u, time_ctx, ctx); 
 
         // save oldest solution before it goes 
         save_policy.saveSolution(executor.getExpiringSolution()); 

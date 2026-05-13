@@ -118,22 +118,25 @@ class Executor
       m_stored_times.back() = t;
     }
 
-    // sets current times from start,end iterators.  
+    // sets current times from start,end iterators. returns iterator such that [start, iterator) isn't pushed into times. 
     template<typename Iter>
-    void pushTimeRange(Iter start, Iter end){ 
+    Iter pushTimeRange(Iter start, Iter end){ 
       std::size_t d = std::distance(start,end);        
       if(d >= numStoredTimes) 
       {
         // throw std::runtime_error("Executor setStoredTimes(it,it) error: distance(start,end) > numStoredTimes");
         // only copy from rightmost times 
         // std::copy(std::next(m_stored_times.begin(),d-numStoredTimes), m_stored_times.end(), m_stored_times.begin()); 
-        std::copy(std::next(start, d - numStoredTimes),end,m_stored_times.begin()); 
+        auto it = std::next(start, d - numStoredTimes); 
+        std::copy(it,end,m_stored_times.begin()); 
+        return it; 
       } 
       else
       {
         // only copy into rightmost times 
         std::copy(std::next(m_stored_times.begin(),d), m_stored_times.end(), m_stored_times.begin()); 
         std::copy(start,end,std::next(m_stored_times.begin(),numStoredTimes-d)); 
+        return start; 
       }
     }
 
@@ -150,35 +153,33 @@ class Executor
       m_stored_sols[numStoredSols-1] = std::move(sol); 
     }
 
-    // ConsumeSolution but copies full list into m_stored_sols
+    // ConsumeSolution but copies full list into m_stored_sols. returns iterator such that [start, iterator) isn't pushed into times.
     template<typename Iter>
-    void pushSolutionRange(Iter start, Iter end)
+    Iter pushSolutionRange(Iter start, Iter end)
     {
       std::size_t d = std::distance(start,end); 
       if(d >= numStoredTimes-1) 
       {
-        // throw std::runtime_error("Executor pushSolutionRange(it,it) error: distance(start,end) > numStoredTimes"); 
         // move [start+d-numStoredTimes-1,end) to last entries of m_stored_sols
-        std::move(
-            std::move_iterator(std::next(start, d - (numStoredTimes-1))),
-            std::move_iterator(end),
-            m_stored_sols.begin()
-        ); 
+        auto it = std::next(start, d - (numStoredTimes-1)); 
+        std::move(it, end, m_stored_sols.begin());
+        return it; 
       }
       else
       {
         // push numStoredTimes - 1 - d solutions to front of m_stored_sols
-        std::move(
-            std::move_iterator(std::prev(m_stored_sols.end(), d)),
-            std::move_iterator(m_stored_sols.end()),
+        std::move( 
+            std::prev(m_stored_sols.end(), d),
+            m_stored_sols.end(),
             m_stored_sols.begin()
         ); 
         // move [start,end) to last entries of m_stored_sols
         std::move(
-            std::move_iterator(start),
-            std::move_iterator(end),
+            start,
+            end,
             std::next(m_stored_sols.begin(), numStoredTimes - 1 - d)
         ); 
+        return start;
       }
     }
 

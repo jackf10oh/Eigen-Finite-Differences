@@ -15,32 +15,28 @@
 #include "../OutsideSteps/StepContexts.hpp"  // feed to outside steps tuple 
 #include "../OutsideSteps/OStepBase.hpp" // StepType scoped enumeration 
 #include "../Utilities/RowMajorIdentityExpr.hpp"
+#include "SolverBase.hpp"
 #include "SolverArgs.hpp"
 #include "SavePolicies.hpp"
 
 namespace fdm{
   namespace solvers{ 
 
-// template<typename LhsExpression, typename RhsExpression, typename OutsideStepsTuple>
+// template<typename LhsType, typename RhsType, typename OStepTup>
 template<
-  typename LhsExpression, 
-  typename RhsExpression, 
-  typename OutsideStepsTuple, 
+  typename LhsType, 
+  typename RhsType, 
+  typename OStepTup, 
   class SparseIterativeSolver=Eigen::BiCGSTAB<fdm::CSRMatrix>
 >
-class ImplicitSolver
+class ImplicitSolver : public SolverBase<ImplicitSolver<LhsType, RhsType, OStepTup,SparseIterativeSolver>, LhsType, RhsType, OStepTup> 
 {
-  public:
+  private:
     // Type Defs -------------------------------------- 
-    using TExpr = LhsExpression; 
-    using Linop = RhsExpression; 
+    using Base = SolverBase<ImplicitSolver<LhsType, RhsType, OStepTup,SparseIterativeSolver>, LhsType, RhsType, OStepTup>;   
     
   private:
     // Member Data -------------------------------------
-    LhsExpression& m_lhs; // expression of time derivatives 
-    RhsExpression& m_rhs; // expression of spatial derivatives 
-    using TupleCleaned = typename std::remove_reference<OutsideStepsTuple>::type; 
-    TupleCleaned m_osteps; // std::tuple<> of outside steps 
     std::unique_ptr<SparseIterativeSolver> m_iterative_solver;
 
   public:
@@ -49,12 +45,12 @@ class ImplicitSolver
     ImplicitSolver()=delete; 
 
     ImplicitSolver(
-      LhsExpression& l_init, 
-      RhsExpression& r_init, 
-      OutsideStepsTuple ostep_init, 
+      LhsType& l_init, 
+      RhsType& r_init, 
+      OStepTup ostep_init, 
       std::unique_ptr<SparseIterativeSolver> s_init = std::make_unique<SparseIterativeSolver>()
     )
-      : m_lhs(l_init), m_rhs(r_init), m_osteps(ostep_init), m_iterative_solver(std::move(s_init))
+      : Base(l_init, r_init, std::move(ostep_init)), m_iterative_solver(std::move(s_init))
     {
       static_assert(std::is_same_v<typename SparseIterativeSolver::MatrixType, fdm::CSRMatrix>, "must use iterative solver on fmd::Matrix"); 
     }
@@ -81,17 +77,22 @@ class ImplicitSolver
       ++it; 
 
       // setup executor 
-      auto executor = fdm::texprs::make_Executor(m_lhs); 
-      executor.pushSolutionRange(args.initialConditions.begin(), args.initialConditions.end()); 
+      auto executor = fdm::texprs::make_Executor(this->m_lhs); 
       executor.pushTimeRange(time_ctx.container->cbegin(), it); 
+      auto sol_end = executor.pushSolutionRange(args.initialConditions.begin(), args.initialConditions.end()); 
+      for(auto sol_it=args.initialConditions.begin(); sol_it != sol_end; ++sol_it)
+      {
+        // Eventually want save policies to take by (solution, time) 
+        save_policy.saveSolution(std::move(*sol_it)); 
+      }
 
       // set up operators. 
       fdm::utils::RowMajorIdentity identity(0,0); // will resize later  
-      m_rhs.setMesh(args.mesh); 
+      this->m_rhs.setMesh(args.mesh); 
       executor.setMesh(args.mesh); 
 
       // set up context 
-      auto ctx = fdm::osteps::make_context(std::move(args.mesh), &executor, &m_rhs, this); 
+      auto ctx = fdm::osteps::make_context(std::move(args.mesh), &executor, &(this->m_rhs), this); 
 
       // store allocated memory between steps in solver hot loop  
       fdm::CSRMatrix stencil; 
@@ -104,9 +105,9 @@ class ImplicitSolver
       { 
         time_ctx.next = *it; 
 
-        if constexpr(fdm::linops::internal::traits<RhsExpression>::is_timedep){
+        if constexpr(fdm::linops::internal::traits<RhsType>::is_timedep){
           // set the operator to the right side of the step [t(n), t(n+1)] for implicit steps 
-          m_rhs.setTime(time_ctx.next); 
+          this->m_rhs.setTime(time_ctx.next); 
           // should build an autonomous solver for these linops, since it evaluate the 
           // expression at every step. but still save a little time
           // we also can't check that outside steps won't change the mesh we operate on.  
@@ -117,42 +118,28 @@ class ImplicitSolver
         executor.calculate(time_ctx.next); 
 
         // outside steps before any type of linear algebra is performed... 
-        std::apply(
-          [&](auto&... lam_args){ 
-            ((lam_args.template BeforeLinAlgebra<fdm::osteps::StepType::Implicit>(time_ctx, ctx)), ...); 
-          }, 
-          m_osteps
-        ); 
-        
+        this->template tupleBeforeLinAlgebra<fdm::osteps::StepType::Implicit>(time_ctx,ctx);
+
         // store the matrix into stencil 
-        std::size_t s = m_rhs.rows(); 
+        std::size_t s = this->m_rhs.rows(); 
         identity.resize(s,s); 
-        stencil = identity - (executor.getInvCoeff() * m_rhs.toEigen());
+        stencil = identity - (executor.getInvCoeff() * (this->m_rhs.toEigen()));
         
         // outside steps matrix before step
-        std::apply(
-          [&](auto&&... lam_args){ ((lam_args.template MatBeforeStep<fdm::osteps::StepType::Implicit>(stencil, time_ctx, ctx)), ...); }, 
-          m_osteps
-        ); 
+        this->template tupleMatBeforeStep<fdm::osteps::StepType::Implicit>(stencil, time_ctx, ctx); 
 
         // store the expression into a vector 
         rhs_vector = executor.getRhsExpression(); 
 
         // outside steps vector before step 
-        std::apply(
-          [&](auto&&... lam_args){ ((lam_args.template VecBeforeStep<fdm::osteps::StepType::Implicit>(rhs_vector, time_ctx, ctx)), ...); }, 
-          m_osteps
-        ); 
+        this->template tupleVecBeforeStep<fdm::osteps::StepType::Implicit>(rhs_vector, time_ctx, ctx); 
 
         // Implicit Step (I - D(t+1))*U(n+1) = rhs 
         m_iterative_solver->compute(stencil); 
         solution_u = m_iterative_solver->solveWithGuess(rhs_vector,rhs_vector);
         
-        // outside steps vector after step(next_sol) 
-        std::apply(
-          [&](auto&&... lam_args){ ((lam_args.template VecAfterStep<fdm::osteps::StepType::Implicit>(solution_u, time_ctx, ctx)), ...); }, 
-          m_osteps
-        );
+        // outside steps solution after step(next_sol) 
+        this->template tupleVecAfterStep<fdm::osteps::StepType::Implicit>(solution_u, time_ctx, ctx); 
 
         // save oldest solution before it goes 
         save_policy.saveSolution(executor.getExpiringSolution()); 
