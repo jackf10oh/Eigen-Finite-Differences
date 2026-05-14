@@ -74,7 +74,7 @@ class TimeDepCoeff : public CoeffBase<TimeDepCoeff<Callable>>
     // Member Data ----------- 
     std::weak_ptr<const Mesh> m_mesh_observed; 
     const Mesh* m_mesh_raw; 
-    typename fdm::internal::BindFirst<Callable> m_callable; // stores Callable + captured double. 
+    typename fdm::internal::BindFirst<Callable> m_callable; // stores Callable + captured something that converts to fdm::Real. 
 
   public:
     // Constructor ----------
@@ -90,13 +90,13 @@ class TimeDepCoeff : public CoeffBase<TimeDepCoeff<Callable>>
       m_mesh_raw = m.get(); 
     }
     auto getMesh() const { return m_mesh_observed.lock(); }
-    void setTime(double t)
+    void setTime(fdm::Real t)
     { 
       m_callable.captured_arg = t; 
       CoeffBase<TimeDepCoeff>::setMesh_impl(m_mesh_raw);
     }
-    // double getTime() const { return m_callable.captured_arg; } // don't want to do this. getTime() should always reflect last setTime that triggered updates to matrix 
-    void setTime_hooked(double t)
+    // fdm::Real getTime() const { return m_callable.captured_arg; } // don't want to do this. getTime() should always reflect last setTime that triggered updates to matrix 
+    void setTime_hooked(fdm::Real t)
     {
       m_callable.captured_arg = t;
     }

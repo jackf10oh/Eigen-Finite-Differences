@@ -131,7 +131,7 @@ class NwiseUnaryOp : public fdm::linops::PartialDerivBase<NwiseUnaryOp<UnaryOp,X
     const auto& functor() const { return m_functor; }
     const auto& nestedExpression() const { return m_xpr; }
     auto& nestedExpression(){ return m_xpr; }
-    void setTime_hooked(double t)
+    void setTime_hooked(fdm::Real t)
     {
       m_xpr.const_cast_derived().setTime_hooked(t); 
     }

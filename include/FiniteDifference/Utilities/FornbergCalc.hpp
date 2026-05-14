@@ -23,7 +23,7 @@ class FornCalc
     // Member Data ----------------------------------------------------------
     std::size_t m_order;                // maximum order of derivative stencil  
     std::size_t m_n_nodes;              // number of nodes to use in approximation
-    std::vector<double> m_arr;          // single allocation of memory rows*cols big 
+    std::vector<fdm::Scalar> m_arr;          // single allocation of memory rows*cols big 
   public:
     // Constructors + Destructor =========================================================
     FornCalc()=delete;
@@ -31,7 +31,7 @@ class FornCalc
       : m_n_nodes(max_nodes), m_order(max_order_init), m_arr(m_n_nodes*(m_order+1))
     {
       // if(m_order+1>max_nodes) throw std::invalid_argument("# Nodes must be > Order deriv in Fornberg algo"); 
-      // for(double& val : m_arr) val=0.0; 
+      // for(fdm::Scalar& val : m_arr) val=0.0; 
     };
     FornCalc(const FornCalc& other)=delete; 
     // destructor 
@@ -39,7 +39,7 @@ class FornCalc
     
     // Member Funcs ======================================================================================
     template<typename Input_Iter>
-    Eigen::Map<const Eigen::VectorXd> GetWeights(double x_bar, Input_Iter start, Input_Iter end, std::size_t order=1)
+    Eigen::Map<const Eigen::VectorXd> GetWeights(fdm::Scalar x_bar, Input_Iter start, Input_Iter end, std::size_t order=1)
     {
       // Update m_arr weight values 
       Calculate(x_bar, start, end, order); 
@@ -50,7 +50,7 @@ class FornCalc
 
     // Updates m_arr to contain weights up to order n
     template<typename Input_Iter>
-    void Calculate(double x_bar, Input_Iter start, Input_Iter end, std::size_t order=1)
+    void Calculate(fdm::Scalar x_bar, Input_Iter start, Input_Iter end, std::size_t order=1)
     {
       // Matrix of Order+1 rows, N cols
       // row m from Weights is the coeffs for derivative of order m (m= 0, ... , order)
@@ -59,12 +59,12 @@ class FornCalc
       // m_arr.resize(m_n_nodes*(order+1));
 
       // utility lambdas convert (i,j) -> index in flattened m_arr 
-      auto entryRef = [this](std::size_t i, std::size_t j)->double&{ return this->m_arr[i*this->m_n_nodes+j];}; 
+      auto entryRef = [this](std::size_t i, std::size_t j)->fdm::Scalar&{ return this->m_arr[i*this->m_n_nodes+j];}; 
 
       // number of nodes 
       m_n_nodes = std::distance(start,end); 
       m_order = order;
-      auto nodeRef = [&start](std::size_t i)-> const double& {return *(start+i);};
+      auto nodeRef = [&start](std::size_t i)-> const fdm::Scalar& {return *(start+i);};
       
       // zero all stored entries
       for(auto& entry : m_arr) entry=0.0; 
@@ -73,11 +73,11 @@ class FornCalc
       entryRef(0,0) = 1; 
 
       // c1 holds old c2 for next loop
-      double c1=1.0; 
+      fdm::Scalar c1=1.0; 
       // c2 will hold an accumulation of (node[n]-node[0]) * ... * (node[n]-node[n-1])
-      double c2; 
+      fdm::Scalar c2; 
       // c3 holds the difference (nodes[new]-nodes[old])
-      double c3; 
+      fdm::Scalar c3; 
 
       // for number of nodes n=2, ..., N (first node was zero index)
       for(std::size_t n=1; n<m_n_nodes; n++)

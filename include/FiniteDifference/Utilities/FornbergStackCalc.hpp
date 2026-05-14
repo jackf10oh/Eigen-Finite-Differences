@@ -27,7 +27,7 @@ class FornbergStackCalc
     static constexpr std::size_t order = N;                // maximum order of derivative stencil  
     static constexpr std::size_t numNodesMax = M;              // number of nodes to use in approximation
   private:
-    std::array<double, M*(N+1)> m_arr;          // single allocation of memory rows*cols big 
+    std::array<fdm::Scalar, M*(N+1)> m_arr;          // single allocation of memory rows*cols big 
     std::size_t m_nodes_used; // stores how many nodes were actually used in the algorithm
   public:
     // Constructors + Destructor =========================================================
@@ -37,7 +37,7 @@ class FornbergStackCalc
     }
     
     template<typename Iter>
-    FornbergStackCalc(double x_bar, Iter start, Iter end)
+    FornbergStackCalc(fdm::Scalar x_bar, Iter start, Iter end)
     { 
       static_assert(M >= N + 1, "FornbergArrayCalc requires NUM_NODES >= ORDER + 1"); 
       calculate(x_bar,start,end); 
@@ -56,7 +56,7 @@ class FornbergStackCalc
 
     // Updates m_arr to contain weights up to order n
     template<typename Iter>
-    void calculate(double x_bar, Iter start, Iter end)
+    void calculate(fdm::Scalar x_bar, Iter start, Iter end)
     {
       // make sure distance(start,end) <= numNodesMax 
       auto d = std::distance(start,end); 

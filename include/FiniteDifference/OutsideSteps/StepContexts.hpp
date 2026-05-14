@@ -30,10 +30,10 @@ namespace fdm{
 template<typename C = void>
 struct TimeContext
 {
-  double now; 
-  double next; 
+  fdm::Real now; 
+  fdm::Real next; 
   std::shared_ptr<const C> container; 
-  TimeContext(double t1=0.0, double t2=0.0, std::shared_ptr<const C> c=nullptr)
+  TimeContext(fdm::Real t1=0.0, fdm::Real t2=0.0, std::shared_ptr<const C> c=nullptr)
     : now(t1), next(t2), container(c)
   {}
   TimeContext(const TimeContext& other)=delete; 
@@ -77,7 +77,7 @@ class Context
 
 // entry point functions
 template<typename C=void>
-auto make_time(double t1=0.0, double t2=0.0, std::shared_ptr<const C> c=nullptr){ return TimeContext(t1,t2,c); }; 
+auto make_time(fdm::Real t1=0.0, fdm::Real t2=0.0, std::shared_ptr<const C> c=nullptr){ return TimeContext(t1,t2,c); }; 
 
 template<typename M = fdm::Mesh, typename X=void, typename R=void, typename S=void>
 auto make_context(std::shared_ptr<M> m=nullptr, X* x=nullptr, R* r=nullptr, S* s=nullptr){ return Context(m,x,r,s); }

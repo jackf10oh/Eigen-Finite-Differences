@@ -18,14 +18,14 @@ class RobinBC
 {
   public:  
     // member data 
-    double boundary_target;
-    double val_coeff;
-    double deriv_coeff;
+    fdm::Scalar boundary_target;
+    fdm::Scalar val_coeff;
+    fdm::Scalar deriv_coeff;
 
   public:
     // Constructors + Destructor ---------------------------------------------
     // a*U + b*Ux = target
-    RobinBC(double a=1.0, double b=0.0, double target=0.0) 
+    RobinBC(fdm::Scalar a=1.0, fdm::Scalar b=0.0, fdm::Scalar target=0.0) 
       : val_coeff(a), deriv_coeff(b), boundary_target(target)
     {}; 
     // copy 
@@ -35,30 +35,30 @@ class RobinBC
 
     // Member Funcs ----------------------------------------------
     // change first/last (left/right boundary) row of the fdm stencil matrix
-    void SetStencilL(double t, const fdm::Vector& mesh, fdm::CSRMatrix& Mat) const 
+    void SetStencilL(fdm::Real t, const fdm::Vector& mesh, fdm::CSRMatrix& Mat) const 
     {
       Mat.topRows(1) *= 0;
       // first order derivative approximation 
-      double h = mesh[1] - mesh[0];  
+      fdm::Scalar h = mesh[1] - mesh[0];  
       Mat.coeffRef(0,0)=  val_coeff + deriv_coeff*(-1.0/h);
       Mat.coeffRef(0,1)=  deriv_coeff*(1.0/h);
     }; 
-    void SetStencilR(double t, const fdm::Vector& mesh, fdm::CSRMatrix& Mat) const 
+    void SetStencilR(fdm::Real t, const fdm::Vector& mesh, fdm::CSRMatrix& Mat) const 
     {
       Mat.bottomRows(1) *= 0; 
       // first order derivative approximation 
-      double h = mesh[mesh.size()-1] - mesh[mesh.size()-2];  
+      fdm::Scalar h = mesh[mesh.size()-1] - mesh[mesh.size()-2];  
       Mat.coeffRef(Mat.rows()-1, Mat.cols()-2)= deriv_coeff*(-1.0/h);
       Mat.coeffRef(Mat.rows()-1, Mat.cols()-1)=  val_coeff + deriv_coeff*(1.0/h);
     };
 
-    void SetImpSolL(double t, const fdm::Vector& mesh, fdm::StridedRef Sol) const 
+    void SetImpSolL(fdm::Real t, const fdm::Vector& mesh, fdm::StridedRef Sol) const 
     {Sol[0] = boundary_target;};
-    void SetImpSolR(double t, const fdm::Vector& mesh, fdm::StridedRef Sol) const 
+    void SetImpSolR(fdm::Real t, const fdm::Vector& mesh, fdm::StridedRef Sol) const 
     {Sol[Sol.size()-1] = boundary_target;};
     
     // change the first/last (left/right boundary) entry of a vector  
-    void SetSolL(double t, const fdm::Vector& mesh, fdm::StridedRef Sol) const 
+    void SetSolL(fdm::Real t, const fdm::Vector& mesh, fdm::StridedRef Sol) const 
     { 
       // if(Sol.size()<3 || mesh->size()<3) throw std::runtime_error("Discretization1D or Mesh1D size too small!(must be >= 3)"); 
 
@@ -79,7 +79,7 @@ class RobinBC
       Sol[0] = target;  
       // void return type
     };
-    void SetSolR(double t, const fdm::Vector& mesh, fdm::StridedRef Sol) const  
+    void SetSolR(fdm::Real t, const fdm::Vector& mesh, fdm::StridedRef Sol) const  
     {
       // if(Sol.size()<3 || mesh->size()<3) throw std::runtime_error("Discretization1D or Mesh1D size too small!(must be >= 3)"); 
 
@@ -91,7 +91,7 @@ class RobinBC
 
       // solve the equation target = a*(S[N-1]) + b * ( W[0]*S[N-3] + W[1]*S[N-2] + W[2]*S[N-1] ) 
       // for the target value S[N-1] 
-      double target = boundary_target; 
+      fdm::Scalar target = boundary_target; 
       target -= deriv_coeff * weights[0]*Sol[Sol.size()-3]; 
       target -= deriv_coeff * weights[1]*Sol[Sol.size()-2]; 
       target /= val_coeff + deriv_coeff*weights[2]; 

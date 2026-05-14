@@ -27,7 +27,7 @@ struct TimeDepMemberData{};
 
 template<>
 struct TimeDepMemberData<true>{
-  double m_current_time; 
+  fdm::Real m_current_time; 
   const Mesh* m_mesh_raw; 
 
 }; 
@@ -106,7 +106,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
       }
     }
     SharedConstMesh getMesh() const { return m_mesh_observed.lock(); }
-    void setTime(double t){ 
+    void setTime(fdm::Real t){ 
       if constexpr(fdm::linops::internal::traits<Derived>::is_timedep){
         // update m_current_time + update m_stencil matrix 
         this->m_current_time=t; 
@@ -114,8 +114,8 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
         setMesh_impl(this->m_mesh_raw); 
       }
     }
-    void setTime_hooked(double t){}
-    double getTime() const {
+    void setTime_hooked(fdm::Real t){}
+    fdm::Real getTime() const {
       if constexpr(fdm::linops::internal::traits<Derived>::is_timedep){
         return this->m_current_time; 
       }

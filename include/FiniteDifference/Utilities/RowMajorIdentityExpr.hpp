@@ -27,7 +27,7 @@ struct traits<fdm::utils::RowMajorIdentity> {
   typedef Eigen::Sparse StorageKind;
   typedef Eigen::MatrixXpr XprKind;
   typedef typename Eigen::Index StorageIndex;
-  typedef double Scalar;
+  typedef fdm::Scalar Scalar;
   enum {
     Flags = Eigen::RowMajorBit,
     RowsAtCompileTime = Eigen::Dynamic,

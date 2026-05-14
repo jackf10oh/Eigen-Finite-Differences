@@ -12,7 +12,7 @@
 #include<array>
 #include<memory>
 #include<Eigen/Core>
-#include "../Utilities/FornbergStackCalc.hpp"
+#include "../Utilities/Fornberg2.hpp" // not using stack calc. we need a std::array<Real> not std::array<Scalar> 
 #include "TExprTraits.hpp" 
 #include "../Types.hpp" // Scalar, DiagMatrix
 
@@ -26,7 +26,7 @@ class Executor
   public:
     // Type Defs ------------------------------------------- 
     using Tup = std::remove_cv_t<std::remove_reference_t<decltype(std::declval<TimeDeriv&>().toTuple())>>;
-    using ScalarTup = std::remove_cv_t<std::remove_reference_t<decltype(texprs::traits::filter_tup<texprs::traits::coeffat_returns_double>(std::declval<Tup>()))>>;
+    using ScalarTup = std::remove_cv_t<std::remove_reference_t<decltype(texprs::traits::filter_tup<texprs::traits::coeffat_returns_real>(std::declval<Tup>()))>>;
     using MatrixTup = std::remove_cv_t<std::remove_reference_t<decltype(texprs::traits::filter_tup<texprs::traits::coeffat_returns_other>(std::declval<Tup>()))>>;
     using InvCoeff = std::conditional_t<std::tuple_size<MatrixTup>::value==0, fdm::Scalar, fdm::DiagMatrix>; 
 
@@ -39,20 +39,20 @@ class Executor
     // reference to the expression the executor is working on. 
     TimeDeriv& m_wrapped;
 
-    // tuple that stores all entries in expr_init.toTuple() such that .coeffAt(...) returns a double  
+    // tuple that stores all entries in expr_init.toTuple() such that .coeffAt(...) returns a fdm::Real  
     ScalarTup m_scalar_coeff_sum_partition;
 
     // .....  such that .coeffAt(...) returns a Matrix  
     MatrixTup m_mat_coeff_sum_partition; 
 
     // list of t0, t1, ..., tn 
-    std::array<double, numStoredTimes> m_stored_times; 
+    std::array<fdm::Real, numStoredTimes> m_stored_times; 
 
     // list of solutions u0, u1, ..., un-1 at times t0, t1, ..., tn-1 
     std::array<fdm::Vector, numStoredTimes-1> m_stored_sols; 
 
     // forberg weights calculator 
-    fdm::utils::FornbergStackCalc<numStoredTimes, TimeDeriv::maxOrder> m_weights_calc; 
+    std::array<fdm::Real, numStoredTimes * (TimeDeriv::maxOrder+1)> m_weights_arr; 
     
     // result of buildInvCoeff.   
     InvCoeff m_inv_coeff; 
@@ -65,7 +65,7 @@ class Executor
     // from expressions of Time derivatives
     Executor(TimeDeriv& expr_init) 
       : m_wrapped(expr_init),
-      m_scalar_coeff_sum_partition(texprs::traits::filter_tup<texprs::traits::coeffat_returns_double>(m_wrapped.toTuple())), 
+      m_scalar_coeff_sum_partition(texprs::traits::filter_tup<texprs::traits::coeffat_returns_real>(m_wrapped.toTuple())), 
       m_mat_coeff_sum_partition(texprs::traits::filter_tup<texprs::traits::coeffat_returns_other>(m_wrapped.toTuple()))
     {
       static_assert(texprs::traits::is_timederiv_crtp<TimeDeriv>::value, "Must construct Executor from TExpr!");
@@ -89,14 +89,6 @@ class Executor
     auto& getStoredTimes(){ return m_stored_times; }; 
     const auto& getStoredTimes() const { return m_stored_times; }; 
 
-    // getter to time that matches last solution in list 
-    double& getCurrentTime(){ return m_stored_times[numStoredTimes-2]; }
-    const double& getCurrentTime() const { return m_stored_times[numStoredTimes-2]; }
-
-    // getter to future time
-    double& getNextTime(){ return m_stored_times[numStoredTimes-1]; }
-    const double& getNextTime() const { return m_stored_times[numStoredTimes-1]; }
-
     // getters to stored solutions 
     auto& getStoredSolutions(){ return m_stored_sols; }
     const auto& getStoredSolutions() const { return m_stored_sols; }
@@ -110,7 +102,7 @@ class Executor
     const fdm::Vector& getExpiringSolution() const { return m_stored_sols.front(); }
     
     // consume a time. push back all previous
-    void pushTime(double t)
+    void pushTime(fdm::Real t)
     {
       // all values in m_stored_time have been left shifted by 1
       std::move(std::next(m_stored_times.begin()), m_stored_times.end(), m_stored_times.begin()); 
@@ -197,7 +189,7 @@ class Executor
     }
 
     // traverse stored tuples and sets time for any LinOps inside 
-    void setTime(double t)
+    void setTime(fdm::Real t)
     {
       std::apply(
         [t,this](auto&... args){ ((setTime_singleton(t, args)),...); }, 
@@ -209,8 +201,12 @@ class Executor
       ); 
     }
 
-    void calculate(double t){ 
-      m_weights_calc.calculate(t, m_stored_times.cbegin(), m_stored_times.cend()); 
+    void calculate(fdm::Real t){ 
+      fdm::utils::fornberg2(
+        m_stored_times.cbegin(), m_stored_times.cend(),
+        t,TimeDeriv::maxOrder,
+        m_weights_arr.begin()
+      ); 
       setTime(t);   
       buildInvCoeff(); 
     }
@@ -238,20 +234,20 @@ class Executor
     {
       if constexpr(std::tuple_size<MatrixTup>::value == 0){
         // just scalars need to be added 
-        double scalar_sum = std::apply(
+        fdm::Real reals_sum = std::apply(
           [this](auto&&... args){
-            return (args.template coeffAt<ithNode, numStoredTimes>(m_weights_calc.getArray()) + ...); 
+            return (args.template coeffAt<ithNode, numStoredTimes>(m_weights_arr) + ...); 
           }, 
           m_scalar_coeff_sum_partition
         ); 
         // need to flip the coefficient by (-1) so that its moved to rhs 
-        return scalar_sum * m_stored_sols[ithNode]; 
+        return reals_sum * m_stored_sols[ithNode]; 
       }
       else if constexpr(std::tuple_size<ScalarTup>::value == 0){
         // just matrix return types need to be added
         decltype(auto) matrix_sum = std::apply(
           [this](auto&&... args){
-            return (args.template coeffAt<ithNode, numStoredTimes>(m_weights_calc.getArray()) + ...); 
+            return (args.template coeffAt<ithNode, numStoredTimes>(m_weights_arr) + ...); 
           },
           m_mat_coeff_sum_partition
         ); 
@@ -259,19 +255,19 @@ class Executor
       }
       else{
         // sum of both scalar AND matrix return types! 
-        double scalar_sum = std::apply(
+        fdm::Real reals_sum = std::apply(
           [this](auto&&... args){
-            return (args.template coeffAt<ithNode, numStoredTimes>(m_weights_calc.getArray()) + ...); 
+            return (args.template coeffAt<ithNode, numStoredTimes>(m_weights_arr) + ...); 
           }, 
           m_scalar_coeff_sum_partition
         );
         decltype(auto) matrix_sum = std::apply(
           [this](auto&&... args){
-            return (args.template coeffAt<ithNode, numStoredTimes>(m_weights_calc.getArray()) + ...); 
+            return (args.template coeffAt<ithNode, numStoredTimes>(m_weights_arr) + ...); 
           }, 
           m_mat_coeff_sum_partition
         ); 
-        return scalar_sum * m_stored_sols[ithNode] + matrix_sum * m_stored_sols[ithNode]; 
+        return reals_sum * m_stored_sols[ithNode] + matrix_sum * m_stored_sols[ithNode]; 
       }
     }
 
@@ -282,7 +278,7 @@ class Executor
         // all coeffAt's evaluate to scalar -> return 1 / sum(coeffs) 
         fdm::Scalar s = std::apply(
             [this](auto&&... coeffs){
-              return (coeffs.template coeffAt<numStoredTimes-1, numStoredTimes>(m_weights_calc.getArray()) + ...); 
+              return (coeffs.template coeffAt<numStoredTimes-1, numStoredTimes>(m_weights_arr) + ...); 
             }, 
             m_scalar_coeff_sum_partition
         );
@@ -292,7 +288,7 @@ class Executor
         // all coeffAt's evaluate to matrix -> return (sum(coeffs)).cwiseInverse 
         auto expr = std::apply(
               [this](auto&&... coeffs){
-                return (coeffs.template coeffAt<numStoredTimes-1, numStoredTimes>(m_weights_calc.getArray()) + ...); 
+                return (coeffs.template coeffAt<numStoredTimes-1, numStoredTimes>(m_weights_arr) + ...); 
               }, 
               m_mat_coeff_sum_partition 
         ); 
@@ -301,15 +297,15 @@ class Executor
       else{
         // otherwise return product of 1/(sum(scalar) + (sum(Mats))
         std::cout << "correct branch hit" << std::endl; 
-        double s = std::apply(
+        fdm::Real s = std::apply(
             [this](auto&&... coeffs){
-              return (coeffs.template coeffAt<numStoredTimes-1, numStoredTimes>(m_weights_calc.getArray()) + ...); 
+              return (coeffs.template coeffAt<numStoredTimes-1, numStoredTimes>(m_weights_arr) + ...); 
             }, 
             m_scalar_coeff_sum_partition
         );
         auto expr = std::apply(
               [this](auto&&... coeffs){
-                return (coeffs.template coeffAt<numStoredTimes-1, numStoredTimes>(m_weights_calc.getArray()) + ...); 
+                return (coeffs.template coeffAt<numStoredTimes-1, numStoredTimes>(m_weights_arr) + ...); 
               }, 
               m_mat_coeff_sum_partition 
         ); 
@@ -333,7 +329,7 @@ class Executor
 
     // Sets mesh onto a Time Derivative. traverse lhs/rhs of multiply expressions
     template<typename TimeDerivU>
-    void setTime_singleton(double t,TimeDerivU& tderiv)
+    void setTime_singleton(fdm::Real t,TimeDerivU& tderiv)
     {
       if constexpr(texprs::traits::is_coeffmult_crtp<TimeDerivU>::value){
         setTime_singleton(t, tderiv.getLhs()); 

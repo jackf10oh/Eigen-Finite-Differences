@@ -40,7 +40,7 @@ struct ForwardNodeSelector
   static constexpr std::size_t numNodesUsed = numNodesMin; 
   std::array<Eigen::Index, numNodesMax> nodeIndices;
   std::array<fdm::Scalar, numNodesMax> nodeValues;
-  double x_bar; 
+  fdm::Scalar x_bar; 
   std::size_t nonZerosOffset; 
 
   // Constructor ============================

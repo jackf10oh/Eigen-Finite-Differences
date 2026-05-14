@@ -209,7 +209,7 @@ auto make_Discretization(std::shared_ptr<const fdm::Mesh> mesh, const Callable& 
 
 auto linspaced(std::size_t n, fdm::Scalar x0, fdm::Scalar x1)
 {
-  auto lam = [d = static_cast<double>(n)-1.0,x0,x1](std::size_t idx){ return (idx/d)*(x1-x0)+x0; };
+  auto lam = [d = static_cast<fdm::Scalar>(n)-1.0,x0,x1](std::size_t idx){ return (idx/d)*(x1-x0)+x0; };
   return Eigen::CwiseNullaryOp<decltype(lam), fdm::Vector>(n, 1, std::move(lam)); 
 }
 

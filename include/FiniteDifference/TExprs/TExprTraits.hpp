@@ -89,33 +89,33 @@ struct variadicFoldMaximum<i,trailing...>
 
 } // end namespace internal 
 
-// given a type T. detect if it returns a double from coeffAt<>() or some other matrix expression. 
+// given a type T. detect if it returns a fdm::Real from coeffAt<>() or some other matrix expression. 
 namespace traits{
 
 template<typename TIMEDERIV_T>
 struct TimeDerivTraits
 {
-  using _coeffatreturntype_unclean_ = decltype(std::declval<TIMEDERIV_T>().template coeffAt<0,0>(std::declval<std::array<double,0>>()));  
+  using _coeffatreturntype_unclean_ = decltype(std::declval<TIMEDERIV_T>().template coeffAt<0,0>(std::declval<std::array<fdm::Real,0>>()));  
   using CoeffAtReturnType = std::remove_cv_t<std::remove_reference_t<_coeffatreturntype_unclean_>>;
 }; 
 
 template<typename T>
-struct coeffat_returns_double_impl : std::false_type{};
+struct coeffat_returns_real_impl : std::false_type{};
 
 template<std::size_t nthOrder>
-struct coeffat_returns_double_impl<texprs::NthTimeDeriv<nthOrder>> : std::true_type{}; 
+struct coeffat_returns_real_impl<texprs::NthTimeDeriv<nthOrder>> : std::true_type{}; 
 
 template<class Lhs, class Rhs>
-struct coeffat_returns_double_impl<texprs::CoeffMultExpr<Lhs,Rhs>> : std::conjunction<
-  std::is_arithmetic<Lhs>, 
-  coeffat_returns_double_impl<std::remove_cv_t<std::remove_reference_t<std::remove_cv_t<std::remove_reference_t<Rhs>>>>>
+struct coeffat_returns_real_impl<texprs::CoeffMultExpr<Lhs,Rhs>> : std::conjunction<
+  std::is_convertible<decltype(std::declval<Lhs>() * fdm::Real()),fdm::Real>, 
+  coeffat_returns_real_impl<std::remove_cv_t<std::remove_reference_t<Rhs>>>
 >{}; 
 
 template<class T>
-using coeffat_returns_double = coeffat_returns_double_impl<std::remove_cv_t<std::remove_reference_t<T>>>; 
+using coeffat_returns_real = coeffat_returns_real_impl<std::remove_cv_t<std::remove_reference_t<T>>>; 
 
 template<typename T>
-struct coeffat_returns_other : public std::negation<coeffat_returns_double<T>>{}; 
+struct coeffat_returns_other : public std::negation<coeffat_returns_real<T>>{}; 
 
 } // end namespace traits
 

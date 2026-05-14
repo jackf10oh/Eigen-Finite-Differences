@@ -113,7 +113,7 @@ class Interpolator
 
     // get value of Solution at any point t,{x1,x2,...xn} in time/space 
     template<std::size_t numDimsMax>
-    double solAt(double t, const fdm::Coordinate<numDimsMax>& coords){
+    fdm::Scalar solAt(fdm::Real t, const fdm::Coordinate<numDimsMax>& coords){
       assert((numDimsMax == m_args.mesh->numDims()) && "error in Interpolator.solAt() : # of dims in coordinate must == # of dims in stored mesh");
       // if m_data is empty... 
       if(!m_calculated) fillStoredSolutions(); 
@@ -123,8 +123,8 @@ class Interpolator
       auto offset = std::distance(m_args.times->cbegin(), time_interval.first); 
 
       // find left / right value in linear interpolation 
-      double y1 =  interpolateSolution(coords.values, m_data[offset].cbegin(), m_data[offset].cend()); 
-      double y2 =  interpolateSolution(coords.values, m_data[offset+1].cbegin(), m_data[offset+1].cend());
+      fdm::Scalar y1 =  interpolateSolution(coords.values, m_data[offset].cbegin(), m_data[offset].cend()); 
+      fdm::Scalar y2 =  interpolateSolution(coords.values, m_data[offset+1].cbegin(), m_data[offset+1].cend());
       
       // linear interpolation (t-t1) * (y2 - y1) / (t2 - t1) 
       return y1 + (t - *time_interval.first) * (y2 - y1) / (*time_interval.second - *time_interval.first); 
@@ -133,13 +133,13 @@ class Interpolator
   private:
     // Unreachable ----------------------------------------------------
     template<typename Container, typename Iterator>
-    double interpolateSolution(const Container& coords, Iterator start, Iterator stop)
+    fdm::Scalar interpolateSolution(const Container& coords, Iterator start, Iterator stop)
     {
       return LinearInterp_recursive_impl(coords, start, stop, m_args.mesh, coords.size()-1);
     }; 
 
     template<typename Container, typename Iterator>
-    double LinearInterp_recursive_impl(
+    fdm::Scalar LinearInterp_recursive_impl(
       const Container& coords, 
       Iterator start, 
       Iterator stop,  
@@ -153,8 +153,8 @@ class Interpolator
       if(ith_dim == 0){
         std::size_t final_offset = cumulative_offset + std::distance(sub_dim_m.cbegin(), subinterval.first); 
         auto it = std::next(start, final_offset); 
-        double y1 = *it; ++it; 
-        double y2 = *it; 
+        fdm::Scalar y1 = *it; ++it; 
+        fdm::Scalar y2 = *it; 
         // result = y1 + (c-x1) * (y2-y1) / (x2-x1)
         return y1 + (y2-y1) * (coords[ith_dim] - *subinterval.first) / (*subinterval.second - *subinterval.first);  
       }
@@ -162,8 +162,8 @@ class Interpolator
         std::size_t stride = m->sizesMiddleProduct(0,ith_dim); 
         std::size_t idx = std::distance(sub_dim_m.cbegin(), subinterval.first); 
         std::size_t next_offset = cumulative_offset + stride * (idx); 
-        double y1 = LinearInterp_recursive_impl(coords, start, stop, m, ith_dim-1, next_offset); 
-        double y2 = LinearInterp_recursive_impl(coords, start, stop, m, ith_dim-1, next_offset + stride);
+        fdm::Scalar y1 = LinearInterp_recursive_impl(coords, start, stop, m, ith_dim-1, next_offset); 
+        fdm::Scalar y2 = LinearInterp_recursive_impl(coords, start, stop, m, ith_dim-1, next_offset + stride);
         // result = y1 + (c-x1) * (y2-y1) / (x2-x1)
         return y1 + (y2 - y1) * (coords[ith_dim] - *subinterval.first) / (*subinterval.second - *subinterval.first); 
       }

@@ -10,12 +10,13 @@
 
 #include<utility> // std::pair
 #include<algorithm> // std::lower_bound
+#include<iterator>
 
 namespace fdm{
   namespace utils{
 
 template<typename Iterator>
-auto make_subinterval(double x, Iterator start, Iterator stop)
+auto make_subinterval(typename std::iterator_traits<iterator>::value_type x, Iterator start, Iterator stop)
 {
   // runtime checks 
   if(std::distance(start,stop) < 2) throw std::runtime_error("size of v < 2"); 
@@ -35,8 +36,8 @@ auto make_subinterval(double x, Iterator start, Iterator stop)
 }; 
 
 template<typename DomainIterator, typename ValueIterator>
-double linear_interpolation(
-  double x, 
+auto linear_interpolation(
+  std::iterator_traits<DomainIterator>::value_type x, 
   DomainIterator d_start, DomainIterator d_stop, 
   ValueIterator v_start)
 {
@@ -44,18 +45,18 @@ double linear_interpolation(
 
   auto offset = std::distance(d_start,bounding_interval.first); 
   auto it = std::next(v_start, offset); 
-  double y1 = *it; 
+  auto y1 = *it; 
   it++; 
-  double y2 = *it; 
+  auto y2 = *it; 
 
   return y1 + (y2-y1) * (x - *bounding_interval.first) / (*bounding_interval.second - *bounding_interval.first); 
 }
 
-template<typename DomainIterator>
-double linear_interpolation(
-  double x, 
+template<typename DomainIterator, typename ValueType>
+ValueType linear_interpolation(
+  std::iterator_traits<DomainIterator>::value_type x, 
   DomainIterator d_start, DomainIterator d_stop,
-  double y1, double y2)
+  ValueType y1, ValueType y2)
 {
   auto bounding_interval =  make_subinterval(x, d_start, d_stop);  
 

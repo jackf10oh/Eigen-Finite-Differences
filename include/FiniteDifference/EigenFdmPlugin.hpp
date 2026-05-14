@@ -80,7 +80,7 @@ std::shared_ptr<const fdm::Mesh> getMesh() const
   }
 }
 
-void setTime(double t)
+void setTime(fdm::Real t)
 {
   // TODO ternary operators? 
   if constexpr(fdm::linops::internal::traits<Derived>::is_binop){
@@ -101,7 +101,7 @@ void setTime(double t)
   // else leaf matrices do nothing by default; 
 }
 
-double getTime() const 
+fdm::Real getTime() const 
 {
   // TODO ternary operators? 
   if constexpr(fdm::linops::internal::traits<Derived>::is_binop){

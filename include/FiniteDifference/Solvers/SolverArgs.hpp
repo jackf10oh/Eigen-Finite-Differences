@@ -14,7 +14,6 @@
 #include "../Types.hpp"
 #include "../Mesh.hpp"
 
-
 namespace fdm{
   namespace solvers{ 
 

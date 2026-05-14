@@ -89,9 +89,9 @@ class AutonomousCoeff : public CoeffBase<AutonomousCoeff<Callable>>
       CoeffBase<AutonomousCoeff<Callable>>::setMesh_impl(m.get()); 
     }
     auto getMesh() const { return m_mesh_observed.lock(); }
-    void setTime(double t){/* do nothing */}
-    double getTime() const { return -1.0; }
-    void setTime_hooked(double t){/* do nothing */}
+    void setTime(fdm::Real t){/* do nothing */}
+    fdm::Real getTime() const { return -1.0; }
+    void setTime_hooked(fdm::Real t){/* do nothing */}
 };
 
 } // end namespace linops 

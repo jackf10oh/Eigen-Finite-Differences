@@ -226,7 +226,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
   private:
     // Unreachable =========================================================== 
     template<std::size_t Idx>
-    void flat_stencil(double t, const fdm::Mesh* m)
+    void flat_stencil(fdm::Real t, const fdm::Mesh* m)
     {
       // !!! uses first entry in m_mats as temp storage !!! 
       if constexpr( Idx > 0 ){
@@ -250,7 +250,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
     }
 
     template<std::size_t... Is>
-    void prepare_flat_stencils(double t, const fdm::Mesh* m, std::index_sequence<Is...>){
+    void prepare_flat_stencils(fdm::Real t, const fdm::Mesh* m, std::index_sequence<Is...>){
       (flat_stencil<Is>(t,m), ...); 
     } 
 
