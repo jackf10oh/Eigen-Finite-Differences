@@ -6,13 +6,13 @@
 //
 // JAF 1/15/2026 
 
-#ifndef FDM_TEXPRS_SUMEXPR_H
-#define FDM_TEXPRS_SUMEXPR_H
+#ifndef FORNFDM_TEXPRS_SUMEXPR_H
+#define FORNFDM_TEXPRS_SUMEXPR_H
 
-#include "TExprTraits.hpp"
+#include "Traits.hpp"
 #include "TimeDerivBase.hpp"
 
-namespace fdm{
+namespace fornfdm{
   namespace texprs{
 
 // ====================================================== 
@@ -59,6 +59,6 @@ auto make_SumExpr(LHS&& lhs, RHS&& rhs)
 }
 
   } // end namespace texprs 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // SumExpr.hpp 

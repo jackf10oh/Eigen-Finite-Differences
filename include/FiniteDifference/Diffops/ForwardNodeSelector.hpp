@@ -5,10 +5,10 @@
 // 
 // JAF 5/11/2026 
 
-#ifndef FDM_DIFFOPS_FORWARDNODESELECTOR_H
-#define FDM_DIFFOPS_FORWARDNODESELECTOR_H 
+#ifndef FORNFDM_DIFFOPS_FORWARDNODESELECTOR_H
+#define FORNFDM_DIFFOPS_FORWARDNODESELECTOR_H 
 
-namespace fdm{
+namespace fornfdm{
 namespace linops{
 
 // tag type to take a guranteed minimum. outside of internal 
@@ -39,8 +39,8 @@ struct ForwardNodeSelector
   static constexpr std::size_t numNodesMax = numNodesMin; 
   static constexpr std::size_t numNodesUsed = numNodesMin; 
   std::array<Eigen::Index, numNodesMax> nodeIndices;
-  std::array<fdm::Scalar, numNodesMax> nodeValues;
-  fdm::Scalar x_bar; 
+  std::array<fornfdm::Scalar, numNodesMax> nodeValues;
+  fornfdm::Scalar x_bar; 
   std::size_t nonZerosOffset; 
 
   // Constructor ============================
@@ -86,6 +86,6 @@ struct ForwardNodeSelector
 
 } // end namespace internal 
 } // end namespace linops 
-} // end namespace fdm
+} // end namespace fornfdm
 
 #endif 

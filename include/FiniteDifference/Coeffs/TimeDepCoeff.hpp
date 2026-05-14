@@ -5,12 +5,12 @@
 //
 // JAF 4/24/2026 
 
-#ifndef FDM_COEFFS_TIMEDEPCOEFF_H
-#define FDM_COEFFS_TIMEDEPCOEFF_H
+#ifndef FORNFDM_COEFFS_TIMEDEPCOEFF_H
+#define FORNFDM_COEFFS_TIMEDEPCOEFF_H
 
 #include "CoeffBase.hpp"
 
-namespace fdm{
+namespace fornfdm{
 namespace linops{
 
 // forward declarartion 
@@ -21,19 +21,19 @@ namespace internal{
 
 // Traits
 template<class Callable>
-struct traits_impl<fdm::linops::TimeDepCoeff<Callable>>
+struct traits_impl<fornfdm::linops::TimeDepCoeff<Callable>>
 {
   static constexpr bool is_linop = true; 
   static constexpr bool is_unarop = false; 
   static constexpr bool is_binop = false; 
   static constexpr bool is_ternop = false;
-  static constexpr std::size_t max_num_args_called = fdm::internal::callable_traits<Callable>::arity - 1; // first arg binded to time. 
+  static constexpr std::size_t max_num_args_called = fornfdm::internal::callable_traits<Callable>::arity - 1; // first arg binded to time. 
   static constexpr bool is_timedep = true; 
 }; 
 
 } // end namespace internal 
 } // end namespace linops 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #include "CoeffBase.hpp"
 
@@ -42,11 +42,11 @@ namespace internal{
 
 // Traits 
 template<class Callable>
-struct traits<fdm::linops::TimeDepCoeff<Callable>> // : public traits<fdm::linops::CoeffBase<fdm::linops::AutonomousCoeff<Callable>>>
+struct traits<fornfdm::linops::TimeDepCoeff<Callable>> // : public traits<fornfdm::linops::CoeffBase<fornfdm::linops::AutonomousCoeff<Callable>>>
 {
   typedef Eigen::DiagonalShape XprKind; 
-  typedef typename Eigen::CwiseNullaryOp<fdm::linops::CyclicWrapper, Eigen::Matrix<fdm::Scalar, 1, Eigen::Dynamic>> DiagonalVectorType;
-  typedef fdm::Scalar Scalar; 
+  typedef typename Eigen::CwiseNullaryOp<fornfdm::linops::CyclicWrapper, Eigen::Matrix<fornfdm::Scalar, 1, Eigen::Dynamic>> DiagonalVectorType;
+  typedef fornfdm::Scalar Scalar; 
   typedef typename DiagonalVectorType::StorageKind StorageKind;
   typedef typename DiagonalVectorType::StorageIndex StorageIndex;
   enum{
@@ -62,7 +62,7 @@ struct traits<fdm::linops::TimeDepCoeff<Callable>> // : public traits<fdm::linop
 }
 }
 
-namespace fdm{
+namespace fornfdm{
 namespace linops{  
 
 template<class Callable>
@@ -74,7 +74,7 @@ class TimeDepCoeff : public CoeffBase<TimeDepCoeff<Callable>>
     // Member Data ----------- 
     std::weak_ptr<const Mesh> m_mesh_observed; 
     const Mesh* m_mesh_raw; 
-    typename fdm::internal::BindFirst<Callable> m_callable; // stores Callable + captured something that converts to fdm::Real. 
+    typename fornfdm::internal::BindFirst<Callable> m_callable; // stores Callable + captured something that converts to fornfdm::Real. 
 
   public:
     // Constructor ----------
@@ -90,19 +90,19 @@ class TimeDepCoeff : public CoeffBase<TimeDepCoeff<Callable>>
       m_mesh_raw = m.get(); 
     }
     auto getMesh() const { return m_mesh_observed.lock(); }
-    void setTime(fdm::Real t)
+    void setTime(fornfdm::Real t)
     { 
       m_callable.captured_arg = t; 
       CoeffBase<TimeDepCoeff>::setMesh_impl(m_mesh_raw);
     }
-    // fdm::Real getTime() const { return m_callable.captured_arg; } // don't want to do this. getTime() should always reflect last setTime that triggered updates to matrix 
-    void setTime_hooked(fdm::Real t)
+    // fornfdm::Real getTime() const { return m_callable.captured_arg; } // don't want to do this. getTime() should always reflect last setTime that triggered updates to matrix 
+    void setTime_hooked(fornfdm::Real t)
     {
       m_callable.captured_arg = t;
     }
 };
 
 } // end namespace linops 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // TimeDepCoeff.hpp 

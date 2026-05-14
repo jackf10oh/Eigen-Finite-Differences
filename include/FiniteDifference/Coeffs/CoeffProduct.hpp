@@ -4,12 +4,12 @@
 //
 // JAF 4/24/2026 
 
-#ifndef FDM_COEFFS_COEFFPRODUCT_H
-#define FDM_COEFFS_COEFFPRODUCT_H
+#ifndef FORNFDM_COEFFS_COEFFPRODUCT_H
+#define FORNFDM_COEFFS_COEFFPRODUCT_H
 
 #include "../Diffops/EvaluatorBase.hpp"
 
-namespace fdm{
+namespace fornfdm{
 namespace linops{
 
 // forward declaration 
@@ -37,15 +37,15 @@ struct traits_impl<CoeffProduct<LeftCoeff, RightDeriv>>
 template<class LeftCoeff, class RightDeriv>
 struct Evaluator<CoeffProduct<LeftCoeff, RightDeriv>> : public EvaluatorBase<CoeffProduct<LeftCoeff, RightDeriv>>
 {
-  using XprType = fdm::linops::CoeffProduct<LeftCoeff, RightDeriv>; 
+  using XprType = fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>; 
   const XprType& m_xpr; 
   Evaluator<typename XprType::Rhs> m_rhs_eval; 
-  Evaluator(const fdm::linops::CoeffProduct<LeftCoeff, RightDeriv>& xpr)
+  Evaluator(const fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>& xpr)
     : m_xpr(xpr), m_rhs_eval(xpr.rhs())
   {}
 
   template<std::size_t N>
-  auto evaluateWeightsAndCoords(const fdm::Scalar* weights, std::size_t weights_per_order, const Coordinate<N>& coords) const 
+  auto evaluateWeightsAndCoords(const fornfdm::Scalar* weights, std::size_t weights_per_order, const Coordinate<N>& coords) const 
   {
     return m_xpr.functor()(coords.apply(m_xpr.lhs().callable()), m_rhs_eval.evaluateWeightsAndCoords(weights, weights_per_order, coords)); 
   }
@@ -53,16 +53,16 @@ struct Evaluator<CoeffProduct<LeftCoeff, RightDeriv>> : public EvaluatorBase<Coe
 
 } // end namespace internal 
 } // end namespace linops 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 namespace Eigen{
 namespace internal{
 
 // Traits
 template<class LeftCoeff, class RightDeriv>
-struct traits<fdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>
+struct traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>
 {
-  typedef fdm::Scalar Scalar;
+  typedef fornfdm::Scalar Scalar;
   typedef Eigen::Index StorageIndex;
   typedef Sparse StorageKind;
   typedef MatrixXpr XprKind;
@@ -78,53 +78,53 @@ struct traits<fdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>
 
 // Evaluator 
 template<class LeftCoeff, class RightDeriv>
-struct evaluator<fdm::linops::CoeffProduct<LeftCoeff,RightDeriv>> 
-  : public evaluator<fdm::linops::PartialDerivBase<fdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>>, 
-  public evaluator_base<fdm::linops::CoeffProduct<LeftCoeff,RightDeriv>> 
+struct evaluator<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>> 
+  : public evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>>, 
+  public evaluator_base<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>> 
 {
   struct InnerIterator
-    : public evaluator<fdm::linops::PartialDerivBase<fdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>>::InnerIterator
+    : public evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>>::InnerIterator
   {
     enum { 
-      CoeffReadCost = evaluator<fdm::linops::PartialDerivBase<fdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>>::CoeffReadCost, 
-      Flags = evaluator<fdm::linops::PartialDerivBase<fdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>>::Flags 
+      CoeffReadCost = evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>>::CoeffReadCost, 
+      Flags = evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>>::Flags 
     };
 
     InnerIterator(const evaluator& eval, Index row_idx)
-      : evaluator<fdm::linops::PartialDerivBase<fdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>>::InnerIterator(eval, row_idx)
+      : evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>>::InnerIterator(eval, row_idx)
     {}
   }; 
-  evaluator(const fdm::linops::CoeffProduct<LeftCoeff,RightDeriv>& xpr_d)
-    : evaluator<fdm::linops::PartialDerivBase<fdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>>(xpr_d)
+  evaluator(const fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>& xpr_d)
+    : evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>>(xpr_d)
   {}
 }; 
 
 } // end namespace internal 
 } // end namespace Eigen 
 
-namespace fdm{
+namespace fornfdm{
 namespace linops{ 
 
 template<class LeftCoeff, class RightDeriv>
-class CoeffProduct : public fdm::linops::PartialDerivBase<CoeffProduct<LeftCoeff, RightDeriv>>
+class CoeffProduct : public fornfdm::linops::PartialDerivBase<CoeffProduct<LeftCoeff, RightDeriv>>
 {
   public: 
     // Type Defs ------------------------------------- 
-    using Base = fdm::linops::PartialDerivBase<CoeffProduct<LeftCoeff, RightDeriv>>; 
+    using Base = fornfdm::linops::PartialDerivBase<CoeffProduct<LeftCoeff, RightDeriv>>; 
     EIGEN_SPARSE_PUBLIC_INTERFACE(CoeffProduct)
     typedef typename std::remove_cv_t<std::remove_reference_t<LeftCoeff>> Lhs; 
     typedef typename std::remove_cv_t<std::remove_reference_t<RightDeriv>> Rhs; 
-    typedef typename fdm::linops::internal::NestedStorage<LeftCoeff>::type LhsNested;
-    typedef typename fdm::linops::internal::NestedStorage<RightDeriv>::type RhsNested;
+    typedef typename fornfdm::linops::internal::NestedStorage<LeftCoeff>::type LhsNested;
+    typedef typename fornfdm::linops::internal::NestedStorage<RightDeriv>::type RhsNested;
 
     // Friends --------------------------- 
     friend Eigen::internal::evaluator<CoeffProduct>; 
-    friend fdm::linops::internal::EvaluatorBase<CoeffProduct>; 
-    friend fdm::linops::internal::Evaluator<CoeffProduct>; 
+    friend fornfdm::linops::internal::EvaluatorBase<CoeffProduct>; 
+    friend fornfdm::linops::internal::Evaluator<CoeffProduct>; 
 
   protected:
     // Member data ----------------------------------- 
-    fdm::linops::internal::BinaryMultiplyFO m_functor; 
+    fornfdm::linops::internal::BinaryMultiplyFO m_functor; 
     LhsNested m_lhs; 
     RhsNested m_rhs; 
   
@@ -140,7 +140,7 @@ class CoeffProduct : public fdm::linops::PartialDerivBase<CoeffProduct<LeftCoeff
     auto& lhs(){ return m_lhs; }
     const auto& rhs() const { return m_rhs; }
     auto& rhs(){ return m_rhs; }
-    void setTime_hooked(fdm::Real t)
+    void setTime_hooked(fornfdm::Real t)
     {
       m_lhs.const_cast_derived().setTime_hooked(t); 
       m_rhs.const_cast_derived().setTime_hooked(t);  
@@ -148,6 +148,6 @@ class CoeffProduct : public fdm::linops::PartialDerivBase<CoeffProduct<LeftCoeff
 }; 
 
 } // end namespace linops  
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // CoeffProduct.hpp 

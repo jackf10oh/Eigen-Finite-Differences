@@ -4,8 +4,8 @@
 //
 // JAF 4/21/2026 
 
-#ifndef FDM_DIFFOPS_EVALUATORBASE_H
-#define FDM_DIFFOPS_EVALUATORBASE_H
+#ifndef FORNFDM_DIFFOPS_EVALUATORBASE_H
+#define FORNFDM_DIFFOPS_EVALUATORBASE_H
 
 #include<array>
 #include "../Utilities/Fornberg2.hpp"
@@ -16,7 +16,7 @@
 #include "../Coordinate.hpp"
 #include "NodeSelector.hpp"
 
-namespace fdm{
+namespace fornfdm{
 namespace linops{
 namespace internal{
 
@@ -27,7 +27,7 @@ struct Evaluator{};
 template<class Xpr>
 struct EvaluatorBase
 {
-  using traits_t = fdm::linops::internal::traits<Xpr>; 
+  using traits_t = fornfdm::linops::internal::traits<Xpr>; 
   static constexpr std::size_t numNodesMin = traits_t::maxOrder+1;
 
   // estimate is for compressed matrix. need to handle block diagonals outside of Evaluator. 
@@ -41,12 +41,12 @@ struct EvaluatorBase
     // member data  
     const Evaluator<Xpr>& m_eval; 
     NodeSelector<typename traits_t::node_selector_tag, numNodesMin> m_nodes; 
-    typename fdm::utils::FornbergStackCalc<NodeSelector<typename traits_t::node_selector_tag, numNodesMin>::numNodesMax, traits_t::maxOrder> m_calc; 
-    fdm::Coordinate<traits_t::max_num_args_called> m_coords; 
+    typename fornfdm::utils::FornbergStackCalc<NodeSelector<typename traits_t::node_selector_tag, numNodesMin>::numNodesMax, traits_t::maxOrder> m_calc; 
+    fornfdm::Coordinate<traits_t::max_num_args_called> m_coords; 
 
     public:
     // constructor
-    Row(const Evaluator<Xpr>& eval, const fdm::Mesh* m, std::size_t row_idx)
+    Row(const Evaluator<Xpr>& eval, const fornfdm::Mesh* m, std::size_t row_idx)
       : m_eval(eval), 
       m_nodes(m->getAxis(traits_t::direction), (row_idx / eval.m_xpr.m_prod_before) % m->sizeOfDim(traits_t::direction)), 
       m_calc(m_nodes.x_bar, m_nodes.nodeValues.cbegin(), std::next(m_nodes.nodeValues.cbegin(), m_nodes.numNodesUsed)), 
@@ -74,6 +74,6 @@ struct EvaluatorBase
 
 } // end namespace internal 
 } // end namespace linops 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // Evaluator.hpp

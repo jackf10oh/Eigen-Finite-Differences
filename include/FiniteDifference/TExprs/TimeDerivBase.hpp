@@ -5,12 +5,12 @@
 //
 // JAF 1/15/2026 
 
-#ifndef FDM_TEXPRS_TIMEDERIVBASE_H
-#define FDM_TEXPRS_TIMEDERIVBASE_H
+#ifndef FORNFDM_TEXPRS_TIMEDERIVBASE_H
+#define FORNFDM_TEXPRS_TIMEDERIVBASE_H
 
-#include "TExprTraits.hpp"
+#include "Traits.hpp"
 
-namespace fdm{
+namespace fornfdm{
   namespace texprs{
   
 // Base Definition =====================================================
@@ -90,6 +90,6 @@ class TimeDerivBase
 }; 
 
   } // end namespace texprs 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif

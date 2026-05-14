@@ -4,15 +4,15 @@
 //
 // JAF 4/23/2026 
 
-#ifndef FDM_DIFFOPS_NWISEBINARYOP_H
-#define FDM_DIFFOPS_NWISEBINARYOP_H
+#ifndef FORNFDM_DIFFOPS_NWISEBINARYOP_H
+#define FORNFDM_DIFFOPS_NWISEBINARYOP_H
 
 #include "../Traits.hpp"
 #include "Traits.hpp"
 #include "EvaluatorBase.hpp"
 #include "Functors.hpp"
 
-namespace fdm{
+namespace fornfdm{
 namespace linops{
 
 // Forward Declaration
@@ -23,18 +23,18 @@ namespace internal{
 
 // Evaluator 
 template<class BinaryOp, class LhsType, class RhsType>
-struct Evaluator<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> : public EvaluatorBase<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
+struct Evaluator<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> : public EvaluatorBase<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
 {
-  using XprType = fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>; 
+  using XprType = fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>; 
   const XprType& m_xpr; 
   Evaluator<typename XprType::Lhs> m_lhs_eval; 
   Evaluator<typename XprType::Rhs> m_rhs_eval; 
-  Evaluator(const fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>& xpr)
+  Evaluator(const fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>& xpr)
     : m_xpr(xpr), m_lhs_eval(xpr.lhs()), m_rhs_eval(xpr.rhs())
   {}
 
   template<std::size_t N>
-  auto evaluateWeightsAndCoords(const fdm::Scalar* weights, std::size_t weights_per_order, const fdm::Coordinate<N>& coords) const 
+  auto evaluateWeightsAndCoords(const fornfdm::Scalar* weights, std::size_t weights_per_order, const fornfdm::Coordinate<N>& coords) const 
   {
     return m_xpr.functor()( 
       m_lhs_eval.evaluateWeightsAndCoords(weights, weights_per_order, coords), 
@@ -45,7 +45,7 @@ struct Evaluator<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> : public 
 
 // Traits
 template<class BinaryOp, class LhsType, class RhsType>
-struct traits_impl<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
+struct traits_impl<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
 {
   static constexpr bool is_linop = true; 
   static constexpr bool is_unarop = false; 
@@ -60,15 +60,15 @@ struct traits_impl<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
 
 } // end namespace internal 
 } // end namespace linops
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 namespace Eigen{
 namespace internal{
 
 template<class BinaryOp, class LhsType, class RhsType>
-struct traits<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
+struct traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
 {
-  typedef fdm::Scalar Scalar;
+  typedef fornfdm::Scalar Scalar;
   typedef Eigen::Index StorageIndex;
   typedef Sparse StorageKind;
   typedef MatrixXpr XprKind;
@@ -83,49 +83,49 @@ struct traits<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
 }; 
 
 template<class BinaryOp, class LhsType, class RhsType>
-struct evaluator<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> 
-  : public evaluator<fdm::linops::PartialDerivBase<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>, 
-  public evaluator_base<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> 
+struct evaluator<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> 
+  : public evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>, 
+  public evaluator_base<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> 
 {
   struct InnerIterator
-    : public evaluator<fdm::linops::PartialDerivBase<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>::InnerIterator
+    : public evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>::InnerIterator
   {
     enum { 
-      CoeffReadCost = evaluator<fdm::linops::PartialDerivBase<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>::CoeffReadCost, 
-      Flags = evaluator<fdm::linops::PartialDerivBase<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>::Flags 
+      CoeffReadCost = evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>::CoeffReadCost, 
+      Flags = evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>::Flags 
     };
 
     InnerIterator(const evaluator& eval, Index row_idx)
-      : evaluator<fdm::linops::PartialDerivBase<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>::InnerIterator(eval, row_idx)
+      : evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>::InnerIterator(eval, row_idx)
     {}
   }; 
-  evaluator(const fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>& xpr_d)
-    : evaluator<fdm::linops::PartialDerivBase<fdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>(xpr_d)
+  evaluator(const fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>& xpr_d)
+    : evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>(xpr_d)
   {}
 }; 
 
 } // end namespac internal 
 } // end namespac Eigen 
 
-namespace fdm{ 
+namespace fornfdm{ 
 namespace linops{
 
 template<class BinaryOp, class LhsType, class RhsType>
-class NwiseBinaryOp : public fdm::linops::PartialDerivBase<NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
+class NwiseBinaryOp : public fornfdm::linops::PartialDerivBase<NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
 {
   public: 
     // Type Defs ------------------------------------- 
-    using Base = fdm::linops::PartialDerivBase<NwiseBinaryOp<BinaryOp,LhsType,RhsType>>; 
+    using Base = fornfdm::linops::PartialDerivBase<NwiseBinaryOp<BinaryOp,LhsType,RhsType>>; 
     EIGEN_SPARSE_PUBLIC_INTERFACE(NwiseBinaryOp)
     typedef typename std::remove_cv_t<std::remove_reference_t<LhsType>> Lhs; 
     typedef typename std::remove_cv_t<std::remove_reference_t<RhsType>> Rhs; 
-    typedef typename fdm::linops::internal::NestedStorage<LhsType>::type LhsNested;
-    typedef typename fdm::linops::internal::NestedStorage<RhsType>::type RhsNested;
+    typedef typename fornfdm::linops::internal::NestedStorage<LhsType>::type LhsNested;
+    typedef typename fornfdm::linops::internal::NestedStorage<RhsType>::type RhsNested;
 
     // Friends 
     friend Eigen::internal::evaluator<NwiseBinaryOp>; 
-    friend fdm::linops::internal::EvaluatorBase<NwiseBinaryOp>; 
-    friend fdm::linops::internal::Evaluator<NwiseBinaryOp>;
+    friend fornfdm::linops::internal::EvaluatorBase<NwiseBinaryOp>; 
+    friend fornfdm::linops::internal::Evaluator<NwiseBinaryOp>;
 
   protected:
     // Member data ----------------------------------- 
@@ -145,7 +145,7 @@ class NwiseBinaryOp : public fdm::linops::PartialDerivBase<NwiseBinaryOp<BinaryO
     auto& lhs(){ return m_lhs; }
     const auto& rhs() const { return m_rhs; }
     auto& rhs(){ return m_rhs; }
-    void setTime_hooked(fdm::Real t)
+    void setTime_hooked(fornfdm::Real t)
     {
       m_lhs.const_cast_derived().setTime_hooked(t); 
       m_rhs.const_cast_derived().setTime_hooked(t); 
@@ -156,9 +156,9 @@ template<
   typename LeftArg,
   typename RightArg, 
   typename = std::enable_if_t<
-    fdm::linops::internal::is_partialderiv_crtp<LeftArg>::value &&
-    fdm::linops::internal::is_partialderiv_crtp<RightArg>::value &&  
-    fdm::internal::is_matching<
+    fornfdm::linops::internal::is_partialderiv_crtp<LeftArg>::value &&
+    fornfdm::linops::internal::is_partialderiv_crtp<RightArg>::value &&  
+    fornfdm::internal::is_matching<
       typename linops::internal::traits<LeftArg>::node_selector_tag, 
       typename linops::internal::traits<RightArg>::node_selector_tag
     >::value &&  
@@ -168,16 +168,16 @@ template<
 >
 auto operator-(LeftArg&& lhs, RightArg&& rhs)
 {
-  return NwiseBinaryOp<fdm::linops::internal::BinarySubtractionFO, LeftArg, RightArg>(std::forward<LeftArg>(lhs), std::forward<RightArg>(rhs), fdm::linops::internal::BinarySubtractionFO{}); 
+  return NwiseBinaryOp<fornfdm::linops::internal::BinarySubtractionFO, LeftArg, RightArg>(std::forward<LeftArg>(lhs), std::forward<RightArg>(rhs), fornfdm::linops::internal::BinarySubtractionFO{}); 
 }; 
 
 template<
   typename LeftArg,
   typename RightArg, 
   typename = std::enable_if_t<
-    fdm::linops::internal::is_partialderiv_crtp<LeftArg>::value &&
-    fdm::linops::internal::is_partialderiv_crtp<RightArg>::value &&  
-    fdm::internal::is_matching<
+    fornfdm::linops::internal::is_partialderiv_crtp<LeftArg>::value &&
+    fornfdm::linops::internal::is_partialderiv_crtp<RightArg>::value &&  
+    fornfdm::internal::is_matching<
       typename linops::internal::traits<LeftArg>::node_selector_tag, 
       typename linops::internal::traits<RightArg>::node_selector_tag
     >::value &&  
@@ -187,10 +187,10 @@ template<
 >
 auto operator+(LeftArg&& lhs, RightArg&& rhs)
 {
-  return NwiseBinaryOp<fdm::linops::internal::BinaryAdditionFO, LeftArg, RightArg>(std::forward<LeftArg>(lhs), std::forward<RightArg>(rhs), fdm::linops::internal::BinaryAdditionFO{}); 
+  return NwiseBinaryOp<fornfdm::linops::internal::BinaryAdditionFO, LeftArg, RightArg>(std::forward<LeftArg>(lhs), std::forward<RightArg>(rhs), fornfdm::linops::internal::BinaryAdditionFO{}); 
 }; 
 
 } // end namespace linops 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // NwiseBinaryOp.hpp

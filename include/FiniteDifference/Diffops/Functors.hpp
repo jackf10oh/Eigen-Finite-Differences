@@ -4,10 +4,10 @@
 //
 // JAF 4/23/2026 
 
-#ifndef FDM_DIFFOPS_FUNCTORS_H
-#define FDM_DIFFOPS_FUNCTORS_H 
+#ifndef FORNFDM_DIFFOPS_FUNCTORS_H
+#define FORNFDM_DIFFOPS_FUNCTORS_H 
 
-namespace fdm{
+namespace fornfdm{
 namespace linops{
 namespace internal{
 
@@ -61,6 +61,6 @@ struct BinaryMultiplyFO
 
 } // end namespace internal 
 } // end namespace linops 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // Functors.hpp 

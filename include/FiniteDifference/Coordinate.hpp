@@ -7,10 +7,10 @@
 //
 // JAF 5/6/2026 
 
-#ifndef FDM_COORDINATE_H
-#define FDM_COORDINATE_H 
+#ifndef FORNFDM_COORDINATE_H
+#define FORNFDM_COORDINATE_H 
 
-namespace fdm{
+namespace fornfdm{
 
 class Mesh; 
 
@@ -19,7 +19,7 @@ template< std::size_t numDimsMax >
 struct Coordinate
 {
   // Member Data ------------------------------
-  std::array<fdm::Scalar, numDimsMax> values; 
+  std::array<fornfdm::Scalar, numDimsMax> values; 
 
   // Constructors ----------------------------
 
@@ -32,22 +32,22 @@ struct Coordinate
     : values{ {std::forward<Xs>(xs)...} }
   {
     static_assert(sizeof...(Xs)<=numDimsMax, "Must construct from <= numDimsMax in Coordinate"); 
-    static_assert((std::is_convertible_v<Xs, fdm::Scalar> && ...), "All args must be convertible to fdm::Scalar"); 
+    static_assert((std::is_convertible_v<Xs, fornfdm::Scalar> && ...), "All args must be convertible to fornfdm::Scalar"); 
   }
 
   // Member Functions ------------------------
   template<class Callable>
-  fdm::Scalar apply(const Callable& c) const; 
+  fornfdm::Scalar apply(const Callable& c) const; 
 
   template<class Callable, std::size_t... idxs>
-  fdm::Scalar apply_impl(const Callable& c, std::index_sequence<idxs...>) const; 
+  fornfdm::Scalar apply_impl(const Callable& c, std::index_sequence<idxs...>) const; 
 };
 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #include "Mesh.hpp"
 
-namespace fdm{ 
+namespace fornfdm{ 
 
 template<std::size_t numDimsMax>
 Coordinate<numDimsMax>::Coordinate(const Mesh* m, std::size_t row_idx)
@@ -66,9 +66,9 @@ Coordinate<numDimsMax>::Coordinate(const Mesh* m, std::size_t row_idx)
 
 template<std::size_t numDimsMax>
 template<class Callable>
-fdm::Scalar Coordinate<numDimsMax>::apply(const Callable& c) const 
+fornfdm::Scalar Coordinate<numDimsMax>::apply(const Callable& c) const 
 {
-  constexpr std::size_t N = fdm::internal::callable_traits<Callable>::arity;
+  constexpr std::size_t N = fornfdm::internal::callable_traits<Callable>::arity;
   if constexpr(N == 0){
     return c();
   }  
@@ -79,11 +79,11 @@ fdm::Scalar Coordinate<numDimsMax>::apply(const Callable& c) const
 
 template<std::size_t numDimsMax>
 template<class Callable, std::size_t... idxs>
-fdm::Scalar Coordinate<numDimsMax>::apply_impl(const Callable& c, std::index_sequence<idxs...>) const 
+fornfdm::Scalar Coordinate<numDimsMax>::apply_impl(const Callable& c, std::index_sequence<idxs...>) const 
 {
   return c(values[idxs]...); 
 }
 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif 

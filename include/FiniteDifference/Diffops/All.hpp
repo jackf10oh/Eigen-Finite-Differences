@@ -4,8 +4,8 @@
 // 
 // JAF 5/3/2026 
 
-#ifndef FDM_DIFFOPS_ALL_H
-#define FDM_DIFFOPS_ALL_H
+#ifndef FORNFDM_DIFFOPS_ALL_H
+#define FORNFDM_DIFFOPS_ALL_H
 
 #ifndef EIGEN_SPARSEMATRIXBASE_PLUGIN
   #define EIGEN_SPARSEMATRIXBASE_PLUGIN <FiniteDifference/EigenFdmPlugin.hpp> 

@@ -1,13 +1,13 @@
-// TExprTraits.hpp
+// Traits.hpp
 //
 // compile time traits for TExpr types 
 //
 // JAF 4/4/2026 
 
-#ifndef FDM_TEXPR_TRAITS_H
-#define FDM_TEXPR_TRAITS_H
+#ifndef FORNFDM_TEXPR_TRAITS_H
+#define FORNFDM_TEXPR_TRAITS_H
 
-namespace fdm{
+namespace fornfdm{
   namespace texprs{
 
 template<typename Derived, std::size_t N>
@@ -89,13 +89,13 @@ struct variadicFoldMaximum<i,trailing...>
 
 } // end namespace internal 
 
-// given a type T. detect if it returns a fdm::Real from coeffAt<>() or some other matrix expression. 
+// given a type T. detect if it returns a fornfdm::Real from coeffAt<>() or some other matrix expression. 
 namespace traits{
 
 template<typename TIMEDERIV_T>
 struct TimeDerivTraits
 {
-  using _coeffatreturntype_unclean_ = decltype(std::declval<TIMEDERIV_T>().template coeffAt<0,0>(std::declval<std::array<fdm::Real,0>>()));  
+  using _coeffatreturntype_unclean_ = decltype(std::declval<TIMEDERIV_T>().template coeffAt<0,0>(std::declval<std::array<fornfdm::Real,0>>()));  
   using CoeffAtReturnType = std::remove_cv_t<std::remove_reference_t<_coeffatreturntype_unclean_>>;
 }; 
 
@@ -107,7 +107,7 @@ struct coeffat_returns_real_impl<texprs::NthTimeDeriv<nthOrder>> : std::true_typ
 
 template<class Lhs, class Rhs>
 struct coeffat_returns_real_impl<texprs::CoeffMultExpr<Lhs,Rhs>> : std::conjunction<
-  std::is_convertible<decltype(std::declval<Lhs>() * fdm::Real()),fdm::Real>, 
+  std::is_convertible<decltype(std::declval<Lhs>() * fornfdm::Real()),fornfdm::Real>, 
   coeffat_returns_real_impl<std::remove_cv_t<std::remove_reference_t<Rhs>>>
 >{}; 
 
@@ -161,6 +161,6 @@ auto filter_tup(TUP_T&& tup)
 } // end namespace traits 
 
   } // end namespace texprs 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif 

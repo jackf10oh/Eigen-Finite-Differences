@@ -8,8 +8,8 @@
 //
 // JAF 5/7/2026 
 
-#ifndef FDM_OSTEPS_FORCINGTERM_H
-#define FDM_OSTEPS_FORCINGTERM_H
+#ifndef FORNFDM_OSTEPS_FORCINGTERM_H
+#define FORNFDM_OSTEPS_FORCINGTERM_H
 
 #include "../Traits.hpp" // callable_traits 
 #include "../Coordinate.hpp"
@@ -17,7 +17,7 @@
 #include "OStepBase.hpp" 
 #include "StepContexts.hpp"
 
-namespace fdm{
+namespace fornfdm{
 namespace osteps{
 
 template<class Callable>
@@ -44,19 +44,19 @@ class ForcingTerm : public OStepBase<ForcingTerm<Callable>>
 
     // Member Functions ---------------- 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecBeforeStep(fdm::StridedRef u, const TCtx& t, const Ctx& ctx) const 
+    void VecBeforeStep(fornfdm::StridedRef u, const TCtx& t, const Ctx& ctx) const 
     {
-      using Binded = typename fdm::internal::BindFirst<CallableCleaned>; 
+      using Binded = typename fornfdm::internal::BindFirst<CallableCleaned>; 
       if constexpr(STEP==StepType::Explicit)
       {
         // use left end point t[n]
-        auto xpr = fdm::make_Discretization(ctx.getMesh(), Binded(m_functor, t.now)); 
+        auto xpr = fornfdm::make_Discretization(ctx.getMesh(), Binded(m_functor, t.now)); 
         u += ctx.getExecutor()->getInvCoeff() * xpr; 
       }
       else if constexpr(STEP==StepType::Implicit)
       {
         // use midpoint (t[n] + t[n+1]) / 2  
-        auto xpr = fdm::make_Discretization(ctx.getMesh(), Binded(m_functor, (t.now+t.next)/2));
+        auto xpr = fornfdm::make_Discretization(ctx.getMesh(), Binded(m_functor, (t.now+t.next)/2));
         u += ctx.getExecutor()->getInvCoeff() * xpr; 
       }
     }
@@ -67,6 +67,6 @@ class ForcingTerm : public OStepBase<ForcingTerm<Callable>>
 }; 
 
 } // end namespace osteps 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // ForcingTerm.hpp 

@@ -13,14 +13,14 @@
 // 
 // JAF 3/21/2026 
 
-#ifndef FDM_OSTEPS_STEPCONTEXTS_H
-#define FDM_OSTEPS_STEPCONTEXTS_H
+#ifndef FORNFDM_OSTEPS_STEPCONTEXTS_H
+#define FORNFDM_OSTEPS_STEPCONTEXTS_H
 
 #include<cstddef>
 #include "../Types.hpp"
 #include "../Mesh.hpp"
 
-namespace fdm{
+namespace fornfdm{
   namespace osteps{    
 
 // namespace traits{
@@ -30,21 +30,21 @@ namespace fdm{
 template<typename C = void>
 struct TimeContext
 {
-  fdm::Real now; 
-  fdm::Real next; 
+  fornfdm::Real now; 
+  fornfdm::Real next; 
   std::shared_ptr<const C> container; 
-  TimeContext(fdm::Real t1=0.0, fdm::Real t2=0.0, std::shared_ptr<const C> c=nullptr)
+  TimeContext(fornfdm::Real t1=0.0, fornfdm::Real t2=0.0, std::shared_ptr<const C> c=nullptr)
     : now(t1), next(t2), container(c)
   {}
   TimeContext(const TimeContext& other)=delete; 
 }; 
 
-template<typename M = fdm::Mesh, typename X=void, typename R=void, typename S=void>
+template<typename M = fornfdm::Mesh, typename X=void, typename R=void, typename S=void>
 class Context
 {
   private:
     using MCleaned = std::remove_cv_t<std::remove_reference_t<M>>; 
-    static_assert(std::is_same<fdm::Mesh, MCleaned>::value, "shared_ptr<> passed to osteps::Context must point to Mesh or const Mesh");
+    static_assert(std::is_same<fornfdm::Mesh, MCleaned>::value, "shared_ptr<> passed to osteps::Context must point to Mesh or const Mesh");
 
     // Member Data --------------------------------------------
     const std::shared_ptr<M> m_mesh;
@@ -77,12 +77,12 @@ class Context
 
 // entry point functions
 template<typename C=void>
-auto make_time(fdm::Real t1=0.0, fdm::Real t2=0.0, std::shared_ptr<const C> c=nullptr){ return TimeContext(t1,t2,c); }; 
+auto make_time(fornfdm::Real t1=0.0, fornfdm::Real t2=0.0, std::shared_ptr<const C> c=nullptr){ return TimeContext(t1,t2,c); }; 
 
-template<typename M = fdm::Mesh, typename X=void, typename R=void, typename S=void>
+template<typename M = fornfdm::Mesh, typename X=void, typename R=void, typename S=void>
 auto make_context(std::shared_ptr<M> m=nullptr, X* x=nullptr, R* r=nullptr, S* s=nullptr){ return Context(m,x,r,s); }
 
   } // end namespace osteps 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // StepContexts.hpp 

@@ -14,7 +14,7 @@
 #include<FiniteDifference/Utilities/BumpFunc.hpp>
 #include<Eigen/SparseCore> // macro plugin takes effect. 
 
-using namespace fdm; 
+using namespace fornfdm; 
 
 using std::endl, std::cout; 
 
@@ -24,9 +24,9 @@ int main()
   std::cout << std::setprecision(3); 
   
   // Domain + Time  
-  fdm::solvers::SolverArgs args{
-    .mesh = make_Mesh(fdm::linspaced(41,-5.0,5.0), 2), 
-    .times = std::make_shared<const fdm::Vector>(fdm::linspaced(101,0.0,3.0))
+  fornfdm::solvers::SolverArgs args{
+    .mesh = make_Mesh(fornfdm::linspaced(41,-5.0,5.0), 2), 
+    .times = std::make_shared<const fornfdm::Vector>(fornfdm::linspaced(101,0.0,3.0))
   }; 
 
   // Initial Conditions  
@@ -37,8 +37,8 @@ int main()
   auto Utt = texprs::NthTimeDeriv<2>{}; 
 
   // RHS in space 
-  auto Uxx = linops::NthPartialDeriv<2,0,fdm::linops::Centered<5>>{}; 
-  auto Uyy = linops::NthPartialDeriv<2,1,fdm::linops::Centered<5>>{}; 
+  auto Uxx = linops::NthPartialDeriv<2,0,fornfdm::linops::Centered<5>>{}; 
+  auto Uyy = linops::NthPartialDeriv<2,1,fornfdm::linops::Centered<5>>{}; 
   auto expr = Uxx + Uyy; 
 
   // Boundary Conditions 
@@ -48,7 +48,7 @@ int main()
   osteps::BCList bcs(bc_pair,bc_pair); 
 
   // Forcing Terms 
-  fdm::utils::BumpFunc bump{.L = -1.0, .R = 1.0, .c =0.0, .h = std::sqrt(5), .focus=10}; 
+  fornfdm::utils::BumpFunc bump{.L = -1.0, .R = 1.0, .c =0.0, .h = std::sqrt(5), .focus=10}; 
   osteps::ForcingTerm forcing = [bump](double t, double x, double y)
   {
     return std::sin(6.28318*t) * bump(x) * bump(y);

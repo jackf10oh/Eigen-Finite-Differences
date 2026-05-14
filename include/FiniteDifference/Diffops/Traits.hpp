@@ -4,8 +4,8 @@
 //
 // JAF 4/14/2026 
 
-#ifndef FDM_DIFFOPS_TRAITS_H
-#define FDM_DIFFOPS_TRAITS_H
+#ifndef FORNFDM_DIFFOPS_TRAITS_H
+#define FORNFDM_DIFFOPS_TRAITS_H
 
 #include<cstdint>
 #include<string>
@@ -25,7 +25,7 @@
 
 // #include<Eigen/SparseCore> can't include before plugin macro takes effect! 
 
-namespace fdm{ 
+namespace fornfdm{ 
 namespace linops{
 
 // Forward Declarations ------------------------ 
@@ -118,10 +118,10 @@ template<class T>
 struct is_partialderiv_crtp_helper : std::false_type{}; 
 
 template<class T>
-struct is_partialderiv_crtp_helper<fdm::linops::PartialDerivBase<T>> : std::true_type{}; 
+struct is_partialderiv_crtp_helper<fornfdm::linops::PartialDerivBase<T>> : std::true_type{}; 
 
 template<class T>
-struct is_partialderiv_crtp_impl : std::disjunction<std::is_base_of<fdm::linops::PartialDerivBase<T>,T>, is_partialderiv_crtp_helper<T>>{}; 
+struct is_partialderiv_crtp_impl : std::disjunction<std::is_base_of<fornfdm::linops::PartialDerivBase<T>,T>, is_partialderiv_crtp_helper<T>>{}; 
 
 template<class T>
 using is_partialderiv_crtp = is_partialderiv_crtp_impl<std::remove_cv_t<std::remove_reference_t<T>>>; 
@@ -138,9 +138,9 @@ struct NestedStorage
 };
 
 template<class T>
-struct NestedStorage<T, std::void_t<decltype(fdm::linops::internal::traits<T>::is_linop)>>
+struct NestedStorage<T, std::void_t<decltype(fornfdm::linops::internal::traits<T>::is_linop)>>
 { 
-  using traits_t = typename fdm::linops::internal::traits<T>; 
+  using traits_t = typename fornfdm::linops::internal::traits<T>; 
   typedef typename std::conditional<
     (traits_t::is_linop && !traits_t::is_unarop && !traits_t::is_binop && !traits_t::is_ternop) && (std::is_lvalue_reference<T>::value),
     T,
@@ -162,6 +162,6 @@ struct promote_node_selector_type<T<min01>,T<min02>>
 {using type = T<std::max(min01,min02)>; }; 
 } // end namespace internal 
 } // end namespace linops 
-} // end namespace fdm
+} // end namespace fornfdm
 
 #endif // Traits.hpp (Diffops)

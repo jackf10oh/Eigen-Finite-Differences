@@ -5,13 +5,13 @@
 //
 // JAF 1/31/2026 
 
-#ifndef FDM_OSTEPS_OSTEPBASE_H
-#define FDM_OSTEPS_OSTEPBASE_H
+#ifndef FORNFDM_OSTEPS_OSTEPBASE_H
+#define FORNFDM_OSTEPS_OSTEPBASE_H
 
 #include "../Types.hpp"
 #include "StepContexts.hpp"
 
-namespace fdm{
+namespace fornfdm{
   namespace osteps{    
 
 enum class StepType{
@@ -28,17 +28,17 @@ struct OStepBase
     void BeforeLinAlgebra(const TCtx& t, Ctx& ctx){/* edit everything before linear algebra starts*/}
 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void MatBeforeStep(fdm::CSRMatrix& Mat, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
+    void MatBeforeStep(fornfdm::CSRMatrix& Mat, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
     
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecBeforeStep(fdm::StridedRef u, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
+    void VecBeforeStep(fornfdm::StridedRef u, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecAfterStep(fdm::StridedRef u, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
+    void VecAfterStep(fornfdm::StridedRef u, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
 
 }; 
 
   } // end namespace osteps 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // OStepBase.hpp

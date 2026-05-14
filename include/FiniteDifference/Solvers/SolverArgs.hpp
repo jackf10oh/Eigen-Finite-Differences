@@ -5,8 +5,8 @@
 //
 // JAF 3/4/2026 
 
-#ifndef FDM_SOLVERS_SOLVERARGS_H
-#define FDM_SOLVERS_SOLVERARGS_H
+#ifndef FORNFDM_SOLVERS_SOLVERARGS_H
+#define FORNFDM_SOLVERS_SOLVERARGS_H
 
 #include<memory>
 #include<vector>
@@ -14,7 +14,7 @@
 #include "../Types.hpp"
 #include "../Mesh.hpp"
 
-namespace fdm{
+namespace fornfdm{
   namespace solvers{ 
 
 template<class M, class Container>
@@ -30,12 +30,12 @@ struct SolverArgs
   // ! has to be atleast >= maxOrder + 1. 
   // where maxOrder is the highest order in the LHS time derivatives expression (texprs)  
   // defaulted to empty so it can be assigned later... 
-  std::vector<fdm::Vector> initialConditions = {};
+  std::vector<fornfdm::Vector> initialConditions = {};
 };
 
 // CTAD guideline ... 
 template<class M, class C>
-SolverArgs(std::shared_ptr<M>, std::shared_ptr<const C>, std::vector<fdm::Vector>)
+SolverArgs(std::shared_ptr<M>, std::shared_ptr<const C>, std::vector<fornfdm::Vector>)
   ->SolverArgs<M, C>; 
 
 template<class M, class C>
@@ -43,6 +43,6 @@ SolverArgs(std::shared_ptr<M>, std::shared_ptr<const C>)
   ->SolverArgs<M, C>; 
 
   } // end namespace solvers
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif /// SolverArgs.hpp 

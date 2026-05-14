@@ -5,13 +5,13 @@
 //
 // JAF 1/4/2026 
 
-#ifndef FDM_UTILS_PRINTVEC_H
-#define FDM_UTILS_PRINTVEC_H
+#ifndef FORNFDM_UTILS_PRINTVEC_H
+#define FORNFDM_UTILS_PRINTVEC_H
 
 #include<iostream>
 #include<Eigen/Core> 
 
-namespace fdm{
+namespace fornfdm{
   namespace utils{
 
 // from container with .begin() .end() 
@@ -81,6 +81,6 @@ void print_mat(const Cont2D& A, std::string comment="")
 }
 
   } // end namespace utils 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // PrintVec.hpp

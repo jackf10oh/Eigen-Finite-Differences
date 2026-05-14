@@ -6,15 +6,15 @@
 //
 // JAF 5/12/2026 
 
-#ifndef FDM_SOLVERS_SOLVERBASE_H
-#define FDM_SOLVERS_SOLVERBASE_H 
+#ifndef FORNFDM_SOLVERS_SOLVERBASE_H
+#define FORNFDM_SOLVERS_SOLVERBASE_H 
 
 #include"../Types.hpp" // Matrix, Vector
 #include "../OutsideSteps/OStepBase.hpp" // StepType 
 #include "SolverArgs.hpp"
 #include "SavePolicies.hpp"
 
-namespace fdm{
+namespace fornfdm{
   namespace solvers{
 
 template<typename Derived, typename LhsType, typename RhsType, typename OStepTup>
@@ -63,7 +63,7 @@ class SolverBase
     }
 
   protected:
-    template<fdm::osteps::StepType step, class TCtx, class Ctx>
+    template<fornfdm::osteps::StepType step, class TCtx, class Ctx>
     void tupleBeforeLinAlgebra(const TCtx& time_ctx, Ctx& ctx)
     {
         std::apply(
@@ -74,8 +74,8 @@ class SolverBase
         ); 
     }
 
-    template<fdm::osteps::StepType step, class TCtx, class Ctx>
-    void tupleMatBeforeStep(fdm::CSRMatrix& mat, const TCtx& time_ctx, const Ctx& ctx)
+    template<fornfdm::osteps::StepType step, class TCtx, class Ctx>
+    void tupleMatBeforeStep(fornfdm::CSRMatrix& mat, const TCtx& time_ctx, const Ctx& ctx)
     {
       std::apply(
         [&](auto&&... lam_args)
@@ -86,18 +86,18 @@ class SolverBase
       ); 
     }
 
-    template<fdm::osteps::StepType step, class TCtx, class Ctx>
-    void tupleVecBeforeStep(fdm::Vector& rhs_vector, const TCtx& time_ctx, const Ctx& ctx)
+    template<fornfdm::osteps::StepType step, class TCtx, class Ctx>
+    void tupleVecBeforeStep(fornfdm::Vector& rhs_vector, const TCtx& time_ctx, const Ctx& ctx)
     {
       // outside steps vector before step 
       std::apply(
-        [&](auto&&... lam_args){ ((lam_args.template VecBeforeStep<fdm::osteps::StepType::Explicit>(rhs_vector, time_ctx, ctx)), ...); }, 
+        [&](auto&&... lam_args){ ((lam_args.template VecBeforeStep<fornfdm::osteps::StepType::Explicit>(rhs_vector, time_ctx, ctx)), ...); }, 
         m_osteps
       ); 
     }
 
-    template<fdm::osteps::StepType step, class TCtx, class Ctx>
-    void tupleVecAfterStep(fdm::Vector solution_u, const TCtx& time_ctx, const Ctx& ctx)
+    template<fornfdm::osteps::StepType step, class TCtx, class Ctx>
+    void tupleVecAfterStep(fornfdm::Vector solution_u, const TCtx& time_ctx, const Ctx& ctx)
     {
       // outside steps solution after step(next_sol) 
       std::apply(
@@ -111,6 +111,6 @@ class SolverBase
 }; 
 
   } // end namespace solvers
-} // end namespace fdm
+} // end namespace fornfdm
 
 #endif // SolverBase.hpp 

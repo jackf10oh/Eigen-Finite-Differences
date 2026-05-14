@@ -5,18 +5,20 @@
 //
 // JAF 4/12/2026 
 
-#ifndef FDM_UTILS_LINEARINTERPOLATION_H
-#define FDM_UTILS_LINEARINTERPOLATION_H 
+#ifndef FORNFDM_UTILS_LINEARINTERPOLATION_H
+#define FORNFDM_UTILS_LINEARINTERPOLATION_H 
 
 #include<utility> // std::pair
 #include<algorithm> // std::lower_bound
 #include<iterator>
 
-namespace fdm{
+namespace fornfdm{
   namespace utils{
 
 template<typename Iterator>
-auto make_subinterval(typename std::iterator_traits<iterator>::value_type x, Iterator start, Iterator stop)
+auto make_subinterval(
+  typename std::iterator_traits<Iterator>::value_type x, 
+  Iterator start, Iterator stop)
 {
   // runtime checks 
   if(std::distance(start,stop) < 2) throw std::runtime_error("size of v < 2"); 
@@ -37,7 +39,7 @@ auto make_subinterval(typename std::iterator_traits<iterator>::value_type x, Ite
 
 template<typename DomainIterator, typename ValueIterator>
 auto linear_interpolation(
-  std::iterator_traits<DomainIterator>::value_type x, 
+  typename std::iterator_traits<DomainIterator>::value_type x, 
   DomainIterator d_start, DomainIterator d_stop, 
   ValueIterator v_start)
 {
@@ -54,7 +56,7 @@ auto linear_interpolation(
 
 template<typename DomainIterator, typename ValueType>
 ValueType linear_interpolation(
-  std::iterator_traits<DomainIterator>::value_type x, 
+  typename std::iterator_traits<DomainIterator>::value_type x, 
   DomainIterator d_start, DomainIterator d_stop,
   ValueType y1, ValueType y2)
 {
@@ -64,6 +66,6 @@ ValueType linear_interpolation(
 }
 
   } // end namespace utils 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // LinearInterpolation.hpp 

@@ -6,12 +6,12 @@
 //
 // JAF 1/15/2026 
 
-#ifndef FDM_TEXPRS_NTHTIMEDERIV_H
-#define FDM_TEXPRS_NTHTIMEDERIV_H
+#ifndef FORNFDM_TEXPRS_NTHTIMEDERIV_H
+#define FORNFDM_TEXPRS_NTHTIMEDERIV_H
 
 #include "TimeDerivBase.hpp"
 
-namespace fdm{
+namespace fornfdm{
 namespace texprs{
 
 // ===============================================================
@@ -40,6 +40,6 @@ class NthTimeDeriv : public texprs::TimeDerivBase<NthTimeDeriv<N>, N>
 }; 
 
 } // end namespace texprs 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // NthTimeDeriv.hpp

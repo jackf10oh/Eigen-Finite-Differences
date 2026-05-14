@@ -6,13 +6,13 @@
 //
 // 2/7/2026 
 
-#ifndef FDM_UTILS_BLOCKDIAGEXPR_H
-#define FDM_UTILS_BLOCKDIAGEXPR_H
+#ifndef FORNFDM_UTILS_BLOCKDIAGEXPR_H
+#define FORNFDM_UTILS_BLOCKDIAGEXPR_H
 
 #include<Eigen/Sparse>
 
 // Forward declarations ---------------------------------------------
-namespace fdm{
+namespace fornfdm{
   namespace utils{
 
 template<typename ArgTpe>
@@ -26,7 +26,7 @@ class BlockDiag;
 namespace Eigen {
 namespace internal {
 template<class ArgType>
-struct traits<fdm::utils::BlockDiag<ArgType> > {
+struct traits<fornfdm::utils::BlockDiag<ArgType> > {
   typedef Eigen::Sparse StorageKind;
   typedef Eigen::MatrixXpr XprKind;
   typedef typename ArgType::StorageIndex StorageIndex;
@@ -43,7 +43,7 @@ struct traits<fdm::utils::BlockDiag<ArgType> > {
 }  // namespace Eigen
 
 // expression class ======================================================================= 
-namespace fdm{
+namespace fornfdm{
   namespace utils{
 
 template<class ArgType>
@@ -72,16 +72,16 @@ class BlockDiag : public Eigen::SparseMatrixBase< BlockDiag<ArgType> > {
 };
 
   } // end namespace utils 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 // the evaluator =======================================================================
 namespace Eigen {
 namespace internal {
 template<typename ArgType>
-struct evaluator< fdm::utils::BlockDiag<ArgType> > : evaluator_base< fdm::utils::BlockDiag<ArgType> > {
+struct evaluator< fornfdm::utils::BlockDiag<ArgType> > : evaluator_base< fornfdm::utils::BlockDiag<ArgType> > {
 
   // typedefs -------------------------------------------------- 
-  typedef fdm::utils::BlockDiag<ArgType> XprType;
+  typedef fornfdm::utils::BlockDiag<ArgType> XprType;
   typedef typename nested_eval<ArgType, XprType::ColsAtCompileTime>::type ArgTypeNested;
   typedef typename remove_all<ArgTypeNested>::type ArgTypeNestedCleaned;
   typedef typename XprType::CoeffReturnType CoeffReturnType;
@@ -136,7 +136,7 @@ struct evaluator< fdm::utils::BlockDiag<ArgType> > : evaluator_base< fdm::utils:
 }  // namespace Eigen
 
 // the entry point ======================================================================= 
-namespace fdm{
+namespace fornfdm{
   namespace utils{
 
 template<class ArgType>
@@ -145,7 +145,7 @@ BlockDiag<ArgType> make_BlockDiag(const Eigen::SparseMatrixBase<ArgType>& arg, s
 }
 
   } // end namespace utils 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // BlockDiagExpr.hpp 
 

@@ -5,11 +5,11 @@
 //
 // JAF 4/12/2026 
 
-#ifndef FDM_SOLVERS_CRANKNICOLSONSOLVER_H
-#define FDM_SOLVERS_CRANKNICOLSONSOLVER_H
+#ifndef FORNFDM_SOLVERS_CRANKNICOLSONSOLVER_H
+#define FORNFDM_SOLVERS_CRANKNICOLSONSOLVER_H
 
 #include<Eigen/IterativeLinearSolvers> // BiCGSTAB sparse iterative solver  
-#include "../TExprs/TExprTraits.hpp" // check LHS is time derivatives 
+#include "../TExprs/Traits.hpp" // check LHS is time derivatives 
 #include "../TExprs/Executor.hpp" // marches through time 
 #include "../OutsideSteps/StepContexts.hpp"  // feed to outside steps tuple 
 #include "../OutsideSteps/OStepBase.hpp" // StepType scoped enumeration 
@@ -18,14 +18,14 @@
 #include "SolverArgs.hpp"
 #include "SavePolicies.hpp"
 
-namespace fdm{
+namespace fornfdm{
   namespace solvers{ 
 
 template<
   typename LhsType, 
   typename RhsType, 
   typename OStepTup, 
-  class SparseIterativeSolver=Eigen::BiCGSTAB<fdm::CSRMatrix>
+  class SparseIterativeSolver=Eigen::BiCGSTAB<fornfdm::CSRMatrix>
 >
 class CrankNicolsonSolver : public SolverBase<CrankNicolsonSolver<LhsType, RhsType, OStepTup, SparseIterativeSolver>, LhsType, RhsType, OStepTup>
 {
@@ -50,7 +50,7 @@ class CrankNicolsonSolver : public SolverBase<CrankNicolsonSolver<LhsType, RhsTy
     )
       : Base(l_init, r_init, std::move(ostep_init)), m_iterative_solver(std::move(s_init))
     {
-      static_assert(std::is_same_v<typename SparseIterativeSolver::MatrixType, fdm::CSRMatrix>, "must use iterative solver on fmd::Matrix"); 
+      static_assert(std::is_same_v<typename SparseIterativeSolver::MatrixType, fornfdm::CSRMatrix>, "must use iterative solver on fmd::Matrix"); 
     }
 
     // not copyable! 
@@ -71,11 +71,11 @@ class CrankNicolsonSolver : public SolverBase<CrankNicolsonSolver<LhsType, RhsTy
     {
       // setup time context 
       auto it = std::next(args.times->cbegin(), args.initialConditions.size()-1); 
-      auto time_ctx = fdm::osteps::make_time(*it, 0.0, std::move(args.times));
+      auto time_ctx = fornfdm::osteps::make_time(*it, 0.0, std::move(args.times));
       ++it; 
 
       // setup executor 
-      auto executor = fdm::texprs::make_Executor(this->m_lhs); 
+      auto executor = fornfdm::texprs::make_Executor(this->m_lhs); 
       executor.pushTimeRange(time_ctx.container->cbegin(), it); 
       auto sol_end = executor.pushSolutionRange(args.initialConditions.begin(), args.initialConditions.end()); 
       for(auto sol_it=args.initialConditions.begin(); sol_it != sol_end; ++sol_it)
@@ -85,22 +85,22 @@ class CrankNicolsonSolver : public SolverBase<CrankNicolsonSolver<LhsType, RhsTy
       }
 
       // set up operators. 
-      fdm::utils::RowMajorIdentity identity(0,0); // will resize later  
+      fornfdm::utils::RowMajorIdentity identity(0,0); // will resize later  
       this->m_rhs.setMesh(args.mesh); 
       executor.setMesh(args.mesh); 
 
       // set up context 
-      auto ctx = fdm::osteps::make_context(std::move(args.mesh), &executor, &(this->m_rhs), this); 
+      auto ctx = fornfdm::osteps::make_context(std::move(args.mesh), &executor, &(this->m_rhs), this); 
 
       // store allocated memory between steps in solver hot loop  
-      fdm::CSRMatrix stencil; 
-      fdm::CSRMatrix linop_untouched; 
-      fdm::Vector rhs_vector;  
-      fdm::Vector solution_u;  
+      fornfdm::CSRMatrix stencil; 
+      fornfdm::CSRMatrix linop_untouched; 
+      fornfdm::Vector rhs_vector;  
+      fornfdm::Vector solution_u;  
 
       // need to get first linop at time.now before it caches the next time steps... 
       
-      if constexpr(fdm::linops::internal::traits<RhsType>::is_timedep){
+      if constexpr(fornfdm::linops::internal::traits<RhsType>::is_timedep){
         this->m_rhs.setTime(time_ctx.now); 
       }
       linop_untouched = 0.5 * (this->m_rhs.toEigen()); 
@@ -116,16 +116,16 @@ class CrankNicolsonSolver : public SolverBase<CrankNicolsonSolver<LhsType, RhsTy
         executor.calculate(0.5 * (time_ctx.now + time_ctx.next)); 
 
         // outside steps before any type of linear algebra is performed... 
-        this->template tupleBeforeLinAlgebra<fdm::osteps::StepType::Implicit>(time_ctx,ctx);
+        this->template tupleBeforeLinAlgebra<fornfdm::osteps::StepType::Implicit>(time_ctx,ctx);
 
         // store the expression into a vector 
         rhs_vector = (executor.getInvCoeff() * (linop_untouched * executor.getCurrentSolution())) + executor.getRhsExpression(); 
 
         // outside steps vector before step 
-        this->template tupleVecBeforeStep<fdm::osteps::StepType::Implicit>(rhs_vector, time_ctx, ctx);  
+        this->template tupleVecBeforeStep<fornfdm::osteps::StepType::Implicit>(rhs_vector, time_ctx, ctx);  
         
         // store the matrix into stencil 
-        if constexpr(fdm::linops::internal::traits<RhsType>::is_timedep){
+        if constexpr(fornfdm::linops::internal::traits<RhsType>::is_timedep){
           // set the operator to the right side of the step [t(n), t(n+1)] for implicit steps 
           this->m_rhs.setTime(time_ctx.next); 
           // should build an autonomous solver for these linops, since it evaluate the 
@@ -138,14 +138,14 @@ class CrankNicolsonSolver : public SolverBase<CrankNicolsonSolver<LhsType, RhsTy
         stencil = identity - executor.getInvCoeff() * linop_untouched; 
         
         // outside steps matrix before step
-        this->template tupleMatBeforeStep<fdm::osteps::StepType::Implicit>(stencil, time_ctx, ctx); 
+        this->template tupleMatBeforeStep<fornfdm::osteps::StepType::Implicit>(stencil, time_ctx, ctx); 
 
         // Implicit Step (I - D(t+1))*U(n+1) = rhs 
         m_iterative_solver->compute(stencil); 
         solution_u = m_iterative_solver->solveWithGuess(rhs_vector,rhs_vector);
         
         // outside steps solution after step(next_sol) 
-        this->template tupleVecAfterStep<fdm::osteps::StepType::Implicit>(solution_u, time_ctx, ctx); 
+        this->template tupleVecAfterStep<fornfdm::osteps::StepType::Implicit>(solution_u, time_ctx, ctx); 
 
         // save oldest solution before it goes 
         save_policy.saveSolution(executor.getExpiringSolution()); 
@@ -166,10 +166,10 @@ class CrankNicolsonSolver : public SolverBase<CrankNicolsonSolver<LhsType, RhsTy
   
 }; 
 
-template<typename L, typename R, typename O, class S=Eigen::BiCGSTAB<fdm::CSRMatrix>>
+template<typename L, typename R, typename O, class S=Eigen::BiCGSTAB<fornfdm::CSRMatrix>>
 using CNSolver = CrankNicolsonSolver<L,R,O,S>; 
 
   } // end namespace solvers
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // CrankNicolsonSolver.hpp 

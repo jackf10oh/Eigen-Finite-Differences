@@ -5,8 +5,8 @@
 //
 // JAF 4/3/2026
 
-#ifndef FDM_UTILS_FORNBERGSTACKCALC_H
-#define FDM_UTILS_FORNBERGSTACKCALC_H
+#ifndef FORNFDM_UTILS_FORNBERGSTACKCALC_H
+#define FORNFDM_UTILS_FORNBERGSTACKCALC_H
 
 #include<cmath>
 #include<cassert>
@@ -15,7 +15,7 @@
 #include<iostream> 
 #include "Fornberg2.hpp" // actual implementation of algorithm 
 
-namespace fdm{
+namespace fornfdm{
   namespace utils{
 
 // stateful Fornberg weight calculator. owns a fixed size array  
@@ -27,7 +27,7 @@ class FornbergStackCalc
     static constexpr std::size_t order = N;                // maximum order of derivative stencil  
     static constexpr std::size_t numNodesMax = M;              // number of nodes to use in approximation
   private:
-    std::array<fdm::Scalar, M*(N+1)> m_arr;          // single allocation of memory rows*cols big 
+    std::array<fornfdm::Scalar, M*(N+1)> m_arr;          // single allocation of memory rows*cols big 
     std::size_t m_nodes_used; // stores how many nodes were actually used in the algorithm
   public:
     // Constructors + Destructor =========================================================
@@ -37,7 +37,7 @@ class FornbergStackCalc
     }
     
     template<typename Iter>
-    FornbergStackCalc(fdm::Scalar x_bar, Iter start, Iter end)
+    FornbergStackCalc(fornfdm::Scalar x_bar, Iter start, Iter end)
     { 
       static_assert(M >= N + 1, "FornbergArrayCalc requires NUM_NODES >= ORDER + 1"); 
       calculate(x_bar,start,end); 
@@ -56,17 +56,17 @@ class FornbergStackCalc
 
     // Updates m_arr to contain weights up to order n
     template<typename Iter>
-    void calculate(fdm::Scalar x_bar, Iter start, Iter end)
+    void calculate(fornfdm::Scalar x_bar, Iter start, Iter end)
     {
       // make sure distance(start,end) <= numNodesMax 
       auto d = std::distance(start,end); 
       assert((d <= numNodesMax) && "FornbergStackCalc error: distance(start,end) > numNodesMax");  
       m_nodes_used = d; 
-      fdm::utils::fornberg2(start,end,x_bar,order,m_arr.begin()); 
+      fornfdm::utils::fornberg2(start,end,x_bar,order,m_arr.begin()); 
     }
 };
 
   } // end namespace utils 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // FornbergArrayCalc.hpp

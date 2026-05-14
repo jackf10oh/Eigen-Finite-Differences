@@ -6,13 +6,13 @@
 //
 // JAF 5/8/2026 
 
-#ifndef FDM_UTILS_FORNBERG2_H
-#define FDM_UTILS_FORNBERG2_H
+#ifndef FORNFDM_UTILS_FORNBERG2_H
+#define FORNFDM_UTILS_FORNBERG2_H
 
 #include<cassert>
 #include<iterator> 
 
-namespace fdm{
+namespace fornfdm{
 namespace utils{
 
 template<class ForwardItIn, class BidItOut>

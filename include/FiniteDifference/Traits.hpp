@@ -1,11 +1,11 @@
 // Traits.hpp
 //
-// traits used by all subdirectory of fdm library 
+// traits used by all subdirectory of fornfdm library 
 //
 // JAF 4/14/2026 
 
-#ifndef FDM_TRAITS_H
-#define FDM_TRAITS_H
+#ifndef FORNFDM_TRAITS_H
+#define FORNFDM_TRAITS_H
 
 #include<cstdint>
 #include<string>
@@ -22,7 +22,7 @@
 // #include<Eigen/SparseCore> can't include before plugin macro takes effect! 
 #include "Types.hpp"
 
-namespace fdm{ 
+namespace fornfdm{ 
 namespace internal{
 
 // traits around a callable type F ---------------------------------------- 
@@ -35,8 +35,8 @@ struct callable_traits<ReturnType(ClassType::*)(Args...)>
 {
   static constexpr std::size_t arity = sizeof...(Args); 
   static constexpr bool maps_scalars_to_scalar = std::conjunction_v<
-    std::is_convertible<ReturnType, fdm::Scalar>, 
-    std::is_convertible<fdm::Scalar, Args>
+    std::is_convertible<ReturnType, fornfdm::Scalar>, 
+    std::is_convertible<fornfdm::Scalar, Args>
     ...
   >; 
 }; 
@@ -47,8 +47,8 @@ struct callable_traits<ReturnType(ClassType::*)(Args...) const>
 {
   static constexpr std::size_t arity = sizeof...(Args); 
   static constexpr bool maps_scalars_to_scalar = std::conjunction_v<
-    std::is_convertible<ReturnType, fdm::Scalar>, 
-    std::is_convertible<fdm::Scalar, Args>
+    std::is_convertible<ReturnType, fornfdm::Scalar>, 
+    std::is_convertible<fornfdm::Scalar, Args>
     ...
   >; 
 }; 
@@ -99,6 +99,6 @@ template<class A, class B>
 using is_matching = is_matching_impl<std::remove_cv_t<std::remove_reference_t<A>>, std::remove_cv_t<std::remove_reference_t<B>>>; 
 
 } // end namespace internal 
-} // end namespace fdm
+} // end namespace fornfdm
 
 #endif // Traits.hpp 

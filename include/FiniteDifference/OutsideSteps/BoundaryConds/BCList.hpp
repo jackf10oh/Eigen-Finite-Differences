@@ -5,8 +5,8 @@
 //
 // JAF 2/1/2026  
 
-#ifndef FDM_OSTEPS_BCLIST_H
-#define FDM_OSTEPS_BCLIST_H
+#ifndef FORNFDM_OSTEPS_BCLIST_H
+#define FORNFDM_OSTEPS_BCLIST_H
 
 #include<cassert>
 #include<tuple>
@@ -20,7 +20,7 @@
 #include "../OStepBase.hpp"
 #include "BCPair.hpp"
 
-namespace fdm{
+namespace fornfdm{
   namespace osteps{
 
 template<typename... BCPairs_Ts>
@@ -48,7 +48,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
     // member data. -------------------------------------------------
     // list of boundary conditions. 1 per Dimension 
     std::tuple< std::remove_reference_t<BCPairs_Ts>... > m_bcs_list; 
-    using MATS_T = decltype(make_repeat_tuple<fdm::CSRMatrix>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{})); 
+    using MATS_T = decltype(make_repeat_tuple<fornfdm::CSRMatrix>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{})); 
     MATS_T m_mats; 
     
   public:
@@ -63,12 +63,12 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
     >
     BCList(BCPairs_Ts... args) 
       : m_bcs_list(args...), 
-      m_mats(make_repeat_tuple<fdm::CSRMatrix>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{}))
+      m_mats(make_repeat_tuple<fornfdm::CSRMatrix>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{}))
     { 
-      // reserves 10 entries inside of a fdm::Matrix
+      // reserves 10 entries inside of a fornfdm::Matrix
       auto reserve_lam = [](auto& mat){mat.reserve(10);}; 
 
-      // go through each fdm::Matrix and reserve 10 entries
+      // go through each fornfdm::Matrix and reserve 10 entries
       std::apply(
         [&](auto&... mats){ ((reserve_lam(mats)), ...); }, 
         m_mats
@@ -82,7 +82,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
 
     // Member Funcs =================================================
     template<StepType STEP, typename TIMECTX = TimeContext<>, typename CONSTCTX = Context<> >
-    void MatBeforeStep(fdm::CSRMatrix& Mat, const TIMECTX& t = {}, const CONSTCTX& ctx = {})
+    void MatBeforeStep(fornfdm::CSRMatrix& Mat, const TIMECTX& t = {}, const CONSTCTX& ctx = {})
     {      
       // check args are compaitble 
       assert((ctx.getMesh()->numDims() == sizeof...(BCPairs_Ts)) && "BCList MatBeforeStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
@@ -100,12 +100,12 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
         std::get<0>(m_bcs_list).m_right.SetStencilR(t.next,ctx.getMesh()->getAxis(0), std::get<0>(m_mats));  
 
         decltype(auto) mask = make_overwrite_mask(ctx.getMesh(), std::make_index_sequence<N>{}); 
-        fdm::utils::overwrite_stencil(Mat, mask); 
+        fornfdm::utils::overwrite_stencil(Mat, mask); 
       }
     } // end MatBeforeStep 
 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecBeforeStep(fdm::StridedRef u, const TCtx& t, const Ctx& ctx)
+    void VecBeforeStep(fornfdm::StridedRef u, const TCtx& t, const Ctx& ctx)
     {
       // check args are compaitble 
       auto mesh = ctx.getMesh(); 
@@ -164,7 +164,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
     } // end VecBeforeStep 
 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecAfterStep(fdm::StridedRef u, const TCtx& t, const Ctx& ctx)
+    void VecAfterStep(fornfdm::StridedRef u, const TCtx& t, const Ctx& ctx)
     {
       
       auto mesh = ctx.getMesh(); // get the MeshXD 
@@ -226,7 +226,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
   private:
     // Unreachable =========================================================== 
     template<std::size_t Idx>
-    void flat_stencil(fdm::Real t, const fdm::Mesh* m)
+    void flat_stencil(fornfdm::Real t, const fornfdm::Mesh* m)
     {
       // !!! uses first entry in m_mats as temp storage !!! 
       if constexpr( Idx > 0 ){
@@ -244,34 +244,34 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
         std::get<Idx>(m_bcs_list).m_right.SetStencilR(t,mesh,std::get<0>(m_mats));
 
         // copy values from "bottom" row into "top" row. 
-        fdm::CSRMatrix::InnerIterator it(std::get<0>(m_mats),0); 
+        fornfdm::CSRMatrix::InnerIterator it(std::get<0>(m_mats),0); 
         for(; it; ++it) std::get<Idx>(m_mats).coeffRef(it.row(),it.col()) = it.value();  
       }
     }
 
     template<std::size_t... Is>
-    void prepare_flat_stencils(fdm::Real t, const fdm::Mesh* m, std::index_sequence<Is...>){
+    void prepare_flat_stencils(fornfdm::Real t, const fornfdm::Mesh* m, std::index_sequence<Is...>){
       (flat_stencil<Is>(t,m), ...); 
     } 
 
     template<std::size_t Idx>
-    auto highdim_stencil(const fdm::Mesh* m)
+    auto highdim_stencil(const fornfdm::Mesh* m)
     {
       if constexpr(Idx == 0){
         // first matrix just gets kronecker product into high dim.
-        return fdm::utils::make_BlockDiag(std::get<Idx>(m_mats), m->sizesMiddleProduct(1, sizeof...(BCPairs_Ts))); 
+        return fornfdm::utils::make_BlockDiag(std::get<Idx>(m_mats), m->sizesMiddleProduct(1, sizeof...(BCPairs_Ts))); 
       }
       else{
         // other dimensions have to be taken 
         // flat stencil -> sparse diag (repeats) -> kronecker product 
         std::size_t s1 = m->sizesMiddleProduct(0, Idx);
         std::size_t s2 = m->sizesMiddleProduct(Idx+1, sizeof...(BCPairs_Ts)); 
-        return fdm::utils::make_BlockDiag(fdm::utils::make_SparseDiag<fdm::utils::SparseDiagPattern::REPEAT>(std::get<Idx>(m_mats), s1), s2); 
+        return fornfdm::utils::make_BlockDiag(fornfdm::utils::make_SparseDiag<fornfdm::utils::SparseDiagPattern::REPEAT>(std::get<Idx>(m_mats), s1), s2); 
       }
     }
 
     template<std::size_t... Is>
-    decltype(auto) make_overwrite_mask(const fdm::Mesh* m, std::index_sequence<Is...>)
+    decltype(auto) make_overwrite_mask(const fornfdm::Mesh* m, std::index_sequence<Is...>)
     {
       if constexpr(sizeof...(Is)==1)
       {
@@ -279,13 +279,13 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
       }
       else
       {
-        return fdm::utils::make_FillRow_fold( highdim_stencil<Is>(m) ...); 
+        return fornfdm::utils::make_FillRow_fold( highdim_stencil<Is>(m) ...); 
       }
     }
 }; // end class BCList 
 
   } // end namespace osteps
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // BCList.hpp 
 

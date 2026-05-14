@@ -1,13 +1,13 @@
 // Interpolator.hpp
 //
-// Lazy calculator that uses a one of fdm's solvers 
+// Lazy calculator that uses a one of fornfdm's solvers 
 // to write solutions at each time step into a stored vector
 // and later interpolate any point  in time + space 
 //
 // JAF 4/12/2026 
 
-#ifndef FDM_SOLVERS_INTERPOLATOR_H
-#define FDM_SOLVERS_INTERPOLATOR_H
+#ifndef FORNFDM_SOLVERS_INTERPOLATOR_H
+#define FORNFDM_SOLVERS_INTERPOLATOR_H
 
 #include<cassert>
 #include<memory>
@@ -18,7 +18,7 @@
 
 #include "ImplicitSolver.hpp"
 
-namespace fdm{
+namespace fornfdm{
   namespace solvers{ 
 
 template<
@@ -31,7 +31,7 @@ class Interpolator
     // Type Defs ----------------------------- 
     struct BackInserterSaver
     {
-      std::vector<fdm::Vector>& m_vec; 
+      std::vector<fornfdm::Vector>& m_vec; 
       BackInserterSaver()=delete; 
       BackInserterSaver(std::vector<Eigen::VectorXd>& v_init) : m_vec(v_init){}; 
       void saveSolution(Eigen::VectorXd sol){ m_vec.emplace_back(std::move(sol)); }; 
@@ -41,7 +41,7 @@ class Interpolator
     // Member Data ------------------------------
     std::vector<Eigen::VectorXd> m_data; 
     StoredSolver m_solver; 
-    SolverArgs<const fdm::Mesh,C> m_args; 
+    SolverArgs<const fornfdm::Mesh,C> m_args; 
     bool m_calculated; 
 
   public: 
@@ -51,7 +51,7 @@ class Interpolator
     Interpolator()=delete; 
 
     // from solver + args 
-    Interpolator(StoredSolver s, SolverArgs<const fdm::Mesh,const C> args = {})
+    Interpolator(StoredSolver s, SolverArgs<const fornfdm::Mesh,const C> args = {})
       : m_data(0), 
       m_args(std::move(args)), 
       m_solver(std::move(s)),
@@ -83,7 +83,7 @@ class Interpolator
     const auto& getArgs() const { return m_args; }; 
 
     // set m_args to a new input
-    void setArgs(SolverArgs<const fdm::Mesh,const C> args_switch)
+    void setArgs(SolverArgs<const fornfdm::Mesh,const C> args_switch)
     {
       m_args = std::move(args_switch); 
       clearStoredSolutions(); 
@@ -113,18 +113,18 @@ class Interpolator
 
     // get value of Solution at any point t,{x1,x2,...xn} in time/space 
     template<std::size_t numDimsMax>
-    fdm::Scalar solAt(fdm::Real t, const fdm::Coordinate<numDimsMax>& coords){
+    fornfdm::Scalar solAt(fornfdm::Real t, const fornfdm::Coordinate<numDimsMax>& coords){
       assert((numDimsMax == m_args.mesh->numDims()) && "error in Interpolator.solAt() : # of dims in coordinate must == # of dims in stored mesh");
       // if m_data is empty... 
       if(!m_calculated) fillStoredSolutions(); 
 
       // find index in m_args.times
-      auto time_interval = fdm::utils::make_subinterval(t, m_args.times->cbegin(), m_args.times->cend());
+      auto time_interval = fornfdm::utils::make_subinterval(t, m_args.times->cbegin(), m_args.times->cend());
       auto offset = std::distance(m_args.times->cbegin(), time_interval.first); 
 
       // find left / right value in linear interpolation 
-      fdm::Scalar y1 =  interpolateSolution(coords.values, m_data[offset].cbegin(), m_data[offset].cend()); 
-      fdm::Scalar y2 =  interpolateSolution(coords.values, m_data[offset+1].cbegin(), m_data[offset+1].cend());
+      fornfdm::Scalar y1 =  interpolateSolution(coords.values, m_data[offset].cbegin(), m_data[offset].cend()); 
+      fornfdm::Scalar y2 =  interpolateSolution(coords.values, m_data[offset+1].cbegin(), m_data[offset+1].cend());
       
       // linear interpolation (t-t1) * (y2 - y1) / (t2 - t1) 
       return y1 + (t - *time_interval.first) * (y2 - y1) / (*time_interval.second - *time_interval.first); 
@@ -133,28 +133,28 @@ class Interpolator
   private:
     // Unreachable ----------------------------------------------------
     template<typename Container, typename Iterator>
-    fdm::Scalar interpolateSolution(const Container& coords, Iterator start, Iterator stop)
+    fornfdm::Scalar interpolateSolution(const Container& coords, Iterator start, Iterator stop)
     {
       return LinearInterp_recursive_impl(coords, start, stop, m_args.mesh, coords.size()-1);
     }; 
 
     template<typename Container, typename Iterator>
-    fdm::Scalar LinearInterp_recursive_impl(
+    fornfdm::Scalar LinearInterp_recursive_impl(
       const Container& coords, 
       Iterator start, 
       Iterator stop,  
-      const std::shared_ptr<const fdm::Mesh>& m,
+      const std::shared_ptr<const fornfdm::Mesh>& m,
       std::size_t ith_dim,
       std::size_t cumulative_offset = 0)
     {
       const auto& sub_dim_m = m->getAxis(ith_dim); 
-      auto subinterval = fdm::utils::make_subinterval(coords[ith_dim], sub_dim_m.cbegin(), sub_dim_m.cend());  
+      auto subinterval = fornfdm::utils::make_subinterval(coords[ith_dim], sub_dim_m.cbegin(), sub_dim_m.cend());  
 
       if(ith_dim == 0){
         std::size_t final_offset = cumulative_offset + std::distance(sub_dim_m.cbegin(), subinterval.first); 
         auto it = std::next(start, final_offset); 
-        fdm::Scalar y1 = *it; ++it; 
-        fdm::Scalar y2 = *it; 
+        fornfdm::Scalar y1 = *it; ++it; 
+        fornfdm::Scalar y2 = *it; 
         // result = y1 + (c-x1) * (y2-y1) / (x2-x1)
         return y1 + (y2-y1) * (coords[ith_dim] - *subinterval.first) / (*subinterval.second - *subinterval.first);  
       }
@@ -162,8 +162,8 @@ class Interpolator
         std::size_t stride = m->sizesMiddleProduct(0,ith_dim); 
         std::size_t idx = std::distance(sub_dim_m.cbegin(), subinterval.first); 
         std::size_t next_offset = cumulative_offset + stride * (idx); 
-        fdm::Scalar y1 = LinearInterp_recursive_impl(coords, start, stop, m, ith_dim-1, next_offset); 
-        fdm::Scalar y2 = LinearInterp_recursive_impl(coords, start, stop, m, ith_dim-1, next_offset + stride);
+        fornfdm::Scalar y1 = LinearInterp_recursive_impl(coords, start, stop, m, ith_dim-1, next_offset); 
+        fornfdm::Scalar y2 = LinearInterp_recursive_impl(coords, start, stop, m, ith_dim-1, next_offset + stride);
         // result = y1 + (c-x1) * (y2-y1) / (x2-x1)
         return y1 + (y2 - y1) * (coords[ith_dim] - *subinterval.first) / (*subinterval.second - *subinterval.first); 
       }
@@ -172,7 +172,7 @@ class Interpolator
 }; 
 
   } // end namespace solvers
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // Interpolator.hpp
 

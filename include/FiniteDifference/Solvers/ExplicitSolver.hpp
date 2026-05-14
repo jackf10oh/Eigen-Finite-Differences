@@ -9,10 +9,10 @@
 //
 // JAF 3/4/2026 
 
-#ifndef FDM_SOLVERS_EXPLICITSOLVER_H
-#define FDM_SOLVERS_EXPLICITSOLVER_H
+#ifndef FORNFDM_SOLVERS_EXPLICITSOLVER_H
+#define FORNFDM_SOLVERS_EXPLICITSOLVER_H
 
-#include "../TExprs/TExprTraits.hpp" // check LHS is time derivatives 
+#include "../TExprs/Traits.hpp" // check LHS is time derivatives 
 #include "../TExprs/Executor.hpp" // marches through time 
 #include "../OutsideSteps/StepContexts.hpp"  // feed to outside steps tuple 
 #include "../OutsideSteps/OStepBase.hpp" // StepType scoped enumeration 
@@ -20,7 +20,7 @@
 #include "SolverArgs.hpp"
 #include "SavePolicies.hpp"
 
-namespace fdm{
+namespace fornfdm{
   namespace solvers{ 
 
 template<typename LhsType, typename RhsType, typename OStepTup>
@@ -54,11 +54,11 @@ class ExplicitSolver : public SolverBase<ExplicitSolver<LhsType, RhsType, OStepT
     {
       // setup time context 
       auto it = std::next(args.times->cbegin(), args.initialConditions.size()-1); 
-      auto time_ctx = fdm::osteps::make_time(*it, 0.0, std::move(args.times));
+      auto time_ctx = fornfdm::osteps::make_time(*it, 0.0, std::move(args.times));
       ++it; 
 
       // setup executor 
-      auto executor = fdm::texprs::make_Executor(this->m_lhs); 
+      auto executor = fornfdm::texprs::make_Executor(this->m_lhs); 
       executor.pushTimeRange(time_ctx.container->cbegin(), it); 
       auto sol_end = executor.pushSolutionRange(args.initialConditions.begin(), args.initialConditions.end()); 
       for(auto sol_it=args.initialConditions.begin(); sol_it != sol_end; ++sol_it)
@@ -72,12 +72,12 @@ class ExplicitSolver : public SolverBase<ExplicitSolver<LhsType, RhsType, OStepT
       executor.setMesh(args.mesh); 
 
       // set up context 
-      auto ctx = fdm::osteps::make_context(std::move(args.mesh), &executor, &(this->m_rhs), this); 
+      auto ctx = fornfdm::osteps::make_context(std::move(args.mesh), &executor, &(this->m_rhs), this); 
 
       // store allocated memory between steps in solver hot loop  
-      fdm::CSRMatrix stencil; 
-      fdm::Vector rhs_vector;  
-      fdm::Vector solution_u;  
+      fornfdm::CSRMatrix stencil; 
+      fornfdm::Vector rhs_vector;  
+      fornfdm::Vector solution_u;  
 
       // hot loop through times
       auto end = time_ctx.container->cend();
@@ -85,7 +85,7 @@ class ExplicitSolver : public SolverBase<ExplicitSolver<LhsType, RhsType, OStepT
       { 
         time_ctx.next = *it; 
 
-        if constexpr(fdm::linops::internal::traits<RhsType>::is_timedep){
+        if constexpr(fornfdm::linops::internal::traits<RhsType>::is_timedep){
           // set the operator to the left side of the step [t(n), t(n+1)] for explicit steps 
           this->m_rhs.setTime(time_ctx.now); 
           // should build an autonomous solver for these linops, since it evaluate the 
@@ -98,25 +98,25 @@ class ExplicitSolver : public SolverBase<ExplicitSolver<LhsType, RhsType, OStepT
         executor.calculate(time_ctx.now); 
 
         // outside steps before any type of linear algebra is performed... 
-        this->template tupleBeforeLinAlgebra<fdm::osteps::StepType::Explicit>(time_ctx,ctx); 
+        this->template tupleBeforeLinAlgebra<fornfdm::osteps::StepType::Explicit>(time_ctx,ctx); 
         
         // store the matrix into stencil 
         stencil = executor.getInvCoeff() * this->m_rhs.toEigen();
         
         // outside steps matrix before step
-        this->template tupleMatBeforeStep<fdm::osteps::StepType::Explicit>(stencil, time_ctx, ctx); 
+        this->template tupleMatBeforeStep<fornfdm::osteps::StepType::Explicit>(stencil, time_ctx, ctx); 
 
         // store the expression into a vector 
         rhs_vector = executor.getRhsExpression(); 
 
         // outside steps vector before step 
-        this->template tupleVecBeforeStep<fdm::osteps::StepType::Explicit>(rhs_vector, time_ctx, ctx); 
+        this->template tupleVecBeforeStep<fornfdm::osteps::StepType::Explicit>(rhs_vector, time_ctx, ctx); 
 
         // Explicit Step 
         solution_u = stencil * executor.getCurrentSolution() + rhs_vector; 
         
         // outside steps solution after step(next_sol) 
-        this->template tupleVecAfterStep<fdm::osteps::StepType::Explicit>(solution_u, time_ctx, ctx); 
+        this->template tupleVecAfterStep<fornfdm::osteps::StepType::Explicit>(solution_u, time_ctx, ctx); 
 
         // save oldest solution before it goes 
         save_policy.saveSolution(executor.getExpiringSolution()); 
@@ -138,6 +138,6 @@ class ExplicitSolver : public SolverBase<ExplicitSolver<LhsType, RhsType, OStepT
 }; 
 
   } // end namespace solvers
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // ExplicitSolver.hpp 

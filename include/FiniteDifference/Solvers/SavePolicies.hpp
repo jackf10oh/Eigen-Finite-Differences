@@ -9,13 +9,13 @@
 //
 // JAF 3/4/2025 
 
-#ifndef FDM_SOLVERS_SAVEPOLICIES_H
-#define FDM_SOLVERS_SAVEPOLICIES_H
+#ifndef FORNFDM_SOLVERS_SAVEPOLICIES_H
+#define FORNFDM_SOLVERS_SAVEPOLICIES_H
 
 #include<chrono>
 #include "../Types.hpp"
 
-namespace fdm{
+namespace fornfdm{
   namespace solvers{ 
 
 // Write Policies. i.e. write previous solution to cout, write to std::vector, write to CSV 
@@ -23,23 +23,23 @@ struct EmptySaver
 {
   // no member data 
   EmptySaver()=default; 
-  void saveSolution(const fdm::Vector& sol){}; 
-  void saveLastSolution(const fdm::Vector& sol){}; 
+  void saveSolution(const fornfdm::Vector& sol){}; 
+  void saveLastSolution(const fornfdm::Vector& sol){}; 
 };
 
 struct LastSaver
 {
   // no member data 
   LastSaver()=default; 
-  void saveSolution(const fdm::Vector& sol={}){}; 
-  auto saveLastSolution(fdm::Vector sol){ return sol; }; 
+  void saveSolution(const fornfdm::Vector& sol={}){}; 
+  auto saveLastSolution(fornfdm::Vector sol){ return sol; }; 
 };
 
 struct PrintSaver
 {
   bool first_entry=true; 
   PrintSaver()=default; 
-  void saveSolution(const fdm::Vector& sol)
+  void saveSolution(const fornfdm::Vector& sol)
   {
     if(first_entry){
       std::cout << "[";
@@ -53,7 +53,7 @@ struct PrintSaver
     }
     std::cout << *it << "],\n";  
   }; 
-  void saveLastSolution(const fdm::Vector& sol)
+  void saveLastSolution(const fornfdm::Vector& sol)
   {
     std::cout << "["; 
     auto it=sol.cbegin(); 
@@ -73,15 +73,15 @@ struct TimerSaver
 
   TimerSaver()=default; 
 
-  void saveSolution(const fdm::Vector& sol={}){}; 
+  void saveSolution(const fornfdm::Vector& sol={}){}; 
 
-  auto saveLastSolution(const fdm::Vector& sol={})
+  auto saveLastSolution(const fornfdm::Vector& sol={})
   { 
     return std::chrono::duration_cast<Units>(std::chrono::system_clock::now() - time_started); 
   }; 
 }; 
 
   } // end namespace solvers
-} // end namespace fdm  
+} // end namespace fornfdm  
 
 #endif // SavePolicies.hpp 

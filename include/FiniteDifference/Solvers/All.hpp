@@ -4,8 +4,8 @@
 //
 // JAF 3/4/2026 
 
-#ifndef FDM_SOLVERS_ALL_H
-#define FDM_SOLVERS_ALL_H
+#ifndef FORNFDM_SOLVERS_ALL_H
+#define FORNFDM_SOLVERS_ALL_H
 
 #include "SolverArgs.hpp"
 #include "SavePolicies.hpp"

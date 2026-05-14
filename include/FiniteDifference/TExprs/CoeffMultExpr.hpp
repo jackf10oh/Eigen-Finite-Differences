@@ -4,14 +4,14 @@
 //
 // JAF 1/15/2026 
 
-#ifndef FDM_TEXPRS_COEFFMULTEXPR_H
-#define FDM_TEXPRS_COEFFMULTEXPR_H
+#ifndef FORNFDM_TEXPRS_COEFFMULTEXPR_H
+#define FORNFDM_TEXPRS_COEFFMULTEXPR_H
 
 #include "TimeDerivBase.hpp"
-#include "TExprTraits.hpp"
+#include "Traits.hpp"
 #include "../Diffops/Traits.hpp"
 
-namespace fdm{
+namespace fornfdm{
 namespace texprs{
 
 // ======================================================
@@ -22,7 +22,7 @@ class CoeffMultExpr : public TimeDerivBase<CoeffMultExpr<Coeff,TimeDeriv>, std::
     // Type Defs --------------------- 
     /* if its an lvalue TimeDeriv store a reference. 
     if its a rvalue NthTimeDeriv just store a copy. */  
-    using LStorage = typename fdm::linops::internal::NestedStorage<Coeff>::type; 
+    using LStorage = typename fornfdm::linops::internal::NestedStorage<Coeff>::type; 
     using RStorage = typename texprs::traits::Storage<TimeDeriv>::type; 
 
     // Member Data ---------------
@@ -70,6 +70,6 @@ auto operator*(Lhs&& c, Rhs&& rhs)
 } 
 
 } // end namespace texprs 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // CoeffMultExpr.hpp 

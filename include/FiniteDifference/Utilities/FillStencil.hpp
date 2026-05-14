@@ -4,12 +4,12 @@
 //
 // JAF 1/2/2025 
 
-#ifndef FDM_UTILS_FILLSTENCIL_H
-#define FDM_UTILS_FILLSTENCIL_H
+#ifndef FORNFDM_UTILS_FILLSTENCIL_H
+#define FORNFDM_UTILS_FILLSTENCIL_H
 
 #include<Eigen/Sparse> 
 
-namespace fdm{
+namespace fornfdm{
   namespace utils{
 
 /* template<typename Scalar, typename Index, typename Derived> 
@@ -78,6 +78,6 @@ void overwrite_stencil(Eigen::SparseMatrix<Scalar,Eigen::RowMajor,Index>& A, con
 };
 
   } // end namespace utils 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // FillStencil.hpp

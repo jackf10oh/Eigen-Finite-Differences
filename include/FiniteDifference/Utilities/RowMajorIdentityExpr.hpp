@@ -6,14 +6,14 @@
 // 
 // JAF 1/2/2026 
 
-#ifndef FDM_UTILS_ROWMAJORIDENTITYEXPR_H
-#define FDM_UTILS_ROWMAJORIDENTITYEXPR_H
+#ifndef FORNFDM_UTILS_ROWMAJORIDENTITYEXPR_H
+#define FORNFDM_UTILS_ROWMAJORIDENTITYEXPR_H
 
 #include<cstdint>
 #include<Eigen/Sparse>
 
 // Enum + Forward declarations ---------------------------------------------
-namespace fdm{
+namespace fornfdm{
   namespace utils{
     class RowMajorIdentity; 
   }
@@ -23,11 +23,11 @@ namespace fdm{
 namespace Eigen {
 namespace internal {
 template<>
-struct traits<fdm::utils::RowMajorIdentity> {
+struct traits<fornfdm::utils::RowMajorIdentity> {
   typedef Eigen::Sparse StorageKind;
   typedef Eigen::MatrixXpr XprKind;
   typedef typename Eigen::Index StorageIndex;
-  typedef fdm::Scalar Scalar;
+  typedef fornfdm::Scalar Scalar;
   enum {
     Flags = Eigen::RowMajorBit,
     RowsAtCompileTime = Eigen::Dynamic,
@@ -40,14 +40,14 @@ struct traits<fdm::utils::RowMajorIdentity> {
 }  // namespace Eigen
 
 // expression class ======================================================================= 
-namespace fdm{
+namespace fornfdm{
   namespace utils{
 
 class RowMajorIdentity : public Eigen::SparseMatrixBase< RowMajorIdentity > {
   public:
     // typedefs 
     // typedefs 
-    typedef typename Eigen::internal::ref_selector<fdm::utils::RowMajorIdentity>::type Nested;
+    typedef typename Eigen::internal::ref_selector<fornfdm::utils::RowMajorIdentity>::type Nested;
     typedef Eigen::Index Index;
     
     // constructors 
@@ -64,16 +64,16 @@ class RowMajorIdentity : public Eigen::SparseMatrixBase< RowMajorIdentity > {
 };
 
   } // end namespace utils 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 // the evaluator =======================================================================
 namespace Eigen {
 namespace internal {
 template<>
-struct evaluator< fdm::utils::RowMajorIdentity > : evaluator_base< fdm::utils::RowMajorIdentity > {
+struct evaluator< fornfdm::utils::RowMajorIdentity > : evaluator_base< fornfdm::utils::RowMajorIdentity > {
 
   // typedefs -------------------------------------------------- 
-  typedef fdm::utils::RowMajorIdentity XprType;
+  typedef fornfdm::utils::RowMajorIdentity XprType;
   // typedef typename nested_eval<XprType::ColsAtCompileTime>::type ArgTypeNested;
   // typedef typename remove_all<ArgTypeNested>::type ArgTypeNestedCleaned;
   typedef typename XprType::CoeffReturnType CoeffReturnType;
@@ -122,7 +122,7 @@ struct evaluator< fdm::utils::RowMajorIdentity > : evaluator_base< fdm::utils::R
 }  // namespace Eigen
 
 // the entry point ======================================================================= 
-namespace fdm{
+namespace fornfdm{
   namespace utils{
     RowMajorIdentity make_RowMajorIdentity(std::size_t m, std::size_t n) {
       return RowMajorIdentity(m,n); 

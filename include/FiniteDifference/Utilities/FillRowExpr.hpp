@@ -6,10 +6,10 @@
 //
 // JAF 3/27/2026 
 
-#ifndef FDM_UTILS_FILLROWEXPR_H
-#define FDM_UTILS_FILLROWEXPR_H
+#ifndef FORNFDM_UTILS_FILLROWEXPR_H
+#define FORNFDM_UTILS_FILLROWEXPR_H
 
-namespace fdm{
+namespace fornfdm{
 namespace utils{ 
 
 // Forward declarations ---------------------------------------------
@@ -17,13 +17,13 @@ template<typename ArgType01, typename ArgType02>
 class FillRow;
 
 } // end namespace utils 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 // type traits =======================================================================
 namespace Eigen {
 namespace internal {
 template<typename ArgType01, typename ArgType02>
-struct traits< fdm::utils::FillRow<ArgType01, ArgType02> > {
+struct traits< fornfdm::utils::FillRow<ArgType01, ArgType02> > {
   typedef Eigen::Sparse StorageKind;
   typedef Eigen::MatrixXpr XprKind;
   typedef typename ArgType01::StorageIndex StorageIndex;
@@ -39,7 +39,7 @@ struct traits< fdm::utils::FillRow<ArgType01, ArgType02> > {
 }  // namespace internal
 }  // namespace Eigen
 
-namespace fdm{
+namespace fornfdm{
 namespace utils { 
 
 // expression class ======================================================================= 
@@ -69,16 +69,16 @@ class FillRow : public Eigen::SparseMatrixBase< FillRow<ArgType01,ArgType02> > {
 };
 
 } // end namespace utils 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 // the evaluator =======================================================================
 namespace Eigen {
 namespace internal {
 template<typename ArgType01, typename ArgType02>
-struct evaluator< fdm::utils::FillRow<ArgType01,ArgType02> > : evaluator_base< fdm::utils::FillRow<ArgType01,ArgType02> > {
+struct evaluator< fornfdm::utils::FillRow<ArgType01,ArgType02> > : evaluator_base< fornfdm::utils::FillRow<ArgType01,ArgType02> > {
 
   // typedefs -------------------------------------------------- 
-  typedef fdm::utils::FillRow<ArgType01,ArgType02> XprType;
+  typedef fornfdm::utils::FillRow<ArgType01,ArgType02> XprType;
   typedef typename nested_eval<ArgType01, XprType::ColsAtCompileTime>::type ArgTypeNested01;
   typedef typename nested_eval<ArgType02, XprType::ColsAtCompileTime>::type ArgTypeNested02;
   // using ArgTypeNested = ArgTypeNested01; // does eigen need to have the ArgTypeNested type defined?  
@@ -144,7 +144,7 @@ struct evaluator< fdm::utils::FillRow<ArgType01,ArgType02> > : evaluator_base< f
 }  // namespace internal
 }  // namespace Eigen
 
-namespace fdm{
+namespace fornfdm{
 namespace utils{ 
 
 // the entry point ======================================================================= 
@@ -171,6 +171,6 @@ auto make_FillRow_fold(T&& A, U&& B, Args&&... rest){
 }
 
 } // end namespac utils 
-} // end namespace fdm
+} // end namespace fornfdm
 
 #endif 

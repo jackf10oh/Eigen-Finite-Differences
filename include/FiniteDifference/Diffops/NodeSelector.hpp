@@ -5,10 +5,10 @@
 //
 // JAF 5/10/2026 
 
-#ifndef FDM_DIFFOPS_NODESELECTOR_H
-#define FDM_DIFFOPS_NODESELECTOR_H
+#ifndef FORNFDM_DIFFOPS_NODESELECTOR_H
+#define FORNFDM_DIFFOPS_NODESELECTOR_H
 
-namespace fdm{
+namespace fornfdm{
 namespace linops{
 namespace internal{
 
@@ -20,7 +20,7 @@ struct NodeSelector{};
 
 } // end namespace internal 
 } // end namespace linops 
-} // end namespace fdm
+} // end namespace fornfdm
 
 #include "CenteredNodeSelector.hpp"
 #include "ForwardNodeSelector.hpp"

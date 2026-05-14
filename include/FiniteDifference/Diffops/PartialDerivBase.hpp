@@ -7,14 +7,14 @@
 //
 // JAF 4/17/2026 
 
-#ifndef FDM_DIFFOPS_PARTIALDERIVBASE_H
-#define FDM_DIFFOPS_PARTIALDERIVBASE_H
+#ifndef FORNFDM_DIFFOPS_PARTIALDERIVBASE_H
+#define FORNFDM_DIFFOPS_PARTIALDERIVBASE_H
 
 #include<Eigen/SparseCore>
 #include "EvaluatorBase.hpp"
 #include "../Types.hpp"
 
-namespace fdm{
+namespace fornfdm{
 namespace linops{
 
 template<class Derived> class PartialDerivBase; 
@@ -27,7 +27,7 @@ struct TimeDepMemberData{};
 
 template<>
 struct TimeDepMemberData<true>{
-  fdm::Real m_current_time; 
+  fornfdm::Real m_current_time; 
   const Mesh* m_mesh_raw; 
 
 }; 
@@ -41,7 +41,7 @@ struct Evaluator<PartialDerivBase<Derived>> : public EvaluatorBase<PartialDerivB
   Evaluator(const PartialDerivBase<Derived>& xpr) : m_derived_eval(xpr.derived()){}
 
   template<std::size_t N>
-  auto evaluateWeightsAndCoords(const fdm::Scalar* weights, std::size_t weights_per_order, const fdm::Coordinate<N>& coords)
+  auto evaluateWeightsAndCoords(const fornfdm::Scalar* weights, std::size_t weights_per_order, const fornfdm::Coordinate<N>& coords)
   {
     return m_derived_eval.evaluateWeightsAndCoords(weights, weights_per_order, coords); 
   }
@@ -49,23 +49,23 @@ struct Evaluator<PartialDerivBase<Derived>> : public EvaluatorBase<PartialDerivB
 
 // linops traits
 template<class Derived>
-struct traits_impl<fdm::linops::PartialDerivBase<Derived>> : traits_impl<Derived>{}; 
+struct traits_impl<fornfdm::linops::PartialDerivBase<Derived>> : traits_impl<Derived>{}; 
 
 } // end namespace internal 
 } // end namespace linops 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 namespace Eigen{
 namespace internal{
 
 // Eigen traits of PartialDerivBase is same as Derived
 template<class Derived>
-struct traits<fdm::linops::PartialDerivBase<Derived>> : public traits<Derived>{}; 
+struct traits<fornfdm::linops::PartialDerivBase<Derived>> : public traits<Derived>{}; 
 
 } // end namespace internal 
 } // end namespace Eigen
 
-namespace fdm{
+namespace fornfdm{
 namespace linops{
 
 template<class Derived>
@@ -78,14 +78,14 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
 
     // Friends ------------------- 
     friend Eigen::internal::evaluator<PartialDerivBase>; 
-    friend fdm::linops::internal::EvaluatorBase<PartialDerivBase>; 
-    friend fdm::linops::internal::Evaluator<PartialDerivBase>; 
+    friend fornfdm::linops::internal::EvaluatorBase<PartialDerivBase>; 
+    friend fornfdm::linops::internal::Evaluator<PartialDerivBase>; 
 
   public: // TODO make protected 
     // Member Data ----------------------------------------------
     // const Mesh* m_mesh_raw = nullptr; // This is unused until I need time dependent operators....... 
     std::weak_ptr<const Mesh> m_mesh_observed = {/*nullptr*/}; 
-    fdm::CSRMatrix m_stencil = {}; 
+    fornfdm::CSRMatrix m_stencil = {}; 
     std::size_t m_prod_before = 1; 
     std::size_t m_prod_after = 1; 
 
@@ -94,7 +94,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
     // FDM Interface -------
     void setMesh(const std::shared_ptr<const Mesh>& m)
     {
-      if constexpr(fdm::linops::internal::traits<Derived>::is_timedep){
+      if constexpr(fornfdm::linops::internal::traits<Derived>::is_timedep){
         // just change the mesh thats observed
         this->m_mesh_observed = m; 
         this->m_mesh_raw = m.get(); 
@@ -106,24 +106,24 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
       }
     }
     SharedConstMesh getMesh() const { return m_mesh_observed.lock(); }
-    void setTime(fdm::Real t){ 
-      if constexpr(fdm::linops::internal::traits<Derived>::is_timedep){
+    void setTime(fornfdm::Real t){ 
+      if constexpr(fornfdm::linops::internal::traits<Derived>::is_timedep){
         // update m_current_time + update m_stencil matrix 
         this->m_current_time=t; 
         derived().setTime_hooked(t); 
         setMesh_impl(this->m_mesh_raw); 
       }
     }
-    void setTime_hooked(fdm::Real t){}
-    fdm::Real getTime() const {
-      if constexpr(fdm::linops::internal::traits<Derived>::is_timedep){
+    void setTime_hooked(fornfdm::Real t){}
+    fornfdm::Real getTime() const {
+      if constexpr(fornfdm::linops::internal::traits<Derived>::is_timedep){
         return this->m_current_time; 
       }
       return -1.0; 
     }
     
     // Eigen Interface ------- 
-    const auto& toEigen() const { return *static_cast<const Base*>(this); } // prevents custom operators from fdm library taking effect. 
+    const auto& toEigen() const { return *static_cast<const Base*>(this); } // prevents custom operators from fornfdm library taking effect. 
     StorageIndex rows() const { return m_prod_before * m_prod_after * m_stencil.rows(); }
     StorageIndex cols() const { return m_prod_before * m_prod_after * m_stencil.cols(); }
     StorageIndex nonZerosEstimate() const {return m_prod_before * m_prod_after * m_stencil.nonZeros(); }
@@ -144,7 +144,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
     // Implementations ----------------------------------------------------------------
     void setMesh_impl(const Mesh* m)
     {
-      using traits_t = fdm::linops::internal::traits<Derived>; 
+      using traits_t = fornfdm::linops::internal::traits<Derived>; 
       const auto& axis = m->getAxis(traits_t::direction); 
       const std::size_t axis_size = m->sizeOfDim(traits_t::direction); 
 
@@ -153,7 +153,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
       bool direction_check = traits_t::direction >=  m->numDims(); 
       if(callable_check || direction_check) throw std::runtime_error("diffops setMesh: # of args in callables must be <= # of dims in mesh and direction must be < # of dims."); 
       
-      using Evaluator = fdm::linops::internal::Evaluator<Derived>; 
+      using Evaluator = fornfdm::linops::internal::Evaluator<Derived>; 
       Evaluator eval(derived()); 
 
       // handle m_prod_before / m_prod_after logic against num args in callables
@@ -244,6 +244,6 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
 }; 
 
 } // end namespace linops
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // PartialDerivBase.hpp  

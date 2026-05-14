@@ -5,13 +5,13 @@
 //
 // JAF 5/11/2026 
 
-#ifndef FDM_DIFFOPS_CENTEREDNODESELECTOR_H
-#define FDM_DIFFOPS_CENTEREDNODESELECTOR_H 
+#ifndef FORNFDM_DIFFOPS_CENTEREDNODESELECTOR_H
+#define FORNFDM_DIFFOPS_CENTEREDNODESELECTOR_H 
 
 #include "NodeSelector.hpp"
 #include "EvaluatorBase.hpp"
 
-namespace fdm{
+namespace fornfdm{
 namespace linops{
 
 // tag type to take a guranteed minimum. outside of internal 
@@ -42,8 +42,8 @@ struct CenteredNodeSelector
   static constexpr std::size_t numNodesMax = 2*((numNodesMin)/2)+1; 
   std::size_t numNodesUsed; 
   std::array<Eigen::Index, numNodesMax> nodeIndices;
-  std::array<fdm::Scalar, numNodesMax> nodeValues;
-  fdm::Scalar x_bar; 
+  std::array<fornfdm::Scalar, numNodesMax> nodeValues;
+  fornfdm::Scalar x_bar; 
   std::size_t nonZerosOffset; 
 
   // Constructor ============================
@@ -106,6 +106,6 @@ struct CenteredNodeSelector
 
 } // end namespace internal 
 } // end namespace linops 
-} // end namespace fdm
+} // end namespace fornfdm
 
 #endif 

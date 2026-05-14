@@ -4,8 +4,8 @@
 //
 // JAF 10/29/2025
 
-#ifndef FDM_UTILS_FORNBERG_H
-#define FDM_UTILS_FORNBERG_H
+#ifndef FORNFDM_UTILS_FORNBERG_H
+#define FORNFDM_UTILS_FORNBERG_H
 
 #include<cmath>
 #include<vector>

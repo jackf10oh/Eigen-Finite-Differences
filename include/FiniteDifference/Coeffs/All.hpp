@@ -4,8 +4,8 @@
 // 
 // JAF 5/3/2026 
 
-#ifndef FDM_COEFFS_ALL_H
-#define FDM_COEFFS_ALL_H
+#ifndef FORNFDM_COEFFS_ALL_H
+#define FORNFDM_COEFFS_ALL_H
 
 #include "CoeffBase.hpp"
 #include "AutonomousCoeff.hpp"

@@ -5,18 +5,18 @@
 //
 // JAF 1/16/2025 
 
-#ifndef FDM_TEXPRS_EXECUTOR_H
-#define FDM_TEXPRS_EXECUTOR_H
+#ifndef FORNFDM_TEXPRS_EXECUTOR_H
+#define FORNFDM_TEXPRS_EXECUTOR_H
 
 #include<algorithm>
 #include<array>
 #include<memory>
 #include<Eigen/Core>
 #include "../Utilities/Fornberg2.hpp" // not using stack calc. we need a std::array<Real> not std::array<Scalar> 
-#include "TExprTraits.hpp" 
+#include "Traits.hpp" 
 #include "../Types.hpp" // Scalar, DiagMatrix
 
-namespace fdm{
+namespace fornfdm{
   namespace texprs{
 
 // ===============================================================================
@@ -28,7 +28,7 @@ class Executor
     using Tup = std::remove_cv_t<std::remove_reference_t<decltype(std::declval<TimeDeriv&>().toTuple())>>;
     using ScalarTup = std::remove_cv_t<std::remove_reference_t<decltype(texprs::traits::filter_tup<texprs::traits::coeffat_returns_real>(std::declval<Tup>()))>>;
     using MatrixTup = std::remove_cv_t<std::remove_reference_t<decltype(texprs::traits::filter_tup<texprs::traits::coeffat_returns_other>(std::declval<Tup>()))>>;
-    using InvCoeff = std::conditional_t<std::tuple_size<MatrixTup>::value==0, fdm::Scalar, fdm::DiagMatrix>; 
+    using InvCoeff = std::conditional_t<std::tuple_size<MatrixTup>::value==0, fornfdm::Scalar, fornfdm::DiagMatrix>; 
 
     // number of nodes used in Fornberg algorithm 
     static constexpr std::size_t numStoredTimes = std::max(M, TimeDeriv::maxOrder+1); 
@@ -39,20 +39,20 @@ class Executor
     // reference to the expression the executor is working on. 
     TimeDeriv& m_wrapped;
 
-    // tuple that stores all entries in expr_init.toTuple() such that .coeffAt(...) returns a fdm::Real  
+    // tuple that stores all entries in expr_init.toTuple() such that .coeffAt(...) returns a fornfdm::Real  
     ScalarTup m_scalar_coeff_sum_partition;
 
     // .....  such that .coeffAt(...) returns a Matrix  
     MatrixTup m_mat_coeff_sum_partition; 
 
     // list of t0, t1, ..., tn 
-    std::array<fdm::Real, numStoredTimes> m_stored_times; 
+    std::array<fornfdm::Real, numStoredTimes> m_stored_times; 
 
     // list of solutions u0, u1, ..., un-1 at times t0, t1, ..., tn-1 
-    std::array<fdm::Vector, numStoredTimes-1> m_stored_sols; 
+    std::array<fornfdm::Vector, numStoredTimes-1> m_stored_sols; 
 
     // forberg weights calculator 
-    std::array<fdm::Real, numStoredTimes * (TimeDeriv::maxOrder+1)> m_weights_arr; 
+    std::array<fornfdm::Real, numStoredTimes * (TimeDeriv::maxOrder+1)> m_weights_arr; 
     
     // result of buildInvCoeff.   
     InvCoeff m_inv_coeff; 
@@ -94,15 +94,15 @@ class Executor
     const auto& getStoredSolutions() const { return m_stored_sols; }
 
     // returns ref to newest solution 
-    fdm::Vector& getCurrentSolution(){ return m_stored_sols.back(); }
-    const fdm::Vector& getCurrentSolution() const { return m_stored_sols.back(); }
+    fornfdm::Vector& getCurrentSolution(){ return m_stored_sols.back(); }
+    const fornfdm::Vector& getCurrentSolution() const { return m_stored_sols.back(); }
 
     // return ref to first elem in m_stored_sols. Gives an opportunity to move it elsewhere before overwritten in ConsumeSolution  
-    fdm::Vector& getExpiringSolution(){ return m_stored_sols.front(); }
-    const fdm::Vector& getExpiringSolution() const { return m_stored_sols.front(); }
+    fornfdm::Vector& getExpiringSolution(){ return m_stored_sols.front(); }
+    const fornfdm::Vector& getExpiringSolution() const { return m_stored_sols.front(); }
     
     // consume a time. push back all previous
-    void pushTime(fdm::Real t)
+    void pushTime(fornfdm::Real t)
     {
       // all values in m_stored_time have been left shifted by 1
       std::move(std::next(m_stored_times.begin()), m_stored_times.end(), m_stored_times.begin()); 
@@ -138,7 +138,7 @@ class Executor
       std::rotate(m_stored_sols.begin(), std::next(m_stored_sols.begin(),idx), m_stored_sols.end()); 
     }
     // consume a solution. push back all previous 
-    void pushSolution(fdm::Vector sol)
+    void pushSolution(fornfdm::Vector sol)
     { 
       /* same idea as pushTime(). with move semantics*/
       std::move(std::next(m_stored_sols.begin()), m_stored_sols.end(), m_stored_sols.begin()); 
@@ -176,7 +176,7 @@ class Executor
     }
 
     // traverse stored tuples and sets mesh for any LinOps inside 
-    void setMesh(const std::shared_ptr<const fdm::Mesh>& m)
+    void setMesh(const std::shared_ptr<const fornfdm::Mesh>& m)
     {
       std::apply(
         [&m, this](auto&... args){ ((setMesh_singleton(m, args)), ...); }, 
@@ -189,7 +189,7 @@ class Executor
     }
 
     // traverse stored tuples and sets time for any LinOps inside 
-    void setTime(fdm::Real t)
+    void setTime(fornfdm::Real t)
     {
       std::apply(
         [t,this](auto&... args){ ((setTime_singleton(t, args)),...); }, 
@@ -201,8 +201,8 @@ class Executor
       ); 
     }
 
-    void calculate(fdm::Real t){ 
-      fdm::utils::fornberg2(
+    void calculate(fornfdm::Real t){ 
+      fornfdm::utils::fornberg2(
         m_stored_times.cbegin(), m_stored_times.cend(),
         t,TimeDeriv::maxOrder,
         m_weights_arr.begin()
@@ -234,7 +234,7 @@ class Executor
     {
       if constexpr(std::tuple_size<MatrixTup>::value == 0){
         // just scalars need to be added 
-        fdm::Real reals_sum = std::apply(
+        fornfdm::Real reals_sum = std::apply(
           [this](auto&&... args){
             return (args.template coeffAt<ithNode, numStoredTimes>(m_weights_arr) + ...); 
           }, 
@@ -255,7 +255,7 @@ class Executor
       }
       else{
         // sum of both scalar AND matrix return types! 
-        fdm::Real reals_sum = std::apply(
+        fornfdm::Real reals_sum = std::apply(
           [this](auto&&... args){
             return (args.template coeffAt<ithNode, numStoredTimes>(m_weights_arr) + ...); 
           }, 
@@ -271,12 +271,12 @@ class Executor
       }
     }
 
-    // gets 1 / c where c is coeff of U(n+1) in fdm equation 
+    // gets 1 / c where c is coeff of U(n+1) in fornfdm equation 
     void buildInvCoeff()
     { 
       if constexpr(std::tuple_size<MatrixTup>::value == 0){
         // all coeffAt's evaluate to scalar -> return 1 / sum(coeffs) 
-        fdm::Scalar s = std::apply(
+        fornfdm::Scalar s = std::apply(
             [this](auto&&... coeffs){
               return (coeffs.template coeffAt<numStoredTimes-1, numStoredTimes>(m_weights_arr) + ...); 
             }, 
@@ -297,7 +297,7 @@ class Executor
       else{
         // otherwise return product of 1/(sum(scalar) + (sum(Mats))
         std::cout << "correct branch hit" << std::endl; 
-        fdm::Real s = std::apply(
+        fornfdm::Real s = std::apply(
             [this](auto&&... coeffs){
               return (coeffs.template coeffAt<numStoredTimes-1, numStoredTimes>(m_weights_arr) + ...); 
             }, 
@@ -316,7 +316,7 @@ class Executor
 
     // Sets mesh onto a Time Derivative. traverse lhs/rhs of multiply expressions
     template<typename TimeDerivU>
-    void setMesh_singleton(const std::shared_ptr<const fdm::Mesh>& m,TimeDerivU& tderiv)
+    void setMesh_singleton(const std::shared_ptr<const fornfdm::Mesh>& m,TimeDerivU& tderiv)
     {
       if constexpr(texprs::traits::is_coeffmult_crtp<TimeDerivU>::value){
         setMesh_singleton(m, tderiv.getLhs()); 
@@ -329,7 +329,7 @@ class Executor
 
     // Sets mesh onto a Time Derivative. traverse lhs/rhs of multiply expressions
     template<typename TimeDerivU>
-    void setTime_singleton(fdm::Real t,TimeDerivU& tderiv)
+    void setTime_singleton(fornfdm::Real t,TimeDerivU& tderiv)
     {
       if constexpr(texprs::traits::is_coeffmult_crtp<TimeDerivU>::value){
         setTime_singleton(t, tderiv.getLhs()); 
@@ -356,6 +356,6 @@ auto make_Executor(TimeDeriv& tderiv)
 }
 
   } // end namespace texprs 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // LhsExecutor.hpp

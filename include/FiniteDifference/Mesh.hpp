@@ -5,15 +5,15 @@
 // 
 // JAF 4/13/2026 
 
-#ifndef FDM_MESH_H
-#define FDM_MESH_H 
+#ifndef FORNFDM_MESH_H
+#define FORNFDM_MESH_H 
 
 #include<array> // std::array
 #include<vector> // std::vector
 #include<memory> // std::shared_ptr
 #include<Eigen/Core> // Eigen::VectorXd 
 
-namespace fdm {
+namespace fornfdm {
 
 // forward declaration + aliases
 class Mesh; 
@@ -30,7 +30,7 @@ class Mesh : public std::enable_shared_from_this<Mesh>
     using StrideView =  Eigen::Map<Eigen::VectorXd, Eigen::Unaligned, Stride>;
     // member data ----------------------------
     static constexpr std::size_t numDimsMax = 5; // fixed maximum.
-    typename std::array<fdm::Vector, numDimsMax> m_mesh_arr; // fixed size array of 1d axes.
+    typename std::array<fornfdm::Vector, numDimsMax> m_mesh_arr; // fixed size array of 1d axes.
     const std::size_t m_size; // runtime size that counts how many dims are used. 
 
   public:
@@ -170,49 +170,49 @@ auto make_Mesh(Args... args)
   return std::make_shared<Mesh>(args...); 
 }
 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #include "Coordinate.hpp" 
 
-namespace fdm{ 
-auto make_Discretization(const fdm::Mesh* m, fdm::Scalar a)
+namespace fornfdm{ 
+auto make_Discretization(const fornfdm::Mesh* m, fornfdm::Scalar a)
 {
   std::size_t s = m->sizesProduct(); 
   auto lam = [a](std::size_t i){ return a; }; 
-  return Eigen::CwiseNullaryOp<decltype(lam), fdm::Vector>(s, 1, lam); 
+  return Eigen::CwiseNullaryOp<decltype(lam), fornfdm::Vector>(s, 1, lam); 
 }
 
 template<class Callable>
-auto make_Discretization(const fdm::Mesh* m, const Callable& func)
+auto make_Discretization(const fornfdm::Mesh* m, const Callable& func)
 {
   std::size_t s = m->sizesProduct(); 
-  constexpr std::size_t N = fdm::internal::callable_traits<Callable>::arity; 
-  auto lam = [func, m](std::size_t i){ return fdm::Coordinate<N>(m, i).apply(func); }; 
-  return Eigen::CwiseNullaryOp<decltype(lam), fdm::Vector>(s, 1, lam); 
+  constexpr std::size_t N = fornfdm::internal::callable_traits<Callable>::arity; 
+  auto lam = [func, m](std::size_t i){ return fornfdm::Coordinate<N>(m, i).apply(func); }; 
+  return Eigen::CwiseNullaryOp<decltype(lam), fornfdm::Vector>(s, 1, lam); 
 }
 
-auto make_Discretization(std::shared_ptr<const fdm::Mesh> mesh, fdm::Scalar a)
+auto make_Discretization(std::shared_ptr<const fornfdm::Mesh> mesh, fornfdm::Scalar a)
 {
   std::size_t s = mesh->sizesProduct(); 
   auto lam = [a](std::size_t i){ return a; }; 
-  return Eigen::CwiseNullaryOp<decltype(lam), fdm::Vector>(s, 1, std::move(lam)); 
+  return Eigen::CwiseNullaryOp<decltype(lam), fornfdm::Vector>(s, 1, std::move(lam)); 
 }
 
 template<class Callable>
-auto make_Discretization(std::shared_ptr<const fdm::Mesh> mesh, const Callable& func)
+auto make_Discretization(std::shared_ptr<const fornfdm::Mesh> mesh, const Callable& func)
 {
   std::size_t s = mesh->sizesProduct(); 
-  constexpr std::size_t N = fdm::internal::callable_traits<Callable>::arity; 
-  auto lam = [func, m = std::move(mesh)](std::size_t i){ return fdm::Coordinate<N>(m.get(), i).apply(func); }; 
-  return Eigen::CwiseNullaryOp<decltype(lam), fdm::Vector>(s, 1, std::move(lam)); 
+  constexpr std::size_t N = fornfdm::internal::callable_traits<Callable>::arity; 
+  auto lam = [func, m = std::move(mesh)](std::size_t i){ return fornfdm::Coordinate<N>(m.get(), i).apply(func); }; 
+  return Eigen::CwiseNullaryOp<decltype(lam), fornfdm::Vector>(s, 1, std::move(lam)); 
 }
 
-auto linspaced(std::size_t n, fdm::Scalar x0, fdm::Scalar x1)
+auto linspaced(std::size_t n, fornfdm::Scalar x0, fornfdm::Scalar x1)
 {
-  auto lam = [d = static_cast<fdm::Scalar>(n)-1.0,x0,x1](std::size_t idx){ return (idx/d)*(x1-x0)+x0; };
-  return Eigen::CwiseNullaryOp<decltype(lam), fdm::Vector>(n, 1, std::move(lam)); 
+  auto lam = [d = static_cast<fornfdm::Scalar>(n)-1.0,x0,x1](std::size_t idx){ return (idx/d)*(x1-x0)+x0; };
+  return Eigen::CwiseNullaryOp<decltype(lam), fornfdm::Vector>(n, 1, std::move(lam)); 
 }
 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // Mesh.hpp 

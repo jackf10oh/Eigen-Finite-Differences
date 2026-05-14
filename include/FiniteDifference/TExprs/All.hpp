@@ -4,10 +4,10 @@
 // 
 // JAF 1/15/2026 
 
-#ifndef FDM_TEXPRS_ALL_H
-#define FDM_TEXPRS_ALL_H
+#ifndef FORNFDM_TEXPRS_ALL_H
+#define FORNFDM_TEXPRS_ALL_H
 
-#include "TExprTraits.hpp"
+#include "Traits.hpp"
 #include "TimeDerivBase.hpp" 
 #include "NthTimeDeriv.hpp"
 #include "CoeffMultExpr.hpp"

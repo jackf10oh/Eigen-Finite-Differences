@@ -6,14 +6,14 @@
 // 
 // JAF 1/2/2026 
 
-#ifndef FDM_UTILS_SPARSEDIAGEXPR_H
-#define FDM_UTILS_SPARSEDIAGEXPR_H
+#ifndef FORNFDM_UTILS_SPARSEDIAGEXPR_H
+#define FORNFDM_UTILS_SPARSEDIAGEXPR_H
 
 #include<cstdint>
 #include<Eigen/Core>
 #include<Eigen/Sparse>
 
-namespace fdm{
+namespace fornfdm{
   namespace utils{
 
 // Enum + Forward declarations ---------------------------------------------
@@ -22,13 +22,13 @@ template<typename ArgTpe, SparseDiagPattern P>
 class SparseDiag; 
 
   } // end namespace utils 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 // type traits =======================================================================
 namespace Eigen {
 namespace internal {
-template<class ArgType, fdm::utils::SparseDiagPattern P>
-struct traits<fdm::utils::SparseDiag<ArgType, P> > {
+template<class ArgType, fornfdm::utils::SparseDiagPattern P>
+struct traits<fornfdm::utils::SparseDiag<ArgType, P> > {
   typedef Eigen::Sparse StorageKind;
   typedef Eigen::MatrixXpr XprKind;
   typedef typename ArgType::StorageIndex StorageIndex;
@@ -45,7 +45,7 @@ struct traits<fdm::utils::SparseDiag<ArgType, P> > {
 }  // namespace Eigen
 
 // expression class ======================================================================= 
-namespace fdm{
+namespace fornfdm{
   namespace utils{
 
 template<class ArgType, SparseDiagPattern P = SparseDiagPattern::REPEAT>
@@ -78,17 +78,17 @@ class SparseDiag : public Eigen::SparseMatrixBase< SparseDiag<ArgType,P> > {
 };
 
   } // end namespace utils 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 
 // the evaluator =======================================================================
 namespace Eigen {
 namespace internal {
-template<typename ArgType, fdm::utils::SparseDiagPattern P>
-struct evaluator< fdm::utils::SparseDiag<ArgType,P> > : evaluator_base< fdm::utils::SparseDiag<ArgType,P> > {
+template<typename ArgType, fornfdm::utils::SparseDiagPattern P>
+struct evaluator< fornfdm::utils::SparseDiag<ArgType,P> > : evaluator_base< fornfdm::utils::SparseDiag<ArgType,P> > {
 
   // typedefs -------------------------------------------------- 
-  typedef fdm::utils::SparseDiag<ArgType, P> XprType;
+  typedef fornfdm::utils::SparseDiag<ArgType, P> XprType;
   typedef typename nested_eval<ArgType, XprType::ColsAtCompileTime>::type ArgTypeNested;
   typedef typename remove_all<ArgTypeNested>::type ArgTypeNestedCleaned;
   typedef typename XprType::CoeffReturnType CoeffReturnType;
@@ -112,11 +112,11 @@ struct evaluator< fdm::utils::SparseDiag<ArgType,P> > : evaluator_base< fdm::uti
     Index col() const { return m_row; };
     Index index() const { return m_row; };
     Scalar value() const { 
-      if constexpr(P == fdm::utils::SparseDiagPattern::REPEAT){
+      if constexpr(P == fornfdm::utils::SparseDiagPattern::REPEAT){
         if(m_eval.m_is_horizontal) return m_eval.m_argImpl.coeff(0, m_row / m_eval.m_num_repeats); 
         else return m_eval.m_argImpl.coeff(m_row / m_eval.m_num_repeats, 0);
       }
-      if constexpr(P == fdm::utils::SparseDiagPattern::CYCLE){
+      if constexpr(P == fornfdm::utils::SparseDiagPattern::CYCLE){
         if(m_eval.m_is_horizontal) return m_eval.m_argImpl.coeff(0, m_row % (m_eval.rows()/m_eval.m_num_repeats));  
         else return m_eval.m_argImpl.coeff(m_row % (m_eval.rows()/m_eval.m_num_repeats), 0); 
       }
@@ -159,7 +159,7 @@ struct evaluator< fdm::utils::SparseDiag<ArgType,P> > : evaluator_base< fdm::uti
 }  // namespace Eigen
 
 // the entry point ======================================================================= 
-namespace fdm{
+namespace fornfdm{
   namespace utils{
 
 template<SparseDiagPattern P = SparseDiagPattern::REPEAT, class ArgType>
@@ -173,6 +173,6 @@ SparseDiag<ArgType,P> make_SparseDiag(const Eigen::MatrixBase<ArgType>& arg, std
 }
 
   } // end namespace utils 
-} // end namespace fdm 
+} // end namespace fornfdm 
 
 #endif // SparseDiagExpr.hpp
