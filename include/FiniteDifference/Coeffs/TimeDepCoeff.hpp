@@ -27,7 +27,7 @@ struct traits_impl<fdm::linops::TimeDepCoeff<Callable>>
   static constexpr bool is_unarop = false; 
   static constexpr bool is_binop = false; 
   static constexpr bool is_ternop = false;
-  static constexpr std::size_t max_num_args_called = fdm::internal::callable_traits<Callable>::num_args - 1; // first arg binded to time. 
+  static constexpr std::size_t max_num_args_called = fdm::internal::callable_traits<Callable>::arity - 1; // first arg binded to time. 
   static constexpr bool is_timedep = true; 
 }; 
 
@@ -74,7 +74,7 @@ class TimeDepCoeff : public CoeffBase<TimeDepCoeff<Callable>>
     // Member Data ----------- 
     std::weak_ptr<const Mesh> m_mesh_observed; 
     const Mesh* m_mesh_raw; 
-    typename fdm::internal::callable_traits<CallableCleaned>::BindFirst m_callable; // stores Callable + captured double. 
+    typename fdm::internal::BindFirst<Callable> m_callable; // stores Callable + captured double. 
 
   public:
     // Constructor ----------
@@ -92,13 +92,13 @@ class TimeDepCoeff : public CoeffBase<TimeDepCoeff<Callable>>
     auto getMesh() const { return m_mesh_observed.lock(); }
     void setTime(double t)
     { 
-      m_callable.captured = t; 
+      m_callable.captured_arg = t; 
       CoeffBase<TimeDepCoeff>::setMesh_impl(m_mesh_raw);
     }
-    double getTime() const { return m_callable.captured; }
+    // double getTime() const { return m_callable.captured_arg; } // don't want to do this. getTime() should always reflect last setTime that triggered updates to matrix 
     void setTime_hooked(double t)
     {
-      m_callable.captured = t;
+      m_callable.captured_arg = t;
     }
 };
 

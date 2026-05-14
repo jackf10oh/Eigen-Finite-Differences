@@ -25,89 +25,65 @@
 namespace fdm{ 
 namespace internal{
 
-// traits around a callable F ----------------------------------------------
-template<typename F>
-class callable_traits
+// traits around a callable type F ---------------------------------------- 
+template<typename T> 
+struct callable_traits : public callable_traits<decltype(&T::operator())>{}; 
+
+// operator() -- non const
+template<class ClassType, class ReturnType, typename... Args>
+struct callable_traits<ReturnType(ClassType::*)(Args...)>
 {
-  private: 
-  // get return type of callable type G invoked on N scalars 
-  template<typename G, std::size_t numScalars, typename... Args> 
-  struct result_traits
-  {
-    using result_type = typename result_traits<G,numScalars-1, fdm::Scalar, Args...>::result_type; 
-  }; 
+  static constexpr std::size_t arity = sizeof...(Args); 
+  static constexpr bool maps_scalars_to_scalar = std::conjunction_v<
+    std::is_convertible<ReturnType, fdm::Scalar>, 
+    std::is_convertible<fdm::Scalar, Args>
+    ...
+  >; 
+}; 
 
-  template<typename G, typename... Args> 
-  struct result_traits<G,0,Args...>
-  {
-    using result_type = typename std::invoke_result<G,Args...>::type; 
-  }; 
+// operator() const 
+template<class ClassType, class ReturnType, typename... Args>
+struct callable_traits<ReturnType(ClassType::*)(Args...) const>
+{
+  static constexpr std::size_t arity = sizeof...(Args); 
+  static constexpr bool maps_scalars_to_scalar = std::conjunction_v<
+    std::is_convertible<ReturnType, fdm::Scalar>, 
+    std::is_convertible<fdm::Scalar, Args>
+    ...
+  >; 
+}; 
 
-  // ---------------------------------------------------------------
-  // test if callable type G can be invoked on N scalars up to max_n_args
-  static constexpr std::size_t numScalarsMax = 20; 
-  template<typename G, std::size_t numScalars=numScalarsMax, typename... Args> //  typename = std::enable_if<N!= std::size_t{-1}> 
-  struct arg_traits
-  {
-    constexpr static bool is_callable = std::is_invocable<G,Args...>::value;
+template<typename T>
+struct BindFirst : BindFirst<decltype(&T::operator())>
+{
+  // Constructor
+  using BindFirst<decltype(&T::operator())>::BindFirst; 
+}; 
 
-    constexpr static std::size_t num_args(){ 
-      if constexpr (is_callable){
-        return sizeof...(Args); 
-      }
-      else{
-        return arg_traits<G,numScalars-1,fdm::Scalar, Args...>::num_args(); 
-      }
-    }
+template<class ClassType, class ReturnType, typename First, typename... Trailing>
+class BindFirst<ReturnType(ClassType::*)(First, Trailing...) const>
+{
+  private:
+    // Type Defs ----------------------- 
+    using MemFn = ReturnType(ClassType::*)(First, Trailing...) const;  
     
-    using result_type = typename result_traits<G,num_args()>::result_type; 
-  }; 
-
-  // terminating case 
-  template<typename G, typename... Args> //  typename = std::enable_if<N!= std::size_t{-1}> 
-  struct arg_traits<G,0,Args...>
-  {
-    constexpr static bool is_callable = std::is_invocable<G,Args...>::value; 
-
-    constexpr static std::size_t num_args(){ 
-      if constexpr (is_callable){
-        return sizeof...(Args); 
-      }
-      else{
-        static_assert(false, "maximum length of args reached"); 
-      }
-    } 
-
-    using result_type = typename result_traits<F,num_args()>::result_type; 
-  }; 
-
-  // --------------------------------------------------------------------- 
-  // Given a callable G, return a new type F that has constructor F( G g, Scalar x0)
-  // with an operator() that accepts # args == # args in G - 1.
-  // the result is f(x1,...,xn) = g(x0,x1,...,xn) 
-
-  template<std::size_t numScalars, typename G, typename... Args> 
-  struct BindFirst_impl : public BindFirst_impl<numScalars-1,G,fdm::Scalar,Args...>
-  {
-    using Base = BindFirst_impl<numScalars-1,G,fdm::Scalar,Args...>; 
-    BindFirst_impl(G g, fdm::Scalar t): Base(g,t) {}; 
-    using BindFirst_impl<numScalars-1,G,fdm::Scalar, Args...>::operator(); 
-  }; 
-
-  template<typename G, typename... Args> 
-  struct BindFirst_impl<0,G,Args...>
-  {
-    const G func; 
-    fdm::Scalar captured; 
-    BindFirst_impl(G g, fdm::Scalar x0): func(g), captured(x0) {}; 
-    fdm::Scalar operator()(Args... args) const {return func(captured,args...); }; 
-  }; 
-
+    // Member Data ------------------------------ 
+    const MemFn mem_fn = &ClassType::operator(); 
+    const std::remove_reference_t<ClassType> binded; 
   public:
-  constexpr static std::size_t num_args = arg_traits<F>::num_args(); 
-  using result_type = typename result_traits<F, num_args>::result_type; 
-  using BindFirst = std::conditional_t<num_args, BindFirst_impl<num_args-1, F>, void>;
-}; // end callable_traits
+    std::remove_reference_t<First> captured_arg;
+
+    // Constructor ==================================
+    BindFirst(ClassType c, First x, MemFn f = &ClassType::operator())
+      : binded(std::move(c)), captured_arg(std::move(x)), mem_fn(f)
+    {} 
+
+    // Member Functions / Operators ---------------- 
+    ReturnType operator()(Trailing... args) const 
+    {
+      return (binded.*mem_fn)(captured_arg, args...); 
+    }
+}; 
 
 // detect if two classes are the same. irregardless of non class template params 
 template<class A, class B>

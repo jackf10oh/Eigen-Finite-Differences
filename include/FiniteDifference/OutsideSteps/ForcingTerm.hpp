@@ -24,8 +24,10 @@ template<class Callable>
 class ForcingTerm : public OStepBase<ForcingTerm<Callable>>
 {
   private:
+    // Type Defs -------------------- 
+    using CallableCleaned = std::remove_reference_t<Callable>; 
     // Member Data --------------------- 
-    std::remove_reference_t<Callable> m_functor; 
+    CallableCleaned m_functor; 
 
   public:
     // Constructors + Destructor ====================
@@ -44,8 +46,7 @@ class ForcingTerm : public OStepBase<ForcingTerm<Callable>>
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
     void VecBeforeStep(fdm::StridedRef u, const TCtx& t, const Ctx& ctx) const 
     {
-      using CallableCleaned = std::remove_cv_t<std::remove_reference_t<Callable>>; 
-      using Binded = typename fdm::internal::callable_traits<CallableCleaned>::BindFirst; 
+      using Binded = typename fdm::internal::BindFirst<CallableCleaned>; 
       if constexpr(STEP==StepType::Explicit)
       {
         // use left end point t[n]

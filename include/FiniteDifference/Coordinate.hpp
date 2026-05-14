@@ -68,7 +68,7 @@ template<std::size_t numDimsMax>
 template<class Callable>
 fdm::Scalar Coordinate<numDimsMax>::apply(const Callable& c) const 
 {
-  constexpr std::size_t N = fdm::internal::callable_traits<Callable>::num_args;
+  constexpr std::size_t N = fdm::internal::callable_traits<Callable>::arity;
   if constexpr(N == 0){
     return c();
   }  

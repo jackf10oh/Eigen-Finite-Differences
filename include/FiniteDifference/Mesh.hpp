@@ -186,7 +186,7 @@ template<class Callable>
 auto make_Discretization(const fdm::Mesh* m, const Callable& func)
 {
   std::size_t s = m->sizesProduct(); 
-  constexpr std::size_t N = fdm::internal::callable_traits<Callable>::num_args; 
+  constexpr std::size_t N = fdm::internal::callable_traits<Callable>::arity; 
   auto lam = [func, m](std::size_t i){ return fdm::Coordinate<N>(m, i).apply(func); }; 
   return Eigen::CwiseNullaryOp<decltype(lam), fdm::Vector>(s, 1, lam); 
 }
@@ -202,7 +202,7 @@ template<class Callable>
 auto make_Discretization(std::shared_ptr<const fdm::Mesh> mesh, const Callable& func)
 {
   std::size_t s = mesh->sizesProduct(); 
-  constexpr std::size_t N = fdm::internal::callable_traits<Callable>::num_args; 
+  constexpr std::size_t N = fdm::internal::callable_traits<Callable>::arity; 
   auto lam = [func, m = std::move(mesh)](std::size_t i){ return fdm::Coordinate<N>(m.get(), i).apply(func); }; 
   return Eigen::CwiseNullaryOp<decltype(lam), fdm::Vector>(s, 1, std::move(lam)); 
 }

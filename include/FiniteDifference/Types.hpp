@@ -12,6 +12,7 @@
 #include<type_traits> // decay_t 
 #include<complex>
 #include<Eigen/Core>
+#include<Eigen/src/Core/NumTraits.h> // convert scalar -> real 
 #include<Eigen/src/Core/util/Macros.h>
 #include<Eigen/src/Core/util/Constants.H> 
 #include<Eigen/src/Core/util/ForwardDeclarations.h>  // CwiseUnaryOp, CwiseBinaryOp, 
@@ -27,7 +28,18 @@ class Mesh;
 template<std::size_t N> class Coordinate; 
 
 // helpful aliases ------
-using Scalar = double; // might use this more consistently in the future... 
+#ifndef FDM_CUSTOM_SCALAR
+using Scalar = double; // might use this more consistently in the future...
+#else
+using Scalar = FDM_CUSTOM_SCALAR;
+#endif 
+
+#ifndef FDM_CUSTOM_REAL
+using Real = typename Eigen::NumTraits<fdm::Scalar>::Real;  
+#else 
+using Real = FDM_CUSTOM_REAL; 
+#endif
+ 
 using Vector = typename Eigen::Matrix<fdm::Scalar, Eigen::Dynamic, 1>; 
 using CSRMatrix = Eigen::SparseMatrix<Scalar, Eigen::RowMajor>; // Compressed Sparse Row (CSR) Matrix
 using DiagMatrix = Eigen::DiagonalMatrix<fdm::Scalar,Eigen::Dynamic>; // Diagonal Matrix 
