@@ -9,7 +9,7 @@
 #define FORNFDM_ALL_H
 
 #ifndef EIGEN_SPARSEMATRIXBASE_PLUGIN
-  #define EIGEN_SPARSEMATRIXBASE_PLUGIN <FiniteDifference/EigenFdmPlugin.hpp> 
+  #define EIGEN_SPARSEMATRIXBASE_PLUGIN <FornFdm/EigenFdmPlugin.hpp> 
 #endif 
 
 #include "Types.hpp"

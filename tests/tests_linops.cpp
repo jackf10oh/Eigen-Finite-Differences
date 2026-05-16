@@ -11,7 +11,7 @@
 #include<gtest/gtest.h>
 #include<gmock/gmock.h>
 
-#include<FiniteDifference/LinOps/All.hpp>
+#include<FornFdm/LinOps/All.hpp>
 
 using namespace fdm; 
 using namespace linops; 

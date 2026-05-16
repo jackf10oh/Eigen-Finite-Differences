@@ -8,8 +8,8 @@
 #ifndef FORNFDM_DIFFOPS_EIGENEVALUATOR_H
 #define FORNFDM_DIFFOPS_EIGENEVALUATOR_H
 
-#include<FiniteDifference/Utilities/BlockDiagExpr.hpp>
-#include<FiniteDifference/Utilities/HighDimExpr.hpp>
+#include<FornFdm/Utilities/BlockDiagExpr.hpp>
+#include<FornFdm/Utilities/HighDimExpr.hpp>
 
 namespace Eigen {
 namespace internal {

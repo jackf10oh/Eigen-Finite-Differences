@@ -25,11 +25,11 @@ endif()
 find_package(Eigen3 REQUIRED)
 
 # header only library ===============================
-add_library(FiniteDifference INTERFACE) 
-target_include_directories(FiniteDifference 
+add_library(FornFdm INTERFACE) 
+target_include_directories(FornFdm 
   INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-target_link_libraries(FiniteDifference
+target_link_libraries(FornFdm
   INTERFACE Eigen3::Eigen
 )
 
@@ -79,7 +79,7 @@ target_link_libraries(FiniteDifference
 
 # Tie all sub directories into main library ============================================== 
 target_link_libraries(FdmStencilExprs
-  INTERFACE FiniteDifference
+  INTERFACE FornFdm
   # INTERFACE LinOps 
   # INTERFACE OutsideSteps
   # INTERFACE TExprs 
