@@ -39,14 +39,14 @@ struct ForwardNodeSelector
   static constexpr std::size_t numNodesMax = numNodesMin; 
   static constexpr std::size_t numNodesUsed = numNodesMin; 
   std::array<Eigen::Index, numNodesMax> nodeIndices;
-  std::array<fornfdm::Scalar, numNodesMax> nodeValues;
+  Eigen::Map<const fornfdm::Vector> nodeValues;
   fornfdm::Scalar x_bar; 
   std::size_t nonZerosOffset; 
 
   // Constructor ============================
   template<class Container>
   ForwardNodeSelector(const Container& c, std::size_t idx)
-    : nonZerosOffset(numNodesUsed * idx)
+    : nonZerosOffset(numNodesUsed * idx), nodeValues(nullptr,0)
   {
     // x_bar is just the ith entry into container c 
     x_bar = c[idx]; 
@@ -55,18 +55,18 @@ struct ForwardNodeSelector
     auto s = c.size() - numNodesUsed;  
     if(idx < s){
       // top rows use a forward stencil 
+      new (&nodeValues) Eigen::Map<const fornfdm::Vector>(c.data() + idx, numNodesUsed); 
       for(auto j=0; j<numNodesUsed; ++j){
         auto node_idx = idx + j;
         nodeIndices[j] = node_idx; 
-        nodeValues[j] = c[node_idx];    
       }
     }
     else {
       // bottom rows pack tightly against right end point
+      new (&nodeValues) Eigen::Map<const fornfdm::Vector>(c.data() + s, numNodesUsed); 
       for(auto j=0; j<numNodesUsed; ++j){
         auto node_idx = s + j;
         nodeIndices[j] = node_idx; 
-        nodeValues[j] = c[node_idx];    
       }
     }
   }

@@ -42,13 +42,14 @@ struct CenteredNodeSelector
   static constexpr std::size_t numNodesMax = 2*((numNodesMin)/2)+1; 
   std::size_t numNodesUsed; 
   std::array<Eigen::Index, numNodesMax> nodeIndices;
-  std::array<fornfdm::Scalar, numNodesMax> nodeValues;
+  Eigen::Map<const fornfdm::Vector> nodeValues;
   fornfdm::Scalar x_bar; 
   std::size_t nonZerosOffset; 
 
   // Constructor ============================
   template<class Container>
   CenteredNodeSelector(const Container& c, std::size_t idx)
+    : nodeValues(nullptr,0)
   {
     constexpr std::size_t centered_skirt = (numNodesMin)/2; 
     // calculate how many nodes were actually used in the array. 
@@ -64,8 +65,8 @@ struct CenteredNodeSelector
       for(auto j=0; j<numNodesUsed; ++j){
         auto node_idx = idx + j;
         nodeIndices[j] = node_idx; 
-        nodeValues[j] = c[node_idx];    
       }
+      new (&nodeValues) Eigen::Map<const fornfdm::Vector>(c.data() + nodeIndices[0], numNodesUsed); 
     }
     else if(idx < c.size()-centered_skirt){
       nonZerosOffset = centered_skirt*numNodesMin + (idx-centered_skirt)*(1+2*centered_skirt); 
@@ -73,8 +74,8 @@ struct CenteredNodeSelector
       for(auto j=0; j<numNodesUsed; ++j){
         auto node_idx = idx-centered_skirt+j; 
         nodeIndices[j] = node_idx; 
-        nodeValues[j] = c[node_idx]; 
       }
+      new (&nodeValues) Eigen::Map<const fornfdm::Vector>(c.data() + nodeIndices[0], numNodesUsed); 
     }
     else{
       nonZerosOffset = centered_skirt*numNodesMin + (c.size()-2*centered_skirt)*(1+2*centered_skirt) + (idx-centered_skirt-(c.size()-2*centered_skirt))*(numNodesMin); 
@@ -85,8 +86,8 @@ struct CenteredNodeSelector
         auto node_idx = idx - numNodesMin + j; 
         --j; 
         nodeIndices[j] = node_idx; 
-        nodeValues[j] = c[node_idx]; 
       } while (j!=0);
+      new (&nodeValues) Eigen::Map<const fornfdm::Vector>(c.data() + nodeIndices[0], numNodesUsed); 
     }
   }
 
