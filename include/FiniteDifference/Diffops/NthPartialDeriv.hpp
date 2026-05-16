@@ -27,7 +27,7 @@ struct Evaluator<fornfdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_
   const fornfdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_tag>& m_xpr; 
   Evaluator(const fornfdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_tag>& xpr): m_xpr(xpr){}
   template<std::size_t N>
-  auto evaluateWeightsAndCoords(const fornfdm::Scalar* weights, std::size_t weights_per_order, const fornfdm::Coordinate<N>& coords) const 
+  auto evalWeightsCoordsTime(const fornfdm::Scalar* weights, std::size_t weights_per_order, const fornfdm::Coordinate<N>& coords, fornfdm::Real t) const 
   {
     return Eigen::Map<const Eigen::Matrix<fornfdm::Scalar, Eigen::Dynamic, 1>>(weights + weights_per_order * _nthOrder, weights_per_order); 
   }

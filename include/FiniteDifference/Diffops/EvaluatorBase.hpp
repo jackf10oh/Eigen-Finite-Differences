@@ -43,14 +43,16 @@ struct EvaluatorBase
     NodeSelector<typename traits_t::node_selector_tag, numNodesMin> m_nodes; 
     typename fornfdm::utils::FornbergStackCalc<NodeSelector<typename traits_t::node_selector_tag, numNodesMin>::numNodesMax, traits_t::maxOrder> m_calc; 
     fornfdm::Coordinate<traits_t::max_num_args_called> m_coords; 
+    fornfdm::Real m_time; 
 
     public:
     // constructor
-    Row(const Evaluator<Xpr>& eval, const fornfdm::Mesh* m, std::size_t row_idx)
+    Row(const Evaluator<Xpr>& eval, const fornfdm::Mesh* m, std::size_t row_idx, fornfdm::Real t)
       : m_eval(eval), 
       m_nodes(m->getAxis(traits_t::direction), (row_idx / eval.m_xpr.m_prod_before) % m->sizeOfDim(traits_t::direction)), 
       m_calc(m_nodes.x_bar, m_nodes.nodeValues.cbegin(), std::next(m_nodes.nodeValues.cbegin(), m_nodes.numNodesUsed)), 
-      m_coords(m, row_idx)
+      m_coords(m, row_idx), 
+      m_time(t)
     {}
 
     // Member Functions ======================================
@@ -61,7 +63,7 @@ struct EvaluatorBase
     const auto& columnIndices() const { return m_nodes.nodeIndices; } 
     
     // uses m_eval to map fornberg weights + coords into eigen expression  
-    auto values() const { return m_eval.evaluateWeightsAndCoords(m_calc.getArray().data(), m_nodes.numNodesUsed, m_coords); }
+    auto values() const { return m_eval.evalWeightsCoordsTime(m_calc.getArray().data(), m_nodes.numNodesUsed, m_coords, m_time); }
 
     // value of non zeros / row index offset 
     inline const std::size_t& valuePtrOffset() const { return m_nodes.nonZerosOffset; }  

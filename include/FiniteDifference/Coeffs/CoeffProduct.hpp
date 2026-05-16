@@ -45,9 +45,14 @@ struct Evaluator<CoeffProduct<LeftCoeff, RightDeriv>> : public EvaluatorBase<Coe
   {}
 
   template<std::size_t N>
-  auto evaluateWeightsAndCoords(const fornfdm::Scalar* weights, std::size_t weights_per_order, const Coordinate<N>& coords) const 
+  auto evalWeightsCoordsTime(const fornfdm::Scalar* weights, std::size_t weights_per_order, const Coordinate<N>& coords, fornfdm::Real t) const 
   {
-    return m_xpr.functor()(coords.apply(m_xpr.lhs().callable()), m_rhs_eval.evaluateWeightsAndCoords(weights, weights_per_order, coords)); 
+    if constexpr(fornfdm::linops::internal::traits<LeftCoeff>::is_timedep){
+      return m_xpr.functor()(coords.applyBindFirst(m_xpr.lhs().callable(), t), m_rhs_eval.evalWeightsCoordsTime(weights, weights_per_order, coords, t)); 
+    }
+    else{
+      return m_xpr.functor()(coords.apply(m_xpr.lhs().callable()), m_rhs_eval.evalWeightsCoordsTime(weights, weights_per_order, coords, t)); 
+    }
   }
 }; 
 
@@ -140,11 +145,6 @@ class CoeffProduct : public fornfdm::linops::PartialDerivBase<CoeffProduct<LeftC
     auto& lhs(){ return m_lhs; }
     const auto& rhs() const { return m_rhs; }
     auto& rhs(){ return m_rhs; }
-    void setTime_hooked(fornfdm::Real t)
-    {
-      m_lhs.const_cast_derived().setTime_hooked(t); 
-      m_rhs.const_cast_derived().setTime_hooked(t);  
-    }
 }; 
 
 } // end namespace linops  

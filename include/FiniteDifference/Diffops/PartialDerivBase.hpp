@@ -41,9 +41,9 @@ struct Evaluator<PartialDerivBase<Derived>> : public EvaluatorBase<PartialDerivB
   Evaluator(const PartialDerivBase<Derived>& xpr) : m_derived_eval(xpr.derived()){}
 
   template<std::size_t N>
-  auto evaluateWeightsAndCoords(const fornfdm::Scalar* weights, std::size_t weights_per_order, const fornfdm::Coordinate<N>& coords)
+  auto evalWeightsCoordsTime(const fornfdm::Scalar* weights, std::size_t weights_per_order, const fornfdm::Coordinate<N>& coords, fornfdm::Real t)
   {
-    return m_derived_eval.evaluateWeightsAndCoords(weights, weights_per_order, coords); 
+    return m_derived_eval.evalWeightsCoordsTime(weights, weights_per_order, coords, t); 
   }
 }; 
 
@@ -102,7 +102,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
       else{
         // change mesh observed + update m_stencil matrix 
         this->m_mesh_observed = m; 
-        setMesh_impl(m.get()); 
+        setMesh_impl(m.get(), -1.0); 
       }
     }
     SharedConstMesh getMesh() const { return m_mesh_observed.lock(); }
@@ -110,11 +110,9 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
       if constexpr(fornfdm::linops::internal::traits<Derived>::is_timedep){
         // update m_current_time + update m_stencil matrix 
         this->m_current_time=t; 
-        derived().setTime_hooked(t); 
-        setMesh_impl(this->m_mesh_raw); 
+        setMesh_impl(this->m_mesh_raw, t); 
       }
     }
-    void setTime_hooked(fornfdm::Real t){}
     fornfdm::Real getTime() const {
       if constexpr(fornfdm::linops::internal::traits<Derived>::is_timedep){
         return this->m_current_time; 
@@ -142,7 +140,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
 
   protected:
     // Implementations ----------------------------------------------------------------
-    void setMesh_impl(const Mesh* m)
+    void setMesh_impl(const Mesh* m, fornfdm::Real t)
     {
       using traits_t = fornfdm::linops::internal::traits<Derived>; 
       const auto& axis = m->getAxis(traits_t::direction); 
@@ -171,7 +169,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
         for(std::size_t row_idx=0; row_idx<axis_size; ++row_idx)
         {
           // use node selector 
-          typename Evaluator::Row row(eval, m, m_prod_before * row_idx); 
+          typename Evaluator::Row row(eval, m, m_prod_before * row_idx, t); 
           // copy the indices into m_stencil's inner indices ptr
           m_stencil.outerIndexPtr()[row_idx] = row.valuePtrOffset(); 
           std::copy_n(row.columnIndices().cbegin(), row.size(), m_stencil.innerIndexPtr() + row.valuePtrOffset());  
@@ -195,7 +193,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
         for(std::size_t row_idx=0; row_idx < product_before*axis_size; ++row_idx)
         {
           // use node selector 
-          typename Evaluator::Row row(eval, m, row_idx);
+          typename Evaluator::Row row(eval, m, row_idx, t);
           // // copy the indices into m_stencil's inner indices ptr
           std::size_t inner_offset = (row.valuePtrOffset() * product_before)+(row.size()*(row_idx%product_before)); 
           std::size_t inset = row_idx%product_before; 
@@ -225,7 +223,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
         // write node wise expressions into each row of stencil 
         for(std::size_t row_idx=0; row_idx < num_repeats*product_before*axis_size; ++row_idx)
         {
-          typename Evaluator::Row row(eval, m, row_idx); 
+          typename Evaluator::Row row(eval, m, row_idx, t); 
           std::size_t inner_offset = (nnz)*(row_idx/(product_before*axis_size))+(row.valuePtrOffset() * product_before)+(row.size()*(row_idx%product_before)); 
           std::size_t inset = (product_before*axis_size)*(row_idx/(product_before*axis_size)) + (row_idx%product_before); 
           std::transform(

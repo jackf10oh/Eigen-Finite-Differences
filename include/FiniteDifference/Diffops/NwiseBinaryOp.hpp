@@ -34,11 +34,11 @@ struct Evaluator<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> : pub
   {}
 
   template<std::size_t N>
-  auto evaluateWeightsAndCoords(const fornfdm::Scalar* weights, std::size_t weights_per_order, const fornfdm::Coordinate<N>& coords) const 
+  auto evalWeightsCoordsTime(const fornfdm::Scalar* weights, std::size_t weights_per_order, const fornfdm::Coordinate<N>& coords, fornfdm::Real t) const 
   {
     return m_xpr.functor()( 
-      m_lhs_eval.evaluateWeightsAndCoords(weights, weights_per_order, coords), 
-      m_rhs_eval.evaluateWeightsAndCoords(weights, weights_per_order, coords)
+      m_lhs_eval.evalWeightsCoordsTime(weights, weights_per_order, coords, t), 
+      m_rhs_eval.evalWeightsCoordsTime(weights, weights_per_order, coords, t)
     ); 
   }
 };
@@ -145,11 +145,6 @@ class NwiseBinaryOp : public fornfdm::linops::PartialDerivBase<NwiseBinaryOp<Bin
     auto& lhs(){ return m_lhs; }
     const auto& rhs() const { return m_rhs; }
     auto& rhs(){ return m_rhs; }
-    void setTime_hooked(fornfdm::Real t)
-    {
-      m_lhs.const_cast_derived().setTime_hooked(t); 
-      m_rhs.const_cast_derived().setTime_hooked(t); 
-    }
 }; 
 
 template<

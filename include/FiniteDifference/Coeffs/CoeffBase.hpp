@@ -14,6 +14,7 @@
 #include<Eigen/Core> // DiagonalMatrixBase 
 #include "../Diffops/Traits.hpp"
 #include "../Diffops/EvaluatorBase.hpp" // Coordinate struct 
+#include "../Coordinate.hpp"
 
 namespace fornfdm{
 namespace linops{
@@ -46,23 +47,12 @@ namespace Eigen{
 namespace internal{
 
 // Traits 
-template<typename Derived>
-struct traits<fornfdm::linops::CoeffBase<Derived>>
-{
-  typedef Eigen::DiagonalShape XprKind; 
-  typedef typename Eigen::CwiseNullaryOp<fornfdm::linops::CyclicWrapper, Eigen::Matrix<fornfdm::Scalar, 1, Eigen::Dynamic>> DiagonalVectorType;
-  typedef fornfdm::Scalar Scalar; 
-  typedef typename DiagonalVectorType::StorageKind StorageKind;
-  typedef typename DiagonalVectorType::StorageIndex StorageIndex;
-  enum{
-    RowsAtCompileTime = DiagonalVectorType::SizeAtCompileTime,
-    ColsAtCompileTime = DiagonalVectorType::SizeAtCompileTime,
-    MaxRowsAtCompileTime = DiagonalVectorType::MaxSizeAtCompileTime,
-    MaxColsAtCompileTime = DiagonalVectorType::MaxSizeAtCompileTime,
-    CoeffReadCost = 1, 
-    Flags = Eigen::NestByRefBit
-  }; 
-}; 
+// template<typename Derived>
+// struct traits<fornfdm::linops::CoeffBase<Derived>>
+// {}; 
+
+// template<typename Derived>
+// struct evaluator<fornfdm::linops::CoeffBase<Derived>> : public evaluator<Derived>{}; 
 
 } // end namespace internal 
 } // end namespace eigen 
@@ -77,12 +67,26 @@ class CoeffBase: public Eigen::DiagonalBase<Derived>
 {
   public:
     // Type Defs ------------------------
+    typedef typename Eigen::DiagonalBase<Derived> Base; 
     typedef typename Eigen::CwiseNullaryOp<CyclicWrapper, Eigen::Matrix<fornfdm::Scalar, 1, Eigen::Dynamic>> DiagonalVectorType; 
-    typedef Eigen::DiagonalShape StorageKind; 
-    typedef typename DiagonalVectorType::StorageIndex StorageIndex; 
-    using Base = Eigen::DiagonalBase<Derived>; 
+    // typedef typename Eigen::internal::traits<Derived>::DiagonalVectorType DiagonalVectorType;
+    typedef typename DiagonalVectorType::Scalar Scalar;
+    typedef typename DiagonalVectorType::RealScalar RealScalar;
+    typedef typename Eigen::internal::traits<Derived>::StorageKind StorageKind;
+    typedef typename Eigen::internal::traits<Derived>::StorageIndex StorageIndex;
+    enum {
+      RowsAtCompileTime = DiagonalVectorType::SizeAtCompileTime,
+      ColsAtCompileTime = DiagonalVectorType::SizeAtCompileTime,
+      MaxRowsAtCompileTime = DiagonalVectorType::MaxSizeAtCompileTime,
+      MaxColsAtCompileTime = DiagonalVectorType::MaxSizeAtCompileTime,
+      IsVectorAtCompileTime = 0,
+      Flags = Eigen::NoPreferredStorageOrderBit
+    };
+    typedef Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, 0, MaxRowsAtCompileTime, MaxColsAtCompileTime> DenseMatrixType;
+    typedef DenseMatrixType DenseType;
+    typedef Eigen::DiagonalMatrix<Scalar,DiagonalVectorType::SizeAtCompileTime,DiagonalVectorType::MaxSizeAtCompileTime> PlainObject;
 
-  private:
+  protected:
     // Member Data ------------------------ 
     typename Eigen::Matrix<fornfdm::Scalar, 1, Eigen::Dynamic> m_diagonal; 
     StorageIndex m_prod_after; 
@@ -97,8 +101,8 @@ class CoeffBase: public Eigen::DiagonalBase<Derived>
     {} 
 
     // Member Functions -------------------
+    const auto& toEigen() const { return *static_cast<const Eigen::DiagonalBase<Derived>*>(this); }
     using Base::derived; 
-    // using Base::const_derived; ????  
     const auto& diagonal() const { return m_cyclic_wrapper; }
     const auto& callable() const { return derived().callable(); }
 
@@ -113,24 +117,6 @@ class CoeffBase: public Eigen::DiagonalBase<Derived>
     auto operator*(RhsDeriv&& rhs) && 
     {
       return CoeffProduct<Derived, RhsDeriv>(std::move(derived()), std::forward<RhsDeriv>(rhs)); 
-    }
-
-  public: // TODO encapsulate this 
-    // Implementations ---------------------
-    void setMesh_impl(const Mesh* m)
-    {
-      using traits_t = fornfdm::linops::internal::traits<Derived>; 
-      m_prod_after = m->sizesMiddleProduct(traits_t::max_num_args_called+1, m->numDims());
-      
-      std::size_t end = m->sizesMiddleProduct(0, traits_t::max_num_args_called+1);
-      m_diagonal.resize(end); 
-      for(std::size_t idx=0; idx<end; ++idx)
-      {
-        fornfdm::Coordinate<traits_t::max_num_args_called> coord(m,idx);
-        m_diagonal[idx] = coord.apply(callable());  
-      }
-      // placement new shenanigans
-      new (&m_cyclic_wrapper) DiagonalVectorType(1,end*m_prod_after,CyclicWrapper(m_diagonal, end)); 
     }
 };
 

@@ -28,9 +28,9 @@ struct Evaluator<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>> : public Evalua
   Evaluator<typename UnarXprType::NestedExpression> m_nested_eval; 
   Evaluator(const fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>& xpr) : m_xpr(xpr), m_nested_eval(xpr.nestedExpression()){} 
   template<std::size_t N>
-  auto evaluateWeightsAndCoords(const fornfdm::Scalar* weights, std::size_t weights_per_order, const fornfdm::Coordinate<N>& coords) const 
+  auto evalWeightsCoordsTime(const fornfdm::Scalar* weights, std::size_t weights_per_order, const fornfdm::Coordinate<N>& coords, fornfdm::Real t) const 
   {
-    return m_xpr.functor()( m_nested_eval.evaluateWeightsAndCoords(weights, weights_per_order, coords)); 
+    return m_xpr.functor()( m_nested_eval.evalWeightsCoordsTime(weights, weights_per_order, coords, t)); 
   }
 };
 
@@ -131,10 +131,6 @@ class NwiseUnaryOp : public fornfdm::linops::PartialDerivBase<NwiseUnaryOp<Unary
     const auto& functor() const { return m_functor; }
     const auto& nestedExpression() const { return m_xpr; }
     auto& nestedExpression(){ return m_xpr; }
-    void setTime_hooked(fornfdm::Real t)
-    {
-      m_xpr.const_cast_derived().setTime_hooked(t); 
-    }
 }; 
 
 template<typename XprType, typename = std::enable_if_t<fornfdm::linops::internal::is_partialderiv_crtp<XprType>::value> >

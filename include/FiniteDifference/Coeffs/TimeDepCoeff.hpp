@@ -26,8 +26,8 @@ struct traits_impl<fornfdm::linops::TimeDepCoeff<Callable>>
   static constexpr bool is_linop = true; 
   static constexpr bool is_unarop = false; 
   static constexpr bool is_binop = false; 
-  static constexpr bool is_ternop = false;
-  static constexpr std::size_t max_num_args_called = fornfdm::internal::callable_traits<Callable>::arity - 1; // first arg binded to time. 
+  static constexpr bool is_ternop = false; 
+  static constexpr std::size_t max_num_args_called = fornfdm::internal::callable_traits<Callable>::arity - 1; // first argument is time
   static constexpr bool is_timedep = true; 
 }; 
 
@@ -35,29 +35,20 @@ struct traits_impl<fornfdm::linops::TimeDepCoeff<Callable>>
 } // end namespace linops 
 } // end namespace fornfdm 
 
-#include "CoeffBase.hpp"
-
 namespace Eigen{
 namespace internal{
 
 // Traits 
 template<class Callable>
-struct traits<fornfdm::linops::TimeDepCoeff<Callable>> // : public traits<fornfdm::linops::CoeffBase<fornfdm::linops::AutonomousCoeff<Callable>>>
+struct traits<fornfdm::linops::TimeDepCoeff<Callable>> 
+  : public traits<Eigen::CwiseNullaryOp<fornfdm::linops::CyclicWrapper, Eigen::Matrix<fornfdm::Scalar, 1, Eigen::Dynamic>>>
 {
-  typedef Eigen::DiagonalShape XprKind; 
   typedef typename Eigen::CwiseNullaryOp<fornfdm::linops::CyclicWrapper, Eigen::Matrix<fornfdm::Scalar, 1, Eigen::Dynamic>> DiagonalVectorType;
-  typedef fornfdm::Scalar Scalar; 
-  typedef typename DiagonalVectorType::StorageKind StorageKind;
-  typedef typename DiagonalVectorType::StorageIndex StorageIndex;
-  enum{
-    RowsAtCompileTime = DiagonalVectorType::SizeAtCompileTime,
-    ColsAtCompileTime = DiagonalVectorType::SizeAtCompileTime,
-    MaxRowsAtCompileTime = DiagonalVectorType::MaxSizeAtCompileTime,
-    MaxColsAtCompileTime = DiagonalVectorType::MaxSizeAtCompileTime,
-    CoeffReadCost = 1, 
-    Flags = Eigen::NestByRefBit
-  }; 
-}; 
+  typedef DiagonalShape StorageKind;
+  enum {
+    Flags = LvalueBit | NoPreferredStorageOrderBit
+  };
+};
 
 }
 }
@@ -68,21 +59,29 @@ namespace linops{
 template<class Callable>
 class TimeDepCoeff : public CoeffBase<TimeDepCoeff<Callable>>
 {
-  private:
+  public:
     // Type Defs ------------
+    typedef typename Eigen::internal::traits<TimeDepCoeff>::DiagonalVectorType DiagonalVectorType;
+    typedef const TimeDepCoeff& Nested;
+    typedef fornfdm::Scalar Scalar;
+    typedef typename Eigen::internal::traits<TimeDepCoeff>::StorageKind StorageKind;
+    typedef typename Eigen::internal::traits<TimeDepCoeff>::StorageIndex StorageIndex;
+  private:
     using CallableCleaned = std::remove_cv_t<std::remove_reference_t<Callable>>; 
     // Member Data ----------- 
     std::weak_ptr<const Mesh> m_mesh_observed; 
-    const Mesh* m_mesh_raw; 
-    typename fornfdm::internal::BindFirst<Callable> m_callable; // stores Callable + captured something that converts to fornfdm::Real. 
+    const Mesh* m_mesh_raw;
+    fornfdm::Real m_current_time;  
+    CallableCleaned m_callable;
 
   public:
     // Constructor ----------
     TimeDepCoeff(Callable c)
-      : CoeffBase<TimeDepCoeff<Callable>>(), m_callable(c, -1.0)
+      : CoeffBase<TimeDepCoeff<Callable>>(), m_callable(c)
     {}
     
     // Member Functions 
+    using CoeffBase<TimeDepCoeff<Callable>>::diagonal; 
     const auto& callable() const { return m_callable; }
     void setMesh(const std::shared_ptr<const Mesh>& m)
     {
@@ -92,14 +91,20 @@ class TimeDepCoeff : public CoeffBase<TimeDepCoeff<Callable>>
     auto getMesh() const { return m_mesh_observed.lock(); }
     void setTime(fornfdm::Real t)
     { 
-      m_callable.captured_arg = t; 
-      CoeffBase<TimeDepCoeff>::setMesh_impl(m_mesh_raw);
+      using traits_t = fornfdm::linops::internal::traits<TimeDepCoeff<Callable>>; 
+      this->m_prod_after = m_mesh_raw->sizesMiddleProduct(traits_t::max_num_args_called, m_mesh_raw->numDims());
+      
+      std::size_t end = m_mesh_raw->sizesMiddleProduct(0, traits_t::max_num_args_called);
+      this->m_diagonal.resize(end); 
+      for(std::size_t idx=0; idx<end; ++idx)
+      {
+        fornfdm::Coordinate<traits_t::max_num_args_called> coord(m_mesh_raw,idx);
+        this->m_diagonal[idx] = coord.applyBindFirst(m_callable, t);  
+      }
+      // placement new shenanigans
+      new (&(this->m_cyclic_wrapper)) typename CoeffBase<TimeDepCoeff<Callable>>::DiagonalVectorType(1,end*(this->m_prod_after),CyclicWrapper(this->m_diagonal, end)); 
     }
-    // fornfdm::Real getTime() const { return m_callable.captured_arg; } // don't want to do this. getTime() should always reflect last setTime that triggered updates to matrix 
-    void setTime_hooked(fornfdm::Real t)
-    {
-      m_callable.captured_arg = t;
-    }
+    fornfdm::Real getTime() const { return m_current_time; }
 };
 
 } // end namespace linops 

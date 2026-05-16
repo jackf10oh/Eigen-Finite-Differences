@@ -35,29 +35,20 @@ struct traits_impl<fornfdm::linops::AutonomousCoeff<Callable>>
 } // end namespace linops 
 } // end namespace fornfdm 
 
-#include "CoeffBase.hpp"
-
 namespace Eigen{
 namespace internal{
 
 // Traits 
 template<class Callable>
-struct traits<fornfdm::linops::AutonomousCoeff<Callable>> // : public traits<fornfdm::linops::CoeffBase<fornfdm::linops::AutonomousCoeff<Callable>>>
+struct traits<fornfdm::linops::AutonomousCoeff<Callable>> 
+  : public traits<Eigen::CwiseNullaryOp<fornfdm::linops::CyclicWrapper, Eigen::Matrix<fornfdm::Scalar, 1, Eigen::Dynamic>>>
 {
-  typedef Eigen::DiagonalShape XprKind; 
   typedef typename Eigen::CwiseNullaryOp<fornfdm::linops::CyclicWrapper, Eigen::Matrix<fornfdm::Scalar, 1, Eigen::Dynamic>> DiagonalVectorType;
-  typedef fornfdm::Scalar Scalar; 
-  typedef typename DiagonalVectorType::StorageKind StorageKind;
-  typedef typename DiagonalVectorType::StorageIndex StorageIndex;
-  enum{
-    RowsAtCompileTime = DiagonalVectorType::SizeAtCompileTime,
-    ColsAtCompileTime = DiagonalVectorType::SizeAtCompileTime,
-    MaxRowsAtCompileTime = DiagonalVectorType::MaxSizeAtCompileTime,
-    MaxColsAtCompileTime = DiagonalVectorType::MaxSizeAtCompileTime,
-    CoeffReadCost = 1, 
-    Flags = Eigen::NestByRefBit
-  }; 
-}; 
+  typedef DiagonalShape StorageKind;
+  enum {
+    Flags = LvalueBit | NoPreferredStorageOrderBit
+  };
+};
 
 }
 }
@@ -68,8 +59,14 @@ namespace linops{
 template<class Callable>
 class AutonomousCoeff : public CoeffBase<AutonomousCoeff<Callable>>
 {
-  private:
+  public:
     // Type Defs ------------
+    typedef typename Eigen::internal::traits<AutonomousCoeff>::DiagonalVectorType DiagonalVectorType;
+    typedef const AutonomousCoeff& Nested;
+    typedef fornfdm::Scalar Scalar;
+    typedef typename Eigen::internal::traits<AutonomousCoeff>::StorageKind StorageKind;
+    typedef typename Eigen::internal::traits<AutonomousCoeff>::StorageIndex StorageIndex;
+  private:
     using CallableCleaned = std::remove_cv_t<std::remove_reference_t<Callable>>; 
     // Member Data ----------- 
     std::weak_ptr<const fornfdm::Mesh> m_mesh_observed; 
@@ -82,16 +79,27 @@ class AutonomousCoeff : public CoeffBase<AutonomousCoeff<Callable>>
     {}
     
     // Member Functions 
+    using CoeffBase<AutonomousCoeff<Callable>>::diagonal; 
     const auto& callable() const { return m_callable; }
     void setMesh(const std::shared_ptr<const fornfdm::Mesh>& m)
     {
       m_mesh_observed = m; 
-      CoeffBase<AutonomousCoeff<Callable>>::setMesh_impl(m.get()); 
+      using traits_t = fornfdm::linops::internal::traits<AutonomousCoeff<Callable>>; 
+      this->m_prod_after = m->sizesMiddleProduct(traits_t::max_num_args_called, m->numDims());
+      
+      std::size_t end = m->sizesMiddleProduct(0, traits_t::max_num_args_called);
+      this->m_diagonal.resize(end); 
+      for(std::size_t idx=0; idx<end; ++idx)
+      {
+        fornfdm::Coordinate<traits_t::max_num_args_called> coord(m.get(),idx);
+        this->m_diagonal[idx] = coord.apply(m_callable);  
+      }
+      // placement new shenanigans
+      new (&(this->m_cyclic_wrapper)) typename CoeffBase<AutonomousCoeff<Callable>>::DiagonalVectorType(1,end*(this->m_prod_after),CyclicWrapper(this->m_diagonal, end)); 
     }
     auto getMesh() const { return m_mesh_observed.lock(); }
     void setTime(fornfdm::Real t){/* do nothing */}
     fornfdm::Real getTime() const { return -1.0; }
-    void setTime_hooked(fornfdm::Real t){/* do nothing */}
 };
 
 } // end namespace linops 

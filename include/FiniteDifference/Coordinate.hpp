@@ -27,20 +27,25 @@ struct Coordinate
   Coordinate(const Mesh* m, std::size_t row_idx);
 
   // from x,y,z values 
-  template<typename... Xs>
+  template<typename... Xs, typename = std::enable_if_t<sizeof...(Xs)<=numDimsMax && (std::is_convertible_v<Xs, fornfdm::Scalar> && ...)> >
   Coordinate(Xs&&... xs)
     : values{ {std::forward<Xs>(xs)...} }
-  {
-    static_assert(sizeof...(Xs)<=numDimsMax, "Must construct from <= numDimsMax in Coordinate"); 
-    static_assert((std::is_convertible_v<Xs, fornfdm::Scalar> && ...), "All args must be convertible to fornfdm::Scalar"); 
-  }
+  {/* all args must be convertible to fornfdm::Scalar. sizeof...(Args) must be <= numDimsMax*/}
 
   // Member Functions ------------------------
   template<class Callable>
   fornfdm::Scalar apply(const Callable& c) const; 
 
+  template<class Callable, class ArgType>
+  fornfdm::Scalar applyBindFirst(const Callable& c, ArgType t) const; 
+
+  private:
+  // Implementations ------------------ 
   template<class Callable, std::size_t... idxs>
   fornfdm::Scalar apply_impl(const Callable& c, std::index_sequence<idxs...>) const; 
+
+  template<class Callable, class ArgType, std::size_t... idxs>
+  fornfdm::Scalar applyBindFirst_impl(const Callable& c, ArgType t, std::index_sequence<idxs...>) const; 
 };
 
 } // end namespace fornfdm 
@@ -82,6 +87,27 @@ template<class Callable, std::size_t... idxs>
 fornfdm::Scalar Coordinate<numDimsMax>::apply_impl(const Callable& c, std::index_sequence<idxs...>) const 
 {
   return c(values[idxs]...); 
+}
+
+template<std::size_t numDimsMax>
+template<class Callable, class ArgType>
+fornfdm::Scalar Coordinate<numDimsMax>::applyBindFirst(const Callable& c, ArgType t) const
+{
+  constexpr std::size_t N = fornfdm::internal::callable_traits<Callable>::arity;
+  static_assert(N>0, "Must call applyBindFirst on callable F with arity >= 1"); 
+  if constexpr(N==1){
+    return c(t); 
+  }
+  else{
+    return applyBindFirst_impl(c, t, std::make_index_sequence<N-1>{});
+  }
+}
+
+template<std::size_t numDimsMax>
+template<class Callable, class ArgType, std::size_t... idxs>
+fornfdm::Scalar Coordinate<numDimsMax>::applyBindFirst_impl(const Callable& c, ArgType t, std::index_sequence<idxs...>) const
+{
+  return c(t,values[idxs]...); 
 }
 
 } // end namespace fornfdm 
