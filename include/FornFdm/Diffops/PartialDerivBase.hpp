@@ -11,6 +11,7 @@
 #define FORNFDM_DIFFOPS_PARTIALDERIVBASE_H
 
 #include<Eigen/SparseCore>
+#include "KroneckerEvaluator.hpp"
 #include "EvaluatorBase.hpp"
 #include "../Types.hpp"
 
@@ -62,6 +63,20 @@ namespace internal{
 template<class Derived>
 struct traits<fornfdm::linops::PartialDerivBase<Derived>> : public traits<Derived>{}; 
 
+// Eigen evaluator of PartialDerivBase is same as Derived
+template<class Derived>
+struct evaluator<fornfdm::linops::PartialDerivBase<Derived>> 
+  : public evaluator_base<fornfdm::linops::PartialDerivBase<Derived>>, 
+  public fornfdm::linops::internal::KroneckerEvaluator<fornfdm::linops::PartialDerivBase<Derived>>
+{
+  using XprType = fornfdm::linops::PartialDerivBase<Derived>; 
+  using Impl = typename fornfdm::linops::internal::KroneckerEvaluator<fornfdm::linops::PartialDerivBase<Derived>>; 
+  using InnerIterator = typename Impl::InnerIterator; 
+  evaluator(const XprType& xpr)
+    : Impl(xpr)
+  {}
+}; 
+
 } // end namespace internal 
 } // end namespace Eigen
 
@@ -78,10 +93,11 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
 
     // Friends ------------------- 
     friend Eigen::internal::evaluator<PartialDerivBase>; 
+    friend fornfdm::linops::internal::KroneckerEvaluator<PartialDerivBase>; 
     friend fornfdm::linops::internal::EvaluatorBase<PartialDerivBase>; 
     friend fornfdm::linops::internal::Evaluator<PartialDerivBase>; 
 
-  public: // TODO make protected 
+  protected:
     // Member Data ----------------------------------------------
     // const Mesh* m_mesh_raw = nullptr; // This is unused until I need time dependent operators....... 
     std::weak_ptr<const Mesh> m_mesh_observed = {/*nullptr*/}; 

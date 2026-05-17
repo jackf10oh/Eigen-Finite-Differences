@@ -8,6 +8,7 @@
 #define FORNFDM_DIFFOPS_NWISEUNARYOP_H
 
 #include "EvaluatorBase.hpp"
+#include "KroneckerEvaluator.hpp"
 #include "Functors.hpp"
 
 namespace fornfdm{
@@ -73,25 +74,16 @@ struct traits<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>>
   };
 }; 
 
-template<class UnaryOp, class XprType>
-struct evaluator<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>> 
-  : public evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>>>, 
-  public evaluator_base<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>> 
+template<class UnaryOp, class _XprType>
+struct evaluator<fornfdm::linops::NwiseUnaryOp<UnaryOp,_XprType>> 
+  : public evaluator_base<fornfdm::linops::NwiseUnaryOp<UnaryOp,_XprType>>, 
+  public fornfdm::linops::internal::KroneckerEvaluator<fornfdm::linops::NwiseUnaryOp<UnaryOp,_XprType>>
 {
-  struct InnerIterator
-    : public evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>>>::InnerIterator
-  {
-    enum { 
-      CoeffReadCost = evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>>>::CoeffReadCost, 
-      Flags = evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>>>::Flags 
-    };
-
-    InnerIterator(const evaluator& eval, Index row_idx)
-      : evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>>>::InnerIterator(eval, row_idx)
-    {}
-  }; 
-  evaluator(const fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>& xpr_d)
-    : evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>>>(xpr_d)
+  using XprType = fornfdm::linops::NwiseUnaryOp<UnaryOp,_XprType>; 
+  using Impl = typename fornfdm::linops::internal::KroneckerEvaluator<fornfdm::linops::NwiseUnaryOp<UnaryOp,_XprType>>; 
+  using InnerIterator = typename Impl::InnerIterator; 
+  evaluator(const XprType& xpr)
+    : Impl(xpr)
   {}
 }; 
 
@@ -113,6 +105,7 @@ class NwiseUnaryOp : public fornfdm::linops::PartialDerivBase<NwiseUnaryOp<Unary
 
     // Friends ------------------------------- 
     friend Eigen::internal::evaluator<NwiseUnaryOp>; 
+    friend fornfdm::linops::internal::KroneckerEvaluator<NwiseUnaryOp>; 
     friend fornfdm::linops::internal::EvaluatorBase<NwiseUnaryOp>; 
     friend fornfdm::linops::internal::Evaluator<NwiseUnaryOp>;
 

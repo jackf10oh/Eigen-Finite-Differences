@@ -8,6 +8,7 @@
 #define FORNFDM_COEFFS_COEFFPRODUCT_H
 
 #include "../Diffops/EvaluatorBase.hpp"
+#include "../Diffops/KroneckerEvaluator.hpp"
 
 namespace fornfdm{
 namespace linops{
@@ -84,23 +85,14 @@ struct traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>
 // Evaluator 
 template<class LeftCoeff, class RightDeriv>
 struct evaluator<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>> 
-  : public evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>>, 
-  public evaluator_base<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>> 
+  : public evaluator_base<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>, 
+  public fornfdm::linops::internal::KroneckerEvaluator<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>
 {
-  struct InnerIterator
-    : public evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>>::InnerIterator
-  {
-    enum { 
-      CoeffReadCost = evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>>::CoeffReadCost, 
-      Flags = evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>>::Flags 
-    };
-
-    InnerIterator(const evaluator& eval, Index row_idx)
-      : evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>>::InnerIterator(eval, row_idx)
-    {}
-  }; 
-  evaluator(const fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>& xpr_d)
-    : evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>>(xpr_d)
+  using XprType = fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>; 
+  using Impl = typename fornfdm::linops::internal::KroneckerEvaluator<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>; 
+  using InnerIterator = typename Impl::InnerIterator; 
+  evaluator(const XprType& xpr)
+    : Impl(xpr)
   {}
 }; 
 
@@ -124,6 +116,7 @@ class CoeffProduct : public fornfdm::linops::PartialDerivBase<CoeffProduct<LeftC
 
     // Friends --------------------------- 
     friend Eigen::internal::evaluator<CoeffProduct>; 
+    friend fornfdm::linops::internal::KroneckerEvaluator<CoeffProduct>; 
     friend fornfdm::linops::internal::EvaluatorBase<CoeffProduct>; 
     friend fornfdm::linops::internal::Evaluator<CoeffProduct>; 
 

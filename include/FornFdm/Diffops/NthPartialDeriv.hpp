@@ -7,6 +7,7 @@
 #ifndef FORNFDM_DIFFOPS_NTHPARTIALDERIV_H
 #define FORNFDM_DIFFOPS_NTHPARTIALDERIV_H
 
+#include "KroneckerEvaluator.hpp"
 #include "EvaluatorBase.hpp"
 #include "CenteredNodeSelector.hpp"
 #include "../Traits.hpp"
@@ -75,20 +76,14 @@ struct traits<fornfdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_ta
 
 template<std::size_t _nthOrder, int _direction, class selector_tag>
 struct evaluator<fornfdm::linops::NthPartialDeriv<_nthOrder, _direction, selector_tag>> 
-  : public evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>>>, 
-  public evaluator_base<fornfdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>> 
+  : public evaluator_base<fornfdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>>, 
+  public fornfdm::linops::internal::KroneckerEvaluator<fornfdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>>
 {
-  struct InnerIterator
-    : public evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>>>::InnerIterator
-  {
-    enum { CoeffReadCost = evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>>>::CoeffReadCost, Flags = evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>>>::Flags };
-
-    InnerIterator(const evaluator& eval, Index row_idx)
-      : evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>>>::InnerIterator(eval, row_idx)
-    {}
-  }; 
-  evaluator(const fornfdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>& xpr_d)
-    : evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>>>(xpr_d)
+  using XprType = fornfdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>; 
+  using Impl = typename fornfdm::linops::internal::KroneckerEvaluator<fornfdm::linops::NthPartialDeriv<_nthOrder, _direction,selector_tag>>; 
+  using InnerIterator = typename Impl::InnerIterator; 
+  evaluator(const XprType& xpr)
+    : Impl(xpr)
   {}
 }; 
 
@@ -106,6 +101,7 @@ class NthPartialDeriv : public PartialDerivBase<NthPartialDeriv<_nthOrder,_direc
   public:
     // Friends ----------------- 
     friend Eigen::internal::evaluator<NthPartialDeriv>; 
+    friend fornfdm::linops::internal::KroneckerEvaluator<NthPartialDeriv>; 
     friend fornfdm::linops::internal::EvaluatorBase<NthPartialDeriv>; 
     friend fornfdm::linops::internal::Evaluator<NthPartialDeriv>;
 

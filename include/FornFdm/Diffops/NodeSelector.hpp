@@ -16,8 +16,6 @@ namespace internal{
 template<class tag, std::size_t numNodesMin>
 struct NodeSelector{}; 
 
-// TODO struct Forward {}; // struct Backward {};
-
 } // end namespace internal 
 } // end namespace linops 
 } // end namespace fornfdm

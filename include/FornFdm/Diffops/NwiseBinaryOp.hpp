@@ -9,6 +9,7 @@
 
 #include "../Traits.hpp"
 #include "Traits.hpp"
+#include "KroneckerEvaluator.hpp"
 #include "EvaluatorBase.hpp"
 #include "Functors.hpp"
 
@@ -83,26 +84,17 @@ struct traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
 }; 
 
 template<class BinaryOp, class LhsType, class RhsType>
-struct evaluator<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> 
-  : public evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>, 
-  public evaluator_base<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> 
+struct evaluator<fornfdm::linops::NwiseBinaryOp<BinaryOp, LhsType, RhsType>> 
+  : public evaluator_base<fornfdm::linops::NwiseBinaryOp<BinaryOp, LhsType, RhsType>>, 
+  public fornfdm::linops::internal::KroneckerEvaluator<fornfdm::linops::NwiseBinaryOp<BinaryOp, LhsType, RhsType>>
 {
-  struct InnerIterator
-    : public evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>::InnerIterator
-  {
-    enum { 
-      CoeffReadCost = evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>::CoeffReadCost, 
-      Flags = evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>::Flags 
-    };
-
-    InnerIterator(const evaluator& eval, Index row_idx)
-      : evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>::InnerIterator(eval, row_idx)
-    {}
-  }; 
-  evaluator(const fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>& xpr_d)
-    : evaluator<fornfdm::linops::PartialDerivBase<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>>(xpr_d)
+  using XprType = fornfdm::linops::NwiseBinaryOp<BinaryOp, LhsType, RhsType>; 
+  using Impl = typename fornfdm::linops::internal::KroneckerEvaluator<fornfdm::linops::NwiseBinaryOp<BinaryOp, LhsType, RhsType>>; 
+  using InnerIterator = typename Impl::InnerIterator; 
+  evaluator(const XprType& xpr)
+    : Impl(xpr)
   {}
-}; 
+};
 
 } // end namespac internal 
 } // end namespac Eigen 
@@ -124,6 +116,7 @@ class NwiseBinaryOp : public fornfdm::linops::PartialDerivBase<NwiseBinaryOp<Bin
 
     // Friends 
     friend Eigen::internal::evaluator<NwiseBinaryOp>; 
+    friend fornfdm::linops::internal::KroneckerEvaluator<NwiseBinaryOp>; 
     friend fornfdm::linops::internal::EvaluatorBase<NwiseBinaryOp>; 
     friend fornfdm::linops::internal::Evaluator<NwiseBinaryOp>;
 

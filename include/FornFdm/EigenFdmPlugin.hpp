@@ -21,7 +21,6 @@ const auto& toEigen() const { return derived(); }
 
 void setMesh(const std::shared_ptr<const fornfdm::Mesh>& m) 
 {
-  // TODO ternary operators? 
   if constexpr(fornfdm::linops::internal::traits<Derived>::is_binop){
     // binary expressions hook lhs/rhs
     if constexpr(fornfdm::linops::internal::traits<typename Derived::Lhs>::is_linop){
@@ -46,7 +45,6 @@ void setMesh(const std::shared_ptr<const fornfdm::Mesh>& m)
 
 std::shared_ptr<const fornfdm::Mesh> getMesh() const 
 {
-  // TODO ternary operators? 
   if constexpr(fornfdm::linops::internal::traits<Derived>::is_binop){
     // binary expressions hook lhs/rhs
     constexpr bool left_returns = fornfdm::linops::internal::traits<typename Derived::Lhs>::is_linop; 
@@ -82,7 +80,6 @@ std::shared_ptr<const fornfdm::Mesh> getMesh() const
 
 void setTime(fornfdm::Real t)
 {
-  // TODO ternary operators? 
   if constexpr(fornfdm::linops::internal::traits<Derived>::is_binop){
     // binary expressions hook lhs/rhs
     if constexpr(fornfdm::linops::internal::traits<typename Derived::Lhs>::is_linop){
@@ -103,7 +100,6 @@ void setTime(fornfdm::Real t)
 
 fornfdm::Real getTime() const 
 {
-  // TODO ternary operators? 
   if constexpr(fornfdm::linops::internal::traits<Derived>::is_binop){
     // binary expressions hook lhs/rhs
     constexpr bool left_returns = fornfdm::linops::internal::traits<typename Derived::Lhs>::is_linop; 

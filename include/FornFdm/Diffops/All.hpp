@@ -14,7 +14,7 @@
 #include "Traits.hpp"
 #include "Functors.hpp"
 #include "PartialDerivBase.hpp"
-#include "EigenEvaluator.hpp"
+#include "KroneckerEvaluator.hpp"
 #include "EvaluatorBase.hpp"
 #include "NwiseBinaryOp.hpp" 
 #include "NwiseUnaryOp.hpp" 
