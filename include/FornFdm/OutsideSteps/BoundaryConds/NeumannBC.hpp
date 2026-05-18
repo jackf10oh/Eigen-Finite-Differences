@@ -45,13 +45,13 @@ class NeumannBC
       Mat.coeffRef(Mat.rows()-1, Mat.cols()-1)=  1.0/h;
     };
 
-    void SetImpSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StridedRef Sol) const 
+    void SetImpSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
     {Sol[0] = boundary_flux;};
-    void SetImpSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StridedRef Sol) const 
+    void SetImpSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
     {Sol[Sol.size()-1] = boundary_flux;};
     
     // change the first/last (left/right boundary) entry of a vector  
-    void SetSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StridedRef Sol) const 
+    void SetSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
     { 
       assert((Sol.size()<3 || mesh.size()<3) && "Discretization1D or Mesh1D size too small!(must be >= 3)"); 
 
@@ -71,7 +71,7 @@ class NeumannBC
       // assign to Sol reference
       Sol[0] = target;  
     };
-    void SetSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StridedRef Sol) const 
+    void SetSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
     {
       assert((Sol.size()<3 || mesh.size()<3) && "Vector or Axis size too small!(must be >= 3)"); 
 

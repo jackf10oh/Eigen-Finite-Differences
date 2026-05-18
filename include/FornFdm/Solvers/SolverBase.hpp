@@ -87,17 +87,17 @@ class SolverBase
     }
 
     template<fornfdm::osteps::StepType step, class TCtx, class Ctx>
-    void tupleVecBeforeStep(fornfdm::Vector& rhs_vector, const TCtx& time_ctx, const Ctx& ctx)
+    void tupleVecBeforeStep(fornfdm::StrideRef rhs_vector, const TCtx& time_ctx, const Ctx& ctx)
     {
       // outside steps vector before step 
       std::apply(
-        [&](auto&&... lam_args){ ((lam_args.template VecBeforeStep<fornfdm::osteps::StepType::Explicit>(rhs_vector, time_ctx, ctx)), ...); }, 
+        [&](auto&&... lam_args){ ((lam_args.template VecBeforeStep<step>(rhs_vector, time_ctx, ctx)), ...); }, 
         m_osteps
       ); 
     }
 
     template<fornfdm::osteps::StepType step, class TCtx, class Ctx>
-    void tupleVecAfterStep(fornfdm::Vector solution_u, const TCtx& time_ctx, const Ctx& ctx)
+    void tupleVecAfterStep(fornfdm::StrideRef solution_u, const TCtx& time_ctx, const Ctx& ctx)
     {
       // outside steps solution after step(next_sol) 
       std::apply(

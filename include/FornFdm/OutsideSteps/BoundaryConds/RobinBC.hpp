@@ -52,13 +52,13 @@ class RobinBC
       Mat.coeffRef(Mat.rows()-1, Mat.cols()-1)=  val_coeff + deriv_coeff*(1.0/h);
     };
 
-    void SetImpSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StridedRef Sol) const 
+    void SetImpSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
     {Sol[0] = boundary_target;};
-    void SetImpSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StridedRef Sol) const 
+    void SetImpSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
     {Sol[Sol.size()-1] = boundary_target;};
     
     // change the first/last (left/right boundary) entry of a vector  
-    void SetSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StridedRef Sol) const 
+    void SetSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
     { 
       // if(Sol.size()<3 || mesh->size()<3) throw std::runtime_error("Discretization1D or Mesh1D size too small!(must be >= 3)"); 
 
@@ -79,7 +79,7 @@ class RobinBC
       Sol[0] = target;  
       // void return type
     };
-    void SetSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StridedRef Sol) const  
+    void SetSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const  
     {
       // if(Sol.size()<3 || mesh->size()<3) throw std::runtime_error("Discretization1D or Mesh1D size too small!(must be >= 3)"); 
 

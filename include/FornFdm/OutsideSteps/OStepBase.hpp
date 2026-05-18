@@ -31,10 +31,10 @@ struct OStepBase
     void MatBeforeStep(fornfdm::CSRMatrix& Mat, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
     
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecBeforeStep(fornfdm::StridedRef u, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
+    void VecBeforeStep(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecAfterStep(fornfdm::StridedRef u, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
+    void VecAfterStep(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
 
 }; 
 

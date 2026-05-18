@@ -5,8 +5,8 @@
 //
 // JAF 4/17/2026 
 
-#ifndef FORNFDM_DIFFOPS_EIGENEVALUATOR_H
-#define FORNFDM_DIFFOPS_EIGENEVALUATOR_H
+#ifndef FORNFDM_DIFFOPS_KRONECKEREVALUATOR_H
+#define FORNFDM_DIFFOPS_KRONECKEREVALUATOR_H
 
 #include "../Types.hpp" // CSRMatrix
 #include "../Traits.hpp" // callable_traits<>

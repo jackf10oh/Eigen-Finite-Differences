@@ -131,7 +131,7 @@ class Mesh : public std::enable_shared_from_this<Mesh>
     } 
 
     // From a VectorXd representing flattened DiscretizationXD produce list of views that "look" like 1 dimensional slices 
-    std::vector<StrideView> makeOneDimViews(StridedRef vec, std::size_t ith_dim=0) const 
+    std::vector<StrideView> makeOneDimViews(StrideRef vec, std::size_t ith_dim=0) const 
     {
       // # of entries in vec must be == to product of mesh1D sizes
       if(vec.size() != sizesProduct()) throw std::runtime_error("DiscretizationXD # of entries must be == to product of sizes in MeshXD"); 

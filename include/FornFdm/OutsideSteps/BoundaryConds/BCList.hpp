@@ -105,7 +105,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
     } // end MatBeforeStep 
 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecBeforeStep(fornfdm::StridedRef u, const TCtx& t, const Ctx& ctx)
+    void VecBeforeStep(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx)
     {
       // check args are compaitble 
       auto mesh = ctx.getMesh(); 
@@ -164,7 +164,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
     } // end VecBeforeStep 
 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecAfterStep(fornfdm::StridedRef u, const TCtx& t, const Ctx& ctx)
+    void VecAfterStep(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx)
     {
       
       auto mesh = ctx.getMesh(); // get the MeshXD 

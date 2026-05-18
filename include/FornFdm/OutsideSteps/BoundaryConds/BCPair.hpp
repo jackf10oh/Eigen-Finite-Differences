@@ -52,7 +52,7 @@ class BCPair: public OStepBase<BCPair<LBC_T,RBC_T>>
     }
 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecBeforeStep(fornfdm::StridedRef u, const TCtx& t, const Ctx& ctx) const
+    void VecBeforeStep(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx) const
     {
       auto m = ctx.getMesh(); 
       if (m->numDims() != 1) throw std::runtime_error("incorrect # of dims passed to 1D boundary condition");        
@@ -63,7 +63,7 @@ class BCPair: public OStepBase<BCPair<LBC_T,RBC_T>>
     }
 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecAfterStep(fornfdm::StridedRef u, const TCtx& t, const Ctx& ctx) const 
+    void VecAfterStep(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx) const 
     {
       auto m = ctx.getMesh(); 
       if (m->numDims() != 1) throw std::runtime_error("incorrect # of dims passed to 1D boundary condition"); 

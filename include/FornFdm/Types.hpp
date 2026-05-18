@@ -43,7 +43,7 @@ using Real = FORNFDM_CUSTOM_REAL;
 using Vector = typename Eigen::Matrix<fornfdm::Scalar, Eigen::Dynamic, 1>; 
 using CSRMatrix = Eigen::SparseMatrix<Scalar, Eigen::RowMajor>; // Compressed Sparse Row (CSR) Matrix
 using DiagMatrix = Eigen::DiagonalMatrix<fornfdm::Scalar,Eigen::Dynamic>; // Diagonal Matrix 
-using StridedRef = typename Eigen::Ref<fornfdm::Vector, 0, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>; 
+using StrideRef = typename Eigen::Ref<fornfdm::Vector, 0, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>; 
 using Stride =  Eigen::Stride<0,Eigen::Dynamic>; 
 using StrideView =  Eigen::Map<fornfdm::Vector, Eigen::Unaligned, Stride>;
 

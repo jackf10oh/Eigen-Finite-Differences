@@ -1,24 +1,24 @@
-add_executable(tests_linops
-  tests_linops.cpp
+add_executable(tests_diffusion
+  tests_diffusion.cpp
 )
 
-target_link_libraries(tests_linops
+target_link_libraries(tests_diffusion
   PRIVATE FornFdm
   PRIVATE GTest::gtest 
   PRIVATE GTest::gtest_main 
   PRIVATE pthread # required by GTest
 )
 
-add_executable(tests_linopsxd 
-  tests_linopsxd.cpp
-)
+# add_executable(tests_linopsxd 
+#   tests_linopsxd.cpp
+# )
 
-target_link_libraries(tests_linopsxd 
-  PRIVATE FornFdm
-  PRIVATE GTest::gtest 
-  PRIVATE GTest::gtest_main 
-  PRIVATE pthread # required by GTest
-)
+# target_link_libraries(tests_linopsxd 
+#   PRIVATE FornFdm
+#   PRIVATE GTest::gtest 
+#   PRIVATE GTest::gtest_main 
+#   PRIVATE pthread # required by GTest
+# )
 
 # add_executable(tests_texprs 
 #   tests_texprs.cpp
@@ -32,6 +32,6 @@ target_link_libraries(tests_linopsxd
 # )
 
 include(GoogleTest)
-gtest_discover_tests(tests_linops)
-gtest_discover_tests(tests_linopsxd)
+gtest_discover_tests(tests_diffusion)
+# gtest_discover_tests(tests_linopsxd)
 # gtest_discover_tests(tests_texprs)

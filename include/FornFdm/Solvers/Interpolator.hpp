@@ -13,13 +13,56 @@
 #include<memory>
 #include<vector>
 #include<Eigen/Core>
+#include "../Types.hpp"
+#include "../Coordinate.hpp"
 #include "../Mesh.hpp"
 #include "../Utilities/LinearInterpolation.hpp"
 
 #include "ImplicitSolver.hpp"
 
 namespace fornfdm{
-  namespace solvers{ 
+namespace solvers{ 
+namespace internal{ 
+template<std::size_t numDimsMax>
+fornfdm::Scalar interpolate_recursive_impl(
+  const fornfdm::Coordinate<numDimsMax>& coords, 
+  const fornfdm::Vector& vec, 
+  const Mesh* mesh,
+  std::size_t ith_dim,
+  std::size_t cumulative_offset = 0)
+{
+  assert((numDimsMax >= mesh->numDims()) && "coordinate must have # of dims >= mesh");
+  const auto& axis = mesh->getAxis(ith_dim); 
+  auto subinterval = fornfdm::utils::make_subinterval(coords[ith_dim], axis.cbegin(), axis.cend());  
+
+  if(ith_dim == 0)
+  {
+    std::size_t final_offset = cumulative_offset + std::distance(axis.cbegin(), subinterval.first); 
+    fornfdm::Scalar y1 = vec[final_offset];
+    fornfdm::Scalar y2 = vec[final_offset+1]; 
+    // result = y1 + (c-x1) * (y2-y1) / (x2-x1)
+    return y1 + (y2-y1) * (coords[ith_dim] - *subinterval.first) / (*subinterval.second - *subinterval.first);  
+  }
+  else
+  {
+    std::size_t stride = mesh->sizesMiddleProduct(0,ith_dim); 
+    std::size_t idx = std::distance(axis.cbegin(), subinterval.first); 
+    std::size_t next_offset = cumulative_offset + stride * (idx); 
+    fornfdm::Scalar y1 = interpolate_recursive_impl(coords, vec, mesh, ith_dim-1, next_offset); 
+    fornfdm::Scalar y2 = interpolate_recursive_impl(coords, vec, mesh, ith_dim-1, next_offset + stride);
+    // result = y1 + (c-x1) * (y2-y1) / (x2-x1)
+    return y1 + (y2 - y1) * (coords[ith_dim] - *subinterval.first) / (*subinterval.second - *subinterval.first); 
+  }
+}; 
+
+} // end namespace internal 
+
+template<std::size_t numDimsMax>
+fornfdm::Scalar interpolate(const fornfdm::Coordinate<numDimsMax>& coords, const fornfdm::Vector& vec, const fornfdm::Mesh* mesh)
+{
+  assert((numDimsMax >= mesh->numDims()) && "coordinate must have # of dims >= mesh");
+  return solvers::internal::interpolate_recursive_impl(coords, vec, mesh, mesh->numDims()-1); 
+}; 
 
 template<
   typename StoredSolver, 
@@ -33,9 +76,9 @@ class Interpolator
     {
       std::vector<fornfdm::Vector>& m_vec; 
       BackInserterSaver()=delete; 
-      BackInserterSaver(std::vector<Eigen::VectorXd>& v_init) : m_vec(v_init){}; 
-      void saveSolution(Eigen::VectorXd sol){ m_vec.emplace_back(std::move(sol)); }; 
-      void saveLastSolution(Eigen::VectorXd sol){ m_vec.emplace_back(std::move(sol)); }; 
+      BackInserterSaver(std::vector<fornfdm::Vector>& v_init) : m_vec(v_init){}; 
+      void saveSolution(fornfdm::Vector sol){ m_vec.emplace_back(std::move(sol)); }; 
+      void saveLastSolution(fornfdm::Vector sol){ m_vec.emplace_back(std::move(sol)); }; 
     }; 
 
     // Member Data ------------------------------
@@ -114,7 +157,8 @@ class Interpolator
     // get value of Solution at any point t,{x1,x2,...xn} in time/space 
     template<std::size_t numDimsMax>
     fornfdm::Scalar solAt(fornfdm::Real t, const fornfdm::Coordinate<numDimsMax>& coords){
-      assert((numDimsMax == m_args.mesh->numDims()) && "error in Interpolator.solAt() : # of dims in coordinate must == # of dims in stored mesh");
+      assert((numDimsMax >= m_args.mesh->numDims()) && "error in Interpolator.solAt() : # of dims in coordinate must >= # of dims in stored mesh");
+      
       // if m_data is empty... 
       if(!m_calculated) fillStoredSolutions(); 
 
@@ -123,55 +167,15 @@ class Interpolator
       auto offset = std::distance(m_args.times->cbegin(), time_interval.first); 
 
       // find left / right value in linear interpolation 
-      fornfdm::Scalar y1 =  interpolateSolution(coords.values, m_data[offset].cbegin(), m_data[offset].cend()); 
-      fornfdm::Scalar y2 =  interpolateSolution(coords.values, m_data[offset+1].cbegin(), m_data[offset+1].cend());
+      fornfdm::Scalar y1 =  solvers::interpolate(coords, m_data[offset], m_args.mesh.get());
+      fornfdm::Scalar y2 =  solvers::interpolate(coords, m_data[offset+1], m_args.mesh.get());
       
       // linear interpolation (t-t1) * (y2 - y1) / (t2 - t1) 
       return y1 + (t - *time_interval.first) * (y2 - y1) / (*time_interval.second - *time_interval.first); 
     }
-
-  private:
-    // Unreachable ----------------------------------------------------
-    template<typename Container, typename Iterator>
-    fornfdm::Scalar interpolateSolution(const Container& coords, Iterator start, Iterator stop)
-    {
-      return LinearInterp_recursive_impl(coords, start, stop, m_args.mesh, coords.size()-1);
-    }; 
-
-    template<typename Container, typename Iterator>
-    fornfdm::Scalar LinearInterp_recursive_impl(
-      const Container& coords, 
-      Iterator start, 
-      Iterator stop,  
-      const std::shared_ptr<const fornfdm::Mesh>& m,
-      std::size_t ith_dim,
-      std::size_t cumulative_offset = 0)
-    {
-      const auto& sub_dim_m = m->getAxis(ith_dim); 
-      auto subinterval = fornfdm::utils::make_subinterval(coords[ith_dim], sub_dim_m.cbegin(), sub_dim_m.cend());  
-
-      if(ith_dim == 0){
-        std::size_t final_offset = cumulative_offset + std::distance(sub_dim_m.cbegin(), subinterval.first); 
-        auto it = std::next(start, final_offset); 
-        fornfdm::Scalar y1 = *it; ++it; 
-        fornfdm::Scalar y2 = *it; 
-        // result = y1 + (c-x1) * (y2-y1) / (x2-x1)
-        return y1 + (y2-y1) * (coords[ith_dim] - *subinterval.first) / (*subinterval.second - *subinterval.first);  
-      }
-      else{
-        std::size_t stride = m->sizesMiddleProduct(0,ith_dim); 
-        std::size_t idx = std::distance(sub_dim_m.cbegin(), subinterval.first); 
-        std::size_t next_offset = cumulative_offset + stride * (idx); 
-        fornfdm::Scalar y1 = LinearInterp_recursive_impl(coords, start, stop, m, ith_dim-1, next_offset); 
-        fornfdm::Scalar y2 = LinearInterp_recursive_impl(coords, start, stop, m, ith_dim-1, next_offset + stride);
-        // result = y1 + (c-x1) * (y2-y1) / (x2-x1)
-        return y1 + (y2 - y1) * (coords[ith_dim] - *subinterval.first) / (*subinterval.second - *subinterval.first); 
-      }
-    }; 
-
 }; 
 
-  } // end namespace solvers
+} // end namespace solvers
 } // end namespace fornfdm 
 
 #endif // Interpolator.hpp

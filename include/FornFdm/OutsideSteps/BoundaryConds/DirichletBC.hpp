@@ -37,15 +37,15 @@ class DirichletBC
     }
 
     // change the first/last (left/right boundary) entry of a vector to implicit solution   
-    void SetImpSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StridedRef Sol) const 
+    void SetImpSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
     {Sol[0] = boundary_val;}
-    void SetImpSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StridedRef Sol) const 
+    void SetImpSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
     {Sol[Sol.size()-1] = boundary_val;}
     
     // change the first/last (left/right boundary) entry of a vector  
-    void SetSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StridedRef Sol) const 
+    void SetSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
     { Sol[0] = boundary_val;}
-    void SetSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StridedRef Sol) const 
+    void SetSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
     {Sol[Sol.size()-1] = boundary_val;}
 };
 
