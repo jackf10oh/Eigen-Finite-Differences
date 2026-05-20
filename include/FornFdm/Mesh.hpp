@@ -13,21 +13,13 @@
 #include<memory> // std::shared_ptr
 #include<Eigen/Core> // Eigen::VectorXd 
 
-namespace fornfdm {
+#include"Types.hpp"
 
-// forward declaration + aliases
-class Mesh; 
-using SharedMesh = std::shared_ptr<Mesh>; 
-using SharedConstMesh = std::shared_ptr<const Mesh>; 
-using WeakMesh = std::weak_ptr<Mesh>; 
-using WeakConstMesh = std::weak_ptr<const Mesh>;
+namespace fornfdm {
 
 class Mesh : public std::enable_shared_from_this<Mesh>
 {
   private:
-    // Type Defs ----------------------- 
-    using Stride =  Eigen::Stride<0,Eigen::Dynamic>; 
-    using StrideView =  Eigen::Map<Eigen::VectorXd, Eigen::Unaligned, Stride>;
     // member data ----------------------------
     static constexpr std::size_t numDimsMax = 5; // fixed maximum.
     typename std::array<fornfdm::Vector, numDimsMax> m_mesh_arr; // fixed size array of 1d axes.
@@ -131,7 +123,7 @@ class Mesh : public std::enable_shared_from_this<Mesh>
     } 
 
     // From a VectorXd representing flattened DiscretizationXD produce list of views that "look" like 1 dimensional slices 
-    std::vector<StrideView> makeOneDimViews(StrideRef vec, std::size_t ith_dim=0) const 
+    std::vector<fornfdm::StrideView> makeOneDimViews(fornfdm::StrideRef vec, std::size_t ith_dim=0) const 
     {
       // # of entries in vec must be == to product of mesh1D sizes
       if(vec.size() != sizesProduct()) throw std::runtime_error("DiscretizationXD # of entries must be == to product of sizes in MeshXD"); 
@@ -143,10 +135,10 @@ class Mesh : public std::enable_shared_from_this<Mesh>
       std::size_t mod = sizesMiddleProduct(0, ith_dim); 
       std::size_t scale = mod * ith_dim_size; 
 
-      std::vector<StrideView> result; 
+      std::vector<fornfdm::StrideView> result; 
       result.reserve(sizeOfDim(ith_dim)); 
 
-      Stride stride(0,mod); 
+      fornfdm::Stride stride(0,mod); 
 
       // iterate through the copies 
       for(std::size_t n=0; n<num_copies; n++)

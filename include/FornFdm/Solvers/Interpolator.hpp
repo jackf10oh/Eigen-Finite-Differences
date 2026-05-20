@@ -33,7 +33,7 @@ fornfdm::Scalar interpolate_recursive_impl(
 {
   assert((numDimsMax >= mesh->numDims()) && "coordinate must have # of dims >= mesh");
   const auto& axis = mesh->getAxis(ith_dim); 
-  auto subinterval = fornfdm::utils::make_subinterval(coords[ith_dim], axis.cbegin(), axis.cend());  
+  auto subinterval = fornfdm::utils::make_subinterval(coords.values[ith_dim], axis.cbegin(), axis.cend());  
 
   if(ith_dim == 0)
   {
@@ -41,17 +41,17 @@ fornfdm::Scalar interpolate_recursive_impl(
     fornfdm::Scalar y1 = vec[final_offset];
     fornfdm::Scalar y2 = vec[final_offset+1]; 
     // result = y1 + (c-x1) * (y2-y1) / (x2-x1)
-    return y1 + (y2-y1) * (coords[ith_dim] - *subinterval.first) / (*subinterval.second - *subinterval.first);  
+    return y1 + (y2-y1) * (coords.values[ith_dim] - *subinterval.first) / (*subinterval.second - *subinterval.first);  
   }
   else
   {
     std::size_t stride = mesh->sizesMiddleProduct(0,ith_dim); 
-    std::size_t idx = std::distance(axis.cbegin(), subinterval.first); 
+    std::size_t idx = std::distance(axis.cbegin(), subinterval.first);
     std::size_t next_offset = cumulative_offset + stride * (idx); 
     fornfdm::Scalar y1 = interpolate_recursive_impl(coords, vec, mesh, ith_dim-1, next_offset); 
     fornfdm::Scalar y2 = interpolate_recursive_impl(coords, vec, mesh, ith_dim-1, next_offset + stride);
     // result = y1 + (c-x1) * (y2-y1) / (x2-x1)
-    return y1 + (y2 - y1) * (coords[ith_dim] - *subinterval.first) / (*subinterval.second - *subinterval.first); 
+    return y1 + (y2 - y1) * (coords.values[ith_dim] - *subinterval.first) / (*subinterval.second - *subinterval.first); 
   }
 }; 
 
@@ -83,7 +83,7 @@ class Interpolator
 
     // Member Data ------------------------------
     std::vector<Eigen::VectorXd> m_data; 
-    StoredSolver m_solver; 
+    std::remove_reference_t<StoredSolver> m_solver; 
     SolverArgs<const fornfdm::Mesh,C> m_args; 
     bool m_calculated; 
 
@@ -94,7 +94,7 @@ class Interpolator
     Interpolator()=delete; 
 
     // from solver + args 
-    Interpolator(StoredSolver s, SolverArgs<const fornfdm::Mesh,const C> args = {})
+    Interpolator(StoredSolver s, SolverArgs<const fornfdm::Mesh,C> args = {})
       : m_data(0), 
       m_args(std::move(args)), 
       m_solver(std::move(s)),
@@ -174,6 +174,11 @@ class Interpolator
       return y1 + (t - *time_interval.first) * (y2 - y1) / (*time_interval.second - *time_interval.first); 
     }
 }; 
+
+// CTAD Guidelins ------ 
+template<typename S, typename C>
+Interpolator(S, solvers::SolverArgs<const fornfdm::Mesh, C>)
+  ->Interpolator<S,C>; 
 
 } // end namespace solvers
 } // end namespace fornfdm 

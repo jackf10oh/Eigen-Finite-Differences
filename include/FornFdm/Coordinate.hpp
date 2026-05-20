@@ -15,7 +15,7 @@ namespace fornfdm{
 class Mesh; 
 
 // Holds (x,y,z) coords in different dimmensions 
-template< std::size_t numDimsMax >
+template< std::size_t numDimsMax>
 struct Coordinate
 {
   // Member Data ------------------------------
@@ -47,6 +47,11 @@ struct Coordinate
   template<class Callable, class ArgType, std::size_t... idxs>
   fornfdm::Scalar applyBindFirst_impl(const Callable& c, ArgType t, std::index_sequence<idxs...>) const; 
 };
+
+// CTAD Guideline ------ 
+template<typename... Xs>
+Coordinate(Xs...)
+    -> Coordinate<sizeof...(Xs)>;
 
 } // end namespace fornfdm 
 

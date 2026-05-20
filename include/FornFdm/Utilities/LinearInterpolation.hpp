@@ -26,11 +26,26 @@ auto make_subinterval(
 
   // right side b in [a,b].
   auto after = std::lower_bound(start, stop, x);
-  if(after == stop) throw std::runtime_error("right bound == v.cend()"); 
+  if(after == stop)
+  {
+    if(x == *after)
+    {
+      return std::pair(std::prev(after), after); 
+    }
+    else
+    {
+      throw std::runtime_error("right bound == v.cend()"); 
+    }
+  }
 
-  // if b == v[0] bump it by 1. 
-  auto before = (after==stop) ? after++ : std::prev(after); 
-  return std::pair(before, after); 
+  if(after == start)
+  {
+    return std::pair(start, std::next(start)); 
+  }
+  else
+  {
+    return std::pair(std::prev(after),after); 
+  }
 
   // std::lower_bound should seriously be renamed 
   // to reflect the fact it an the supremum 

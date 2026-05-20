@@ -8,9 +8,8 @@
 #define FORNFDM_TYPES_H 
 
 #include<cstdint>
-#include<string>
 #include<type_traits> // decay_t 
-#include<complex>
+#include<memory> // smart ptrs 
 #include<Eigen/Core>
 #include<Eigen/src/Core/NumTraits.h> // convert scalar -> real 
 #include<Eigen/src/Core/util/Macros.h>
@@ -25,6 +24,10 @@ namespace fornfdm{
 
 // forward declare ------ 
 class Mesh; 
+using SharedMesh = std::shared_ptr<Mesh>; 
+using SharedConstMesh = std::shared_ptr<const Mesh>; 
+using WeakMesh = std::weak_ptr<Mesh>; 
+using WeakConstMesh = std::weak_ptr<const Mesh>;
 template<std::size_t N> class Coordinate; 
 
 // helpful aliases ------
