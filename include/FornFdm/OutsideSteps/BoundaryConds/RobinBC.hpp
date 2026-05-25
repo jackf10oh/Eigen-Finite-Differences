@@ -18,15 +18,15 @@ class RobinBC
 {
   public:  
     // member data 
-    fornfdm::Scalar boundary_target;
-    fornfdm::Scalar val_coeff;
-    fornfdm::Scalar deriv_coeff;
+    fornfdm::Scalar flux;
+    fornfdm::Scalar stiffness;
+    fornfdm::Scalar damping;
 
   public:
     // Constructors + Destructor ---------------------------------------------
     // a*U + b*Ux = target
     RobinBC(fornfdm::Scalar a=1.0, fornfdm::Scalar b=0.0, fornfdm::Scalar target=0.0) 
-      : val_coeff(a), deriv_coeff(b), boundary_target(target)
+      : stiffness(a), damping(b), flux(target)
     {}; 
     // copy 
     RobinBC(const RobinBC& other)=default; 
@@ -40,22 +40,22 @@ class RobinBC
       Mat.topRows(1) *= 0;
       // first order derivative approximation 
       fornfdm::Scalar h = mesh[1] - mesh[0];  
-      Mat.coeffRef(0,0)=  val_coeff + deriv_coeff*(-1.0/h);
-      Mat.coeffRef(0,1)=  deriv_coeff*(1.0/h);
+      Mat.coeffRef(0,0)=  stiffness + damping*(-1.0/h);
+      Mat.coeffRef(0,1)=  damping*(1.0/h);
     }; 
     void SetStencilR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::CSRMatrix& Mat) const 
     {
       Mat.bottomRows(1) *= 0; 
       // first order derivative approximation 
       fornfdm::Scalar h = mesh[mesh.size()-1] - mesh[mesh.size()-2];  
-      Mat.coeffRef(Mat.rows()-1, Mat.cols()-2)= deriv_coeff*(-1.0/h);
-      Mat.coeffRef(Mat.rows()-1, Mat.cols()-1)=  val_coeff + deriv_coeff*(1.0/h);
+      Mat.coeffRef(Mat.rows()-1, Mat.cols()-2)= damping*(-1.0/h);
+      Mat.coeffRef(Mat.rows()-1, Mat.cols()-1)=  stiffness + damping*(1.0/h);
     };
 
     void SetImpSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
-    {Sol[0] = boundary_target;};
+    {Sol[0] = flux;};
     void SetImpSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
-    {Sol[Sol.size()-1] = boundary_target;};
+    {Sol[Sol.size()-1] = flux;};
     
     // change the first/last (left/right boundary) entry of a vector  
     void SetSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
@@ -70,10 +70,10 @@ class RobinBC
 
       // solve the equation target = a*(S[0]) + b * ( W[0]*S[0] + W[1]*S[1] + W[2]*S[2] ) 
       // for the target value S[0] 
-      double target = boundary_target; 
-      target -= deriv_coeff * weights[1]*Sol[1]; 
-      target -= deriv_coeff * weights[2]*Sol[2];
-      target /= val_coeff + deriv_coeff * weights[0]; 
+      double target = flux; 
+      target -= damping * weights[1]*Sol[1]; 
+      target -= damping * weights[2]*Sol[2];
+      target /= stiffness + damping * weights[0]; 
 
       // assign to Sol reference
       Sol[0] = target;  
@@ -91,10 +91,10 @@ class RobinBC
 
       // solve the equation target = a*(S[N-1]) + b * ( W[0]*S[N-3] + W[1]*S[N-2] + W[2]*S[N-1] ) 
       // for the target value S[N-1] 
-      fornfdm::Scalar target = boundary_target; 
-      target -= deriv_coeff * weights[0]*Sol[Sol.size()-3]; 
-      target -= deriv_coeff * weights[1]*Sol[Sol.size()-2]; 
-      target /= val_coeff + deriv_coeff*weights[2]; 
+      fornfdm::Scalar target = flux; 
+      target -= damping * weights[0]*Sol[Sol.size()-3]; 
+      target -= damping * weights[1]*Sol[Sol.size()-2]; 
+      target /= stiffness + damping*weights[2]; 
 
       // assign to Sol reference
       Sol[Sol.size()-1] = target;  

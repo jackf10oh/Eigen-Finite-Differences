@@ -46,16 +46,15 @@ struct traits_impl<fornfdm::linops::CoeffBase<Derived>> : public traits<Derived>
 namespace Eigen{
 namespace internal{
 
-// Traits 
-// template<typename Derived>
-// struct traits<fornfdm::linops::CoeffBase<Derived>>
-// {}; 
-
-// template<typename Derived>
-// struct evaluator<fornfdm::linops::CoeffBase<Derived>> : public evaluator<Derived>{}; 
+// Traits ------ 
+template<typename Derived>
+struct traits<fornfdm::linops::CoeffBase<Derived>> : public traits<Derived>
+{
+  enum {Flags = traits<Derived>::Flags}; 
+}; 
 
 } // end namespace internal 
-} // end namespace eigen 
+} // end namespace Eigen 
 
 #include "CoeffProduct.hpp" 
 
@@ -101,6 +100,10 @@ class CoeffBase: public Eigen::DiagonalBase<Derived>
     {} 
 
     // Member Functions -------------------
+    void setMesh(const std::shared_ptr<const fornfdm::Mesh>& m){ return derived().setMesh(m); }
+    auto getMesh() const { return derived().getMesh(); }
+    void setTime(fornfdm::Real t){ derived().setTime(t); }
+    fornfdm::Real getTime() const { return derived().getTime(); }
     const auto& toEigen() const { return *static_cast<const Eigen::DiagonalBase<Derived>*>(this); }
     using Base::derived; 
     const auto& diagonal() const { return m_cyclic_wrapper; }

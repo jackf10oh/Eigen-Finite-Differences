@@ -14,71 +14,44 @@
 #include<FornFdm/Utilities/BumpFunc.hpp>
 #include<Eigen/SparseCore> // macro plugin takes effect. 
 
-using namespace fornfdm; 
-
 using std::endl, std::cout; 
 
 int main()
 {
- // iomanip 
-  std::cout << std::setprecision(3); 
-  
-  // Domain + Time  
-  fornfdm::solvers::SolverArgs args{
-    .mesh = make_Mesh(fornfdm::linspaced(41,-5.0,5.0), 2), 
-    .times = std::make_shared<const fornfdm::Vector>(fornfdm::linspaced(101,0.0,3.0))
-  }; 
+  using namespace fornfdm; 
 
-  // Initial Conditions  
-  auto v = make_Discretization(args.mesh, 0.0); 
-  args.initialConditions = { v, v }; 
+  // meshes are passed to fornfdm classes by shared_ptr
 
-  // LHS in time 
-  auto Utt = texprs::NthTimeDeriv<2>{}; 
+  // 1 dimensionsal mesh 
+  std::shared_ptr<fornfdm::Mesh> mesh_01 = fornfdm::make_Mesh(1); 
 
-  // RHS in space 
-  auto Uxx = linops::NthPartialDeriv<2,0,fornfdm::linops::Centered<5>>{}; 
-  auto Uyy = linops::NthPartialDeriv<2,1,fornfdm::linops::Centered<5>>{}; 
-  auto expr = Uxx + Uyy; 
+  // 2 dimensional mesh
+  auto mesh_02 = fornfdm::make_Mesh(2);
 
-  // Boundary Conditions 
-  auto left = osteps::RobinBC(1.0,-1.0,0.0); 
-  auto right = osteps::RobinBC(1.0,1.0,0.0);
-  osteps::BCPair bc_pair(left,right); 
-  osteps::BCList bcs(bc_pair,bc_pair); 
+  // 2 axes with copies of the same value on construction
+  auto mesh_03 = fornfdm::make_Mesh(fornfdm::linspaced(11,0.0,10.0), 2); 
 
-  // Forcing Terms 
-  fornfdm::utils::BumpFunc bump{.L = -1.0, .R = 1.0, .c =0.0, .h = std::sqrt(5), .focus=10}; 
-  osteps::ForcingTerm forcing = [bump](double t, double x, double y)
-  {
-    return std::sin(6.28318*t) * bump(x) * bump(y);
-  }; 
+  // 3 axes each with different initials 
+  auto mesh_04 = make_Mesh(linspaced(11,0.0,10.0), linspaced(21, 0.0, 20.0), linspaced(101,-10.0,10.0)); 
 
-  // Solving ...
-  // solvers::ExplicitSolver my_solver(Utt,expr,std::tie(forcing, bcs)); 
-  // solvers::ImplicitSolver my_solver(Utt,expr,std::tie(forcing, bcs)); 
-  solvers::CrankNicolsonSolver my_solver(Utt,expr,std::tie(forcing, bcs)); 
+  // getters 
+  std::cout << "# of dims: " << mesh_04->numDims() << std::endl; 
+  std::cout << "axis 0: " << mesh_04->getAxis(0).transpose() << std::endl;
+  std::cout << "axis 0 size: " << mesh_04->sizeOfDim(0) << std::endl;
+  std::cout << "axis 1: " << mesh_04->getAxis(1).transpose() << std::endl;
+  std::cout << "axis 1 size: " << mesh_04->sizeOfDim(1) << std::endl;
+  std::cout << "axis 1: " << mesh_04->getAxis(1).transpose() << std::endl;
+  std::cout << "axis 1 size: " << mesh_04->sizeOfDim(1) << std::endl;
 
-  // 1D through time 
-  // my_solver.calculate(args, solvers::PrintSaver{}); 
+  // utilities 
+  std::cout << "full sizes product: " << mesh_04->sizesProduct() << std::endl; 
+  std::cout << "middle product [0,2]: " << mesh_04->sizesMiddleProduct(0,2) << std::endl; 
 
-  // 1D Print 
-  // auto sol = my_solver.calculate(args, solvers::LastSaver{}); 
-  // utils::print_vec(args.initialConditions[0],"ICs"); 
-  // utils::print_vec(sol, "Sol"); 
+  // swappable. (asserts # of dimensions are equal)
+  mesh_02->swap(*mesh_03); 
 
-  // 2D print 
-  auto sol = my_solver.calculate(args, solvers::LastSaver{}); 
-  utils::print_mat(args.mesh->makeOneDimViews(args.initialConditions[0], 0), "Init"); 
-  utils::print_mat(args.mesh->makeOneDimViews(sol, 0), "solution"); 
- 
-  // Time to last sol
-  // auto time_taken = my_solver.calculate(args, solvers::TimerSaver{}); 
-  // cout << "milliseconds: " << time_taken.count() << endl;  
 
-  // Average time to last sol
-  // std::size_t N = 40; 
-  // double sum = 0; 
-  // for(auto i=0; i<N; ++i) sum += my_solver.calculate(args, solvers::TimerSaver{}).count(); 
-  // cout << "Average time: " << (sum/N) << " ms" << endl; 
+  std::cout << "\n New start ------------------------- \n" << std::endl; 
+  fornfdm::Coordinate c{0.0,1.0,2.0};
+  cout << "coord: " << c << endl; 
 };

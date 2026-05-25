@@ -8,12 +8,15 @@
 // 
 // 2a. ) take in a double representing the current time 
 // 2b. ) return the last double set as time  
-// 2c. ) observer a new time. but don't trigger any calculation  
 //
 // 3 ) cast to const Derived&. 
 // -- Used by fornfdm expression to explicitly use Eigen operators. i.e. +,-,* over fornfdm operators 
 // 
 // JAF 4/13/2026 
+
+#ifdef EIGEN_SPARSEMATRIXBASE_PLUGIN_OTHER
+#include EIGEN_SPARSEMATRIXBASE_PLUGIN_OTHER
+#endif
 
 public:
 // Member Functions ================================================================== 

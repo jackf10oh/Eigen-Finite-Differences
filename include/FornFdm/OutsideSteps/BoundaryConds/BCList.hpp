@@ -46,12 +46,12 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
       return std::tuple< repeat_type<T,Is>... >{}; 
     }
     // member data. -------------------------------------------------
-    // list of boundary conditions. 1 per Dimension 
-    std::tuple< std::remove_reference_t<BCPairs_Ts>... > m_bcs_list; 
     using MATS_T = decltype(make_repeat_tuple<fornfdm::CSRMatrix>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{})); 
     MATS_T m_mats; 
-    
   public:
+    // list of boundary conditions. 1 per Dimension 
+    std::tuple< std::remove_reference_t<BCPairs_Ts>... > bcs_list; 
+
     // Constructors + Destructors =========================================
     BCList()=delete; 
     
@@ -62,7 +62,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
       >
     >
     BCList(BCPairs_Ts... args) 
-      : m_bcs_list(args...), 
+      : bcs_list(args...), 
       m_mats(make_repeat_tuple<fornfdm::CSRMatrix>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{}))
     { 
       // reserves 10 entries inside of a fornfdm::Matrix
@@ -96,8 +96,8 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
         // resize + set first matrix in m_mats 
         std::get<0>(m_mats).resize(ctx.getMesh()->sizeOfDim(0), ctx.getMesh()->sizeOfDim(0)); 
         std::get<0>(m_mats).setZero();
-        std::get<0>(m_bcs_list).m_left.SetStencilL(t.next,ctx.getMesh()->getAxis(0), std::get<0>(m_mats));  
-        std::get<0>(m_bcs_list).m_right.SetStencilR(t.next,ctx.getMesh()->getAxis(0), std::get<0>(m_mats));  
+        std::get<0>(bcs_list).left_bc.SetStencilL(t.next,ctx.getMesh()->getAxis(0), std::get<0>(m_mats));  
+        std::get<0>(bcs_list).right_bc.SetStencilR(t.next,ctx.getMesh()->getAxis(0), std::get<0>(m_mats));  
 
         decltype(auto) mask = make_overwrite_mask(ctx.getMesh(), std::make_index_sequence<N>{}); 
         fornfdm::utils::overwrite_stencil(Mat, mask); 
@@ -146,8 +146,8 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
             if(!set_by_low_dim){
               std::size_t offset = (i % mod) + (scale * (i/mod)); // note: was previously using (mod? i%mod : i). shouldn't need it if mod is never == 0
               StrideView_t view(u.data()+offset, s0, stride); 
-              bc_pair.m_left.SetImpSolL(t.next, mesh_1dim, view); 
-              bc_pair.m_right.SetImpSolR(t.next, mesh_1dim, view); 
+              bc_pair.left_bc.SetImpSolL(t.next, mesh_1dim, view); 
+              bc_pair.right_bc.SetImpSolR(t.next, mesh_1dim, view); 
             }
           }
         }; // end set_dim_boundaries lambda 
@@ -158,7 +158,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
           [&](const auto&... args){
             (set_dim_boundaries_imp(args, dim++), ...);
           }, 
-          m_bcs_list
+          bcs_list
         ); 
       } // end if constexpr(step)
     } // end VecBeforeStep 
@@ -205,8 +205,8 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
             if(!set_by_low_dim){
               std::size_t offset = (mod ? i % mod : i) + (scale * (i/mod));
               StrideView_t view(u.data()+offset, s0, stride); 
-              bc_pair.m_left.SetSolL(t.next, mesh_1dim, view); 
-              bc_pair.m_right.SetSolR(t.next, mesh_1dim, view); 
+              bc_pair.left_bc.SetSolL(t.next, mesh_1dim, view); 
+              bc_pair.right_bc.SetSolR(t.next, mesh_1dim, view); 
             }
           } // end for loop through 1 dimensional views 
 
@@ -218,7 +218,7 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
           [&](const auto&... args){
             (set_dim_boundaries(args, dim++), ...);
           }, 
-          m_bcs_list
+          bcs_list
         ); 
       } // end if constexpr(step)
     } // end VecAfterStep
@@ -240,8 +240,8 @@ class BCList : public OStepBase<BCList<BCPairs_Ts...>>
         std::get<Idx>(m_mats).setZero(); 
 
         // set ith matrix to be top row of stencil, 1st matrix to bottom row of stencil 
-        std::get<Idx>(m_bcs_list).m_left.SetStencilL(t,mesh,std::get<Idx>(m_mats)); 
-        std::get<Idx>(m_bcs_list).m_right.SetStencilR(t,mesh,std::get<0>(m_mats));
+        std::get<Idx>(bcs_list).left_bc.SetStencilL(t,mesh,std::get<Idx>(m_mats)); 
+        std::get<Idx>(bcs_list).right_bc.SetStencilR(t,mesh,std::get<0>(m_mats));
 
         // copy values from "bottom" row into "top" row. 
         fornfdm::CSRMatrix::InnerIterator it(std::get<0>(m_mats),0); 

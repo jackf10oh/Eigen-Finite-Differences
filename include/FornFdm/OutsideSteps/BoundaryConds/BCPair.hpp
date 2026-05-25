@@ -19,19 +19,16 @@ namespace fornfdm{
 template<typename LBC_T,typename RBC_T>
 class BCPair: public OStepBase<BCPair<LBC_T,RBC_T>>
 {
-  template<typename... BCPairs_Ts>
-  friend class BCList; 
-  private:
-    // Member Data -----------------------------------------------------------
-    typename std::remove_reference<LBC_T>::type m_left; 
-    typename std::remove_reference<RBC_T>::type m_right; 
-    
   public:
+    // Member Data -----------------------------------------------------------
+    typename std::remove_reference<LBC_T>::type left_bc; 
+    typename std::remove_reference<RBC_T>::type right_bc; 
+    
     // Constructors + Destructor =================================================
     BCPair() = delete;
 
     BCPair(LBC_T l, RBC_T r)
-      : m_left(l),m_right(r)
+      : left_bc(l),right_bc(r)
     {};
 
     BCPair(const BCPair& other)=default; 
@@ -46,8 +43,8 @@ class BCPair: public OStepBase<BCPair<LBC_T,RBC_T>>
       auto m = ctx.getMesh(); 
       if (m->numDims() != 1) throw std::runtime_error("incorrect # of dims passed to 1D boundary condition"); 
       if constexpr(STEP == StepType::Implicit){ 
-        m_left.SetStencilL(t.next, m->getAxis(0), Mat); 
-        m_right.SetStencilR(t.next, m->getAxis(0), Mat); 
+        left_bc.SetStencilL(t.next, m->getAxis(0), Mat); 
+        right_bc.SetStencilR(t.next, m->getAxis(0), Mat); 
       }
     }
 
@@ -57,8 +54,8 @@ class BCPair: public OStepBase<BCPair<LBC_T,RBC_T>>
       auto m = ctx.getMesh(); 
       if (m->numDims() != 1) throw std::runtime_error("incorrect # of dims passed to 1D boundary condition");        
       if constexpr(STEP == StepType::Implicit){
-        m_left.SetImpSolL(t.next, m->getAxis(0), u); 
-        m_right.SetImpSolR(t.next, m->getAxis(0), u); 
+        left_bc.SetImpSolL(t.next, m->getAxis(0), u); 
+        right_bc.SetImpSolR(t.next, m->getAxis(0), u); 
       }
     }
 
@@ -68,8 +65,8 @@ class BCPair: public OStepBase<BCPair<LBC_T,RBC_T>>
       auto m = ctx.getMesh(); 
       if (m->numDims() != 1) throw std::runtime_error("incorrect # of dims passed to 1D boundary condition"); 
       if constexpr(STEP == StepType::Explicit){
-        m_left.SetSolL(t.next, m->getAxis(0), u); 
-        m_right.SetSolR(t.next, m->getAxis(0), u); 
+        left_bc.SetSolL(t.next, m->getAxis(0), u); 
+        right_bc.SetSolR(t.next, m->getAxis(0), u); 
       }  
     }
 };

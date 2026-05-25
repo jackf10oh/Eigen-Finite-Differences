@@ -10,6 +10,8 @@
 #ifndef FORNFDM_COORDINATE_H
 #define FORNFDM_COORDINATE_H 
 
+#include<iostream>
+
 namespace fornfdm{
 
 class Mesh; 
@@ -18,6 +20,9 @@ class Mesh;
 template< std::size_t numDimsMax>
 struct Coordinate
 {
+  // Friends -------------
+  template<std::size_t N>
+  friend std::ostream& operator<<(std::ostream& os, const Coordinate<N>& coord); 
   // Member Data ------------------------------
   std::array<fornfdm::Scalar, numDimsMax> values; 
 
@@ -113,6 +118,22 @@ template<class Callable, class ArgType, std::size_t... idxs>
 fornfdm::Scalar Coordinate<numDimsMax>::applyBindFirst_impl(const Callable& c, ArgType t, std::index_sequence<idxs...>) const
 {
   return c(t,values[idxs]...); 
+}
+
+template<std::size_t N>
+std::ostream& operator<<(std::ostream& os, const fornfdm::Coordinate<N>& coord)
+{
+  os << "("; 
+  for(auto i=0; i<N-1; ++i)
+  {
+    os << coord.values[i] << ", "; 
+  }
+  if constexpr(N > 0)
+  {
+    os << coord.values[N-1]; 
+  }
+  os << ")";
+  return os;  
 }
 
 } // end namespace fornfdm 

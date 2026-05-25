@@ -18,12 +18,12 @@ class NeumannBC
 {
   public:  
     // member data 
-    fornfdm::Scalar boundary_flux;
+    fornfdm::Scalar flux;
 
   public:
     // Constructors + destructor ---------------------------------------------
-    NeumannBC(fornfdm::Scalar val_init=0.0) : boundary_flux(val_init){}; 
-    NeumannBC(const NeumannBC& other) : boundary_flux(other.boundary_flux){}; 
+    NeumannBC(fornfdm::Scalar val_init=0.0) : flux(val_init){}; 
+    NeumannBC(const NeumannBC& other) : flux(other.flux){}; 
     // destructor
     ~NeumannBC()=default; 
     // Member Funcs ----------------------------------------------
@@ -46,9 +46,9 @@ class NeumannBC
     };
 
     void SetImpSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
-    {Sol[0] = boundary_flux;};
+    {Sol[0] = flux;};
     void SetImpSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
-    {Sol[Sol.size()-1] = boundary_flux;};
+    {Sol[Sol.size()-1] = flux;};
     
     // change the first/last (left/right boundary) entry of a vector  
     void SetSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
@@ -63,7 +63,7 @@ class NeumannBC
 
       // solve the equation Flux = W[0]*S[0] + W[1]*S[1] + W[2]*S[2] 
       // for the target value S[0] 
-      fornfdm::Scalar target = boundary_flux; 
+      fornfdm::Scalar target = flux; 
       target -= calc.getArray()[4]*Sol[1]; 
       target -= calc.getArray()[5]*Sol[2];
       target /= calc.getArray()[3]; 
@@ -83,7 +83,7 @@ class NeumannBC
 
       // solve the equation Flux = W[0]*S[N-3] + W[1]*S[N-2] + W[2]*S[N-1] 
       // for the target value S[N-1] 
-      fornfdm::Scalar target = boundary_flux; 
+      fornfdm::Scalar target = flux; 
       target -= calc.getArray()[3]*Sol[Sol.size()-3]; 
       target -= calc.getArray()[4]*Sol[Sol.size()-2]; 
       target /= calc.getArray()[5]; 

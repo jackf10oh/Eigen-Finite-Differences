@@ -17,11 +17,11 @@ class DirichletBC
 {
   public:  
     // member data 
-    fornfdm::Scalar boundary_val;
+    fornfdm::Scalar value;
 
   public:
     // Constructors ---------------------------------------------
-    DirichletBC(fornfdm::Scalar val_init=0.0) : boundary_val(val_init){}; 
+    DirichletBC(fornfdm::Scalar val_init=0.0) : value(val_init){}; 
     DirichletBC(const DirichletBC& other)=default; 
     ~DirichletBC()=default; 
 
@@ -38,15 +38,15 @@ class DirichletBC
 
     // change the first/last (left/right boundary) entry of a vector to implicit solution   
     void SetImpSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
-    {Sol[0] = boundary_val;}
+    {Sol[0] = value;}
     void SetImpSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
-    {Sol[Sol.size()-1] = boundary_val;}
+    {Sol[Sol.size()-1] = value;}
     
     // change the first/last (left/right boundary) entry of a vector  
     void SetSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
-    { Sol[0] = boundary_val;}
+    { Sol[0] = value;}
     void SetSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
-    {Sol[Sol.size()-1] = boundary_val;}
+    {Sol[Sol.size()-1] = value;}
 };
 
 
