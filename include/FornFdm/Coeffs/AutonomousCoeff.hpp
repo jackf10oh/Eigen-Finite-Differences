@@ -50,8 +50,8 @@ struct traits<fornfdm::linops::AutonomousCoeff<Callable>>
   };
 };
 
-}
-}
+} // end namespace internal
+} // end namespace Eigen
 
 namespace fornfdm{
 namespace linops{  

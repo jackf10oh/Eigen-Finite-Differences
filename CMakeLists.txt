@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
-project(FdmStencilExprs LANGUAGES CXX)
-add_library(FdmStencilExprs INTERFACE)
+project(FornFdm LANGUAGES CXX)
+add_library(FornFdm INTERFACE)
 
 # set cxx standard
 set(CMAKE_CXX_STANDARD 17)
@@ -15,7 +15,7 @@ if(USE_OPENMP)
   find_package(OpenMP)
   if(OpenMP_FOUND)
     message(STATUS "OpenMP found successfully!")
-    target_link_libraries(FdmStencilExprs INTERFACE OpenMP::OpenMP_CXX)
+    target_link_libraries(FornFdm INTERFACE OpenMP::OpenMP_CXX)
   endif()
 else()
   message(STATUS "Cmake args disabling OpenMP...")
@@ -25,7 +25,6 @@ endif()
 find_package(Eigen3 REQUIRED)
 
 # header only library ===============================
-add_library(FornFdm INTERFACE) 
 target_include_directories(FornFdm 
   INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
@@ -33,63 +32,9 @@ target_link_libraries(FornFdm
   INTERFACE Eigen3::Eigen
 )
 
-
-# # LinOps ------------- 
-# add_library(LinOps INTERFACE)
-# target_include_directories(LinOps
-#   INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/LinOps/include
-# )
-# target_link_libraries(LinOps  
-#   INTERFACE Eigen3::Eigen
-#   INTERFACE Utilities 
-# )
-
-# # OutsideSteps ------------- 
-# add_library(OutsideSteps INTERFACE)
-# target_include_directories(OutsideSteps
-#   INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/OutsideSteps/include
-# )
-# target_link_libraries(OutsideSteps 
-#   INTERFACE LinOps
-#   INTERFACE Utilities
-# )
-
-# # TExprs --------------------------
-# add_library(TExprs INTERFACE)
-# target_include_directories(TExprs
-#   INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/TExprs/include
-# )
-# target_link_libraries(TExprs
-#   INTERFACE LinOps 
-#   INTERFACE OutsideSteps
-#   INTERFACE Utilities
-# )
-
-# # Solvers ------------------------------------- 
-# add_library(Solvers INTERFACE)
-# target_include_directories(Solvers
-#   INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/Solvers/include
-# )
-# target_link_libraries(Solvers
-#   INTERFACE LinOps 
-#   INTERFACE OutsideSteps
-#   INTERFACE Utilities
-#   INTERFACE TExprs
-# )
-
-# Tie all sub directories into main library ============================================== 
-target_link_libraries(FdmStencilExprs
-  INTERFACE FornFdm
-  # INTERFACE LinOps 
-  # INTERFACE OutsideSteps
-  # INTERFACE TExprs 
-  # INTERFACE Utilities
-  # INTERFACE Solvers
-)
-
 # adding google test
 enable_testing()
-find_package(GTest REQUIRED) #find the gtest library  # will fail if not found
+find_package(GTest) #find the gtest library  # will fail if not found
 
 # adding google benchmark  
 # find_package(benchmark) # Google Benchmark will fail if not found
@@ -130,7 +75,7 @@ add_executable(main
 )
 
 target_link_libraries(main
-  PRIVATE FdmStencilExprs
+  PRIVATE FornFdm
 )
 
 # on windows with mingw 

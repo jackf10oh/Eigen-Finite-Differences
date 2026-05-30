@@ -132,7 +132,7 @@ auto operator-(XprType&& xpr)
   return NwiseUnaryOp<fornfdm::linops::internal::UnaryNegateFO, XprType>(std::forward<XprType>(xpr), fornfdm::linops::internal::UnaryNegateFO{}); 
 }; 
 
-template<typename C, typename XprType, typename = std::enable_if_t<std::is_arithmetic<C>::value && fornfdm::linops::internal::is_partialderiv_crtp<XprType>::value>>
+template<typename C, typename XprType, typename = std::enable_if_t<std::is_convertible<C,fornfdm::Scalar>::value && fornfdm::linops::internal::is_partialderiv_crtp<XprType>::value>>
 auto operator*(C&& c, XprType&& xpr)
 {
   return NwiseUnaryOp<fornfdm::linops::internal::UnaryScalarMultiplyFO<C>, XprType>(std::forward<XprType>(xpr), fornfdm::linops::internal::UnaryScalarMultiplyFO<C>(std::forward<C>(c))); 

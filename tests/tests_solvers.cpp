@@ -1,4 +1,4 @@
-// tests_interpolation.cpp 
+// tests_solvers.cpp 
 // 
 // tests interpolate() free function 
 // in 1D, 2D, and 3D linear solutions 

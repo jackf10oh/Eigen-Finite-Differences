@@ -29,7 +29,7 @@ class Executor
     using ScalarTup = std::remove_cv_t<std::remove_reference_t<decltype(texprs::traits::filter_tup<texprs::traits::coeffat_returns_real>(std::declval<Tup>()))>>;
     using MatrixTup = std::remove_cv_t<std::remove_reference_t<decltype(texprs::traits::filter_tup<texprs::traits::coeffat_returns_other>(std::declval<Tup>()))>>;
     using InvCoeff = std::conditional_t<std::tuple_size<MatrixTup>::value==0, fornfdm::Scalar, fornfdm::DiagMatrix>; 
-
+    using WrappedExpression = TimeDeriv; 
     // number of nodes used in Fornberg algorithm 
     static constexpr std::size_t numStoredTimes = std::max(M, TimeDeriv::maxOrder+1); 
     static constexpr std::size_t numStoredSols = numStoredTimes-1; 
@@ -100,6 +100,9 @@ class Executor
     // return ref to first elem in m_stored_sols. Gives an opportunity to move it elsewhere before overwritten in ConsumeSolution  
     fornfdm::Vector& getExpiringSolution(){ return m_stored_sols.front(); }
     const fornfdm::Vector& getExpiringSolution() const { return m_stored_sols.front(); }
+
+    // getter to internal weights array 
+    const auto& getWeights() const { return m_weights_arr; }
     
     // consume a time. push back all previous
     void pushTime(fornfdm::Real t)
