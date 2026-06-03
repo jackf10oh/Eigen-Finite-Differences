@@ -28,21 +28,17 @@ class NeumannBC
     ~NeumannBC()=default; 
     // Member Funcs ----------------------------------------------
     // change first/last (left/right boundary) row of the fornfdm stencil matrix
-    void SetStencilL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::CSRMatrix& Mat) const 
+    BoundaryRow getTopRow(fornfdm::Real t, const fornfdm::Vector& axis) const 
     {
-      Mat.topRows(1) *= 0;
-      // first order derivative approximation 
-      fornfdm::Scalar h = mesh[1] - mesh[0];  
-      Mat.coeffRef(0,0)= -1.0/h;
-      Mat.coeffRef(0,1)=  1.0/h;
+      // first order derivative approximation. TODO use 3 node stencil here 
+      fornfdm::Scalar h = axis[1] - axis[0];
+      return BoundaryRow{{-1.0/h, 1.0/h, 0}, 2};  
     }; 
-    void SetStencilR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::CSRMatrix& Mat) const 
+    BoundaryRow getBottomRow(fornfdm::Real t, const fornfdm::Vector& axis) const 
     {
-      Mat.bottomRows(1) *= 0; 
       // first order derivative approximation 
-      fornfdm::Real h = mesh[mesh.size()-1] - mesh[mesh.size()-2];  
-      Mat.coeffRef(Mat.rows()-1, Mat.cols()-2)= -1.0/h;
-      Mat.coeffRef(Mat.rows()-1, Mat.cols()-1)=  1.0/h;
+      fornfdm::Real h = axis[axis.size()-1] - axis[axis.size()-2];  
+      return BoundaryRow{{-1.0/h, 1.0/h, 0}, 2};  
     };
 
     void SetImpSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 

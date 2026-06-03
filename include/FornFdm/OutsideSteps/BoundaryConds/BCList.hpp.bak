@@ -23,110 +23,8 @@
 namespace fornfdm{
   namespace osteps{
 
-// recursive functions to traverse the matrix in row order ---
-template<std::size_t ithDim>
-void setStencilNoFill(fornfdm::CSRMatrix& mat, std::size_t offset, const auto& rolling_prods, const auto& boundary_row_pairs);
-
-template<std::size_t ithDim, std::size_t parentDim, bool useTopRow>
-void setStencilFill(fornfdm::CSRMatrix& mat, std::size_t offset, const auto& rolling_prods, const auto& boundary_row_pairs)
-{
-  if constexpr(ithDim == 0)
-  {
-    // use a row iterator to fill the top row 
-    mat.row(offset) *= 0.0;
-    const auto& top_row = boundary_row_pairs[0].first;
-    for(auto n=0; n<top_row.nnz; ++n)
-    {
-      mat.coeffRef(offset,offset + n) = top_row.vals[n];
-    }
-
-    // use parent row iterator to fill middle rows 
-    if constexpr(useTopRow)
-    {
-      const auto& middle_row = boundary_row_pairs[parentDim].first;
-      for(auto n=1; n<rolling_prods[0]-1; ++n)
-      {
-        mat.row(offset+n) *= 0.0;
-        for(auto m=0; m<middle_row.nnz; ++m)
-        {
-          mat.coeffRef(offset+n, offset+ n + m * rolling_prods[parentDim-1]) = middle_row.vals[m];
-        }
-      }
-    }
-    else
-    {
-      const auto& middle_row = boundary_row_pairs[parentDim].second;
-      for(auto n=1; n<rolling_prods[0]-1; ++n)
-      {
-        mat.row(offset+n) *= 0.0;
-        for(auto m=0; m<middle_row.nnz; ++m)
-        {
-          mat.coeffRef(offset+n, offset + n - (middle_row.nnz-m-1) * rolling_prods[parentDim-1]) = middle_row.vals[m];
-        }
-      }
-    }
-
-    // use a row iterator to fill the bottom row 
-    mat.row(offset + rolling_prods[0]-1) *= 0.0;
-    const auto& bottom_row = boundary_row_pairs[0].second;
-    for(auto n=0; n < bottom_row.nnz; ++n)
-    {
-      mat.coeffRef(offset + rolling_prods[0]-1, offset + rolling_prods[0] - bottom_row.nnz + n) = bottom_row.vals[n];
-    } 
-
-    // return/goto parent dim
-  }
-  else
-  {
-    // setStencilFill() using THIS dimensions row iterator
-    setStencilFill<ithDim-1, ithDim, true>(mat, offset, rolling_prods, boundary_row_pairs);
-    // fill middle blocks with setStencilFill() using parent row 
-    for(auto m=1; m < rolling_prods[ithDim-1]-1; ++m)
-    {
-      setStencilFill<ithDim-1, parentDim, useTopRow>(mat, offset + m*rolling_prods[ithDim-1], rolling_prods, boundary_row_pairs);
-    }
-    // setStencilFill() using THIS dimensions row iterator 
-    setStencilFill<ithDim-1,ithDim, false>(mat,offset + rolling_prods[ithDim] - rolling_prods[ithDim-1], rolling_prods, boundary_row_pairs); 
-  }
-}
-
-template<std::size_t ithDim>
-void setStencilNoFill(fornfdm::CSRMatrix& mat, std::size_t offset, const auto& rolling_prods, const auto& boundary_row_pairs)
-{
-  if constexpr(ithDim == 0)
-  {
-    // use a row iterator to fill the top rows. 
-    mat.row(offset) *= 0.0;
-    const auto& top_row = boundary_row_pairs[0].first;
-    for(auto n=0; n < top_row.nnz; ++n)
-    {
-      mat.coeffRef(offset, offset+n) = top_row.vals[n];
-    } 
-    // use a row iterator to fill the bottom rows.
-    mat.row(offset + rolling_prods[0]-1) *= 0.0;
-    const auto& bottom_row = boundary_row_pairs[0].second;
-    for(auto n=0; n < bottom_row.nnz; ++n)
-    {
-      mat.coeffRef(offset + rolling_prods[0]-1, offset + rolling_prods[0] - bottom_row.nnz + n) = bottom_row.vals[n];
-    } 
-    // return/goto parent dimension
-  }
-  else
-  {
-    // setStencilFill() using THIS dimensions row iterator
-    setStencilFill<ithDim-1, ithDim, true>(mat, offset, rolling_prods, boundary_row_pairs);
-    // fill middle blocks with setStencilNoFill() and a certain offset 
-    for(auto m=1; m < rolling_prods[ithDim-1]-1; ++m)
-    {
-      setStencilNoFill<ithDim-1>(mat, offset + m*rolling_prods[ithDim-1], rolling_prods, boundary_row_pairs);
-    }
-    // setStencilFill() using THIS dimensions row iterator 
-    setStencilFill<ithDim-1,ithDim, false>(mat,offset + rolling_prods[ithDim] - rolling_prods[ithDim-1], rolling_prods, boundary_row_pairs); 
-  }
-}
-
-template<typename... BCPairTypes>
-class BCList : public OStepBase<BCList<BCPairTypes...>>
+template<typename... BCPairs_Ts>
+class BCList : public OStepBase<BCList<BCPairs_Ts...>>
 {
   private:
     // Type Traits + Utils ----------------
@@ -139,26 +37,43 @@ class BCList : public OStepBase<BCList<BCPairTypes...>>
     template<typename T>
     using is_bc_pair = is_bc_pair_impl<std::remove_reference_t<std::remove_cv_t<T>>>; 
 
-    // member data. -------------------------------------------------
-    std::array<fornfdm::CSRMatrix, sizeof...(BCPairTypes)> m_mats; 
-    std::array<std::size_t, sizeof...(BCPairTypes)> m_rolling_prods; 
+    template<typename T, std::size_t ignore=0>
+    using repeat_type = T; 
 
+    template<typename T, std::size_t... Is>
+    static auto make_repeat_tuple(std::index_sequence<Is...>)
+    {
+      return std::tuple< repeat_type<T,Is>... >{}; 
+    }
+    // member data. -------------------------------------------------
+    using MATS_T = decltype(make_repeat_tuple<fornfdm::CSRMatrix>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{})); 
+    MATS_T m_mats; 
   public:
     // list of boundary conditions. 1 per Dimension 
-    std::tuple< std::remove_reference_t<BCPairTypes>... > bcs_list; 
+    std::tuple< std::remove_reference_t<BCPairs_Ts>... > bcs_list; 
 
     // Constructors + Destructors =========================================
     BCList()=delete; 
     
     template<typename = std::enable_if_t<
       std::conjunction_v<
-          is_bc_pair<BCPairTypes> ...
+          is_bc_pair<BCPairs_Ts> ...
         >
       >
     >
-    BCList(BCPairTypes... args) 
-      : bcs_list(args...)
-    {} 
+    BCList(BCPairs_Ts... args) 
+      : bcs_list(args...), 
+      m_mats(make_repeat_tuple<fornfdm::CSRMatrix>(std::make_index_sequence<sizeof...(BCPairs_Ts)>{}))
+    { 
+      // reserves 10 entries inside of a fornfdm::Matrix
+      auto reserve_lam = [](auto& mat){mat.reserve(10);}; 
+
+      // go through each fornfdm::Matrix and reserve 10 entries
+      std::apply(
+        [&](auto&... mats){ ((reserve_lam(mats)), ...); }, 
+        m_mats
+      ); 
+    } 
     
     BCList(const BCList& other)=default;
     
@@ -167,17 +82,25 @@ class BCList : public OStepBase<BCList<BCPairTypes...>>
 
     // Member Funcs =================================================
     template<StepType STEP, typename TIMECTX = TimeContext<>, typename CONSTCTX = Context<> >
-    void MatBeforeStep(fornfdm::CSRMatrix& mat, const TIMECTX& t = {}, const CONSTCTX& ctx = {})
+    void MatBeforeStep(fornfdm::CSRMatrix& Mat, const TIMECTX& t = {}, const CONSTCTX& ctx = {})
     {      
       // check args are compaitble 
-      assert((ctx.getMesh()->numDims() == sizeof...(BCPairTypes)) && "BCList MatBeforeStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
+      assert((ctx.getMesh()->numDims() == sizeof...(BCPairs_Ts)) && "BCList MatBeforeStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
 
       if constexpr(STEP == StepType::Implicit)
       {    
-        constexpr std::size_t N = sizeof...(BCPairTypes); 
-        auto rolling_prods = make_rolling_prods(ctx.getMesh());
-        auto boundary_row_pairs = make_row_pairs(t.next, ctx.getMesh());
-        setStencilNoFill<N-1>(mat, 0, rolling_prods, boundary_row_pairs);
+        constexpr std::size_t N = sizeof...(BCPairs_Ts); 
+        // Sets m_mats 2nd to last according to bc pairs 2nd to last... 
+        prepare_flat_stencils(t.next, ctx.getMesh(), std::make_index_sequence<N>{}); 
+
+        // resize + set first matrix in m_mats 
+        std::get<0>(m_mats).resize(ctx.getMesh()->sizeOfDim(0), ctx.getMesh()->sizeOfDim(0)); 
+        std::get<0>(m_mats).setZero();
+        std::get<0>(bcs_list).left_bc.SetStencilL(t.next,ctx.getMesh()->getAxis(0), std::get<0>(m_mats));  
+        std::get<0>(bcs_list).right_bc.SetStencilR(t.next,ctx.getMesh()->getAxis(0), std::get<0>(m_mats));  
+
+        decltype(auto) mask = make_overwrite_mask(ctx.getMesh(), std::make_index_sequence<N>{}); 
+        fornfdm::utils::overwrite_stencil(Mat, mask); 
       }
     } // end MatBeforeStep 
 
@@ -186,7 +109,7 @@ class BCList : public OStepBase<BCList<BCPairTypes...>>
     {
       // check args are compaitble 
       auto mesh = ctx.getMesh(); 
-      assert((mesh->numDims() == sizeof...(BCPairTypes)) && "BCList VecBeforeStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
+      assert((mesh->numDims() == sizeof...(BCPairs_Ts)) && "BCList VecBeforeStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
 
       if constexpr(STEP == StepType::Implicit)
       {
@@ -243,8 +166,9 @@ class BCList : public OStepBase<BCList<BCPairTypes...>>
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
     void VecAfterStep(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx)
     {
+      
       auto mesh = ctx.getMesh(); // get the MeshXD 
-      assert((mesh->numDims() == sizeof...(BCPairTypes)) && "BCList VecAfterStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
+      assert((mesh->numDims() == sizeof...(BCPairs_Ts)) && "BCList VecAfterStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
       
       if constexpr(STEP == StepType::Explicit)
       {
@@ -301,45 +225,63 @@ class BCList : public OStepBase<BCList<BCPairTypes...>>
 
   private:
     // Unreachable =========================================================== 
-    auto make_rolling_prods(const fornfdm::Mesh* m)
+    template<std::size_t Idx>
+    void flat_stencil(fornfdm::Real t, const fornfdm::Mesh* m)
     {
-      constexpr std::size_t N = sizeof...(BCPairTypes); 
-      std::array<std::size_t, N> result;
-      auto rolling = m->sizeOfDim(0);
-      result[0] = rolling; 
-      for(auto i=1; i < N; ++i)
-      {
-        rolling *= m->sizeOfDim(i);
-        result[i] = rolling; 
+      // !!! uses first entry in m_mats as temp storage !!! 
+      if constexpr( Idx > 0 ){
+        // using ith 1D mesh out of MeshXD 
+        const auto& mesh = m->getAxis(Idx); 
+
+        // resize 1st matrix + ith matrix to 1 x N where N == mesh.size() 
+        std::get<0>(m_mats).resize(1,mesh.size()); 
+        std::get<0>(m_mats).setZero(); 
+        std::get<Idx>(m_mats).resize(1,mesh.size()); 
+        std::get<Idx>(m_mats).setZero(); 
+
+        // set ith matrix to be top row of stencil, 1st matrix to bottom row of stencil 
+        std::get<Idx>(bcs_list).left_bc.SetStencilL(t,mesh,std::get<Idx>(m_mats)); 
+        std::get<Idx>(bcs_list).right_bc.SetStencilR(t,mesh,std::get<0>(m_mats));
+
+        // copy values from "bottom" row into "top" row. 
+        fornfdm::CSRMatrix::InnerIterator it(std::get<0>(m_mats),0); 
+        for(; it; ++it) std::get<Idx>(m_mats).coeffRef(it.row(),it.col()) = it.value();  
       }
-      return result;
     }
+
+    template<std::size_t... Is>
+    void prepare_flat_stencils(fornfdm::Real t, const fornfdm::Mesh* m, std::index_sequence<Is...>){
+      (flat_stencil<Is>(t,m), ...); 
+    } 
 
     template<std::size_t Idx>
-    inline auto make_row_pair_single(fornfdm::Real t, const fornfdm::Vector& axis) const
+    auto highdim_stencil(const fornfdm::Mesh* m)
     {
-      return std::make_pair(
-        std::get<Idx>(bcs_list).left_bc.getTopRow(t,axis), 
-        std::get<Idx>(bcs_list).right_bc.getTopRow(t,axis)
-      ); 
+      if constexpr(Idx == 0){
+        // first matrix just gets kronecker product into high dim.
+        return fornfdm::utils::make_BlockDiag(std::get<Idx>(m_mats), m->sizesMiddleProduct(1, sizeof...(BCPairs_Ts))); 
+      }
+      else{
+        // other dimensions have to be taken 
+        // flat stencil -> sparse diag (repeats) -> kronecker product 
+        std::size_t s1 = m->sizesMiddleProduct(0, Idx);
+        std::size_t s2 = m->sizesMiddleProduct(Idx+1, sizeof...(BCPairs_Ts)); 
+        return fornfdm::utils::make_BlockDiag(fornfdm::utils::make_SparseDiag<fornfdm::utils::SparseDiagPattern::REPEAT>(std::get<Idx>(m_mats), s1), s2); 
+      }
     }
 
-    template<std::size_t... Idxs>
-    auto make_row_pairs_impl(fornfdm::Real t, const fornfdm::Mesh* m, std::index_sequence<Idxs...>) const
+    template<std::size_t... Is>
+    decltype(auto) make_overwrite_mask(const fornfdm::Mesh* m, std::index_sequence<Is...>)
     {
-      std::array<std::pair<osteps::BoundaryRow,osteps::BoundaryRow>, sizeof...(Idxs)> result;
-      (
-        (result[Idxs] = make_row_pair_single<Idxs>(t,m->getAxis(Idxs))),
-         ...
-      );
-      return result;
+      if constexpr(sizeof...(Is)==1)
+      {
+        return std::as_const(std::get<0>(m_mats)); 
+      }
+      else
+      {
+        return fornfdm::utils::make_FillRow_fold( highdim_stencil<Is>(m) ...); 
+      }
     }
-
-    inline auto make_row_pairs(fornfdm::Real t, const fornfdm::Mesh* m) const
-    {
-      return make_row_pairs_impl(t, m, std::make_index_sequence<sizeof...(BCPairTypes)>{});
-    }
-
 }; // end class BCList 
 
   } // end namespace osteps

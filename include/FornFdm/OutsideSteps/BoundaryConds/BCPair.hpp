@@ -15,6 +15,13 @@
 namespace fornfdm{
   namespace osteps{
 
+// Utility class for overwriting top/bottom rows in a stencil
+struct BoundaryRow
+{
+  std::array<fornfdm::Scalar,3> vals; 
+  std::size_t nnz;
+};
+
 // Base Class for Boundary Conditions. All operators make no changes to stencil / solution 
 template<typename LBC_T,typename RBC_T>
 class BCPair: public OStepBase<BCPair<LBC_T,RBC_T>>
@@ -34,7 +41,7 @@ class BCPair: public OStepBase<BCPair<LBC_T,RBC_T>>
     BCPair(const BCPair& other)=default; 
 
     // destructor
-    virtual ~BCPair()=default; 
+    ~BCPair()=default; 
 
     // Member Functions ==================================================================
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
@@ -43,8 +50,19 @@ class BCPair: public OStepBase<BCPair<LBC_T,RBC_T>>
       auto m = ctx.getMesh(); 
       if (m->numDims() != 1) throw std::runtime_error("incorrect # of dims passed to 1D boundary condition"); 
       if constexpr(STEP == StepType::Implicit){ 
-        left_bc.SetStencilL(t.next, m->getAxis(0), Mat); 
-        right_bc.SetStencilR(t.next, m->getAxis(0), Mat); 
+        const auto& axis = m->getAxis(0);
+        Mat.row(0) *= 0.0;
+        BoundaryRow top_row = left_bc.getTopRow(t.next, axis);
+        for(auto n=0; n<top_row.nnz; ++n)
+        {
+          Mat.coeffRef(0,n) = top_row.vals[n];
+        }
+        Mat.row(axis.size()-1) *= 0.0;
+        BoundaryRow bottom_row = right_bc.getBottomRow(t.next, axis);
+        for(auto n=0; n<bottom_row.nnz; ++n)
+        {
+          Mat.coeffRef(axis.size()-1,axis.size()-bottom_row.nnz+n) = bottom_row.vals[n];
+        }
       }
     }
 

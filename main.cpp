@@ -20,57 +20,61 @@ using std::endl, std::cout;
 
 int main()
 {
-  // IO manip
-  std::cout << std::setprecision(3); 
-  constexpr double pi = 3.14159265385; 
-  // Domain + Time  
-  fornfdm::solvers::SolverArgs args{
-    .mesh = make_Mesh(fornfdm::linspaced(20,0.0,pi), 1), 
-    .times = std::make_shared<const fornfdm::Vector>(fornfdm::linspaced(100,0.0,0.5))
-  }; 
+  std::cout << std::setprecision(4);
+  auto mesh = fornfdm::make_Mesh(fornfdm::linspaced(5,0.0,4.0),2); 
 
-  // Initial Conditions  
-  auto v = make_Discretization(args.mesh, [](double x){ return std::sin(x); }); 
-  args.initialConditions = { std::move(v) }; 
+  fornfdm::CSRMatrix mat; 
+  mat.resize(25, 25); 
+  mat = Eigen::MatrixXd::Random(25,25).sparseView();
+  // cout << mat.toDense() << endl;
 
-  utils::print_vec(args.initialConditions[0],"Initial"); 
+  auto bc1 = osteps::NeumannBC(0.0); 
+  // auto bc2 = osteps::DirichletBC(1.0);
+  // auto bc3 = osteps::RobinBC(5.0,1.0,30.0); 
 
-  // LHS in time 
-  auto Ut = texprs::NthTimeDeriv<1>{}; 
+  using osteps::BCPair;
+  osteps::BCList bcs(BCPair(bc1,bc1), BCPair(bc1,bc1));
 
-  // RHS in space 
-  auto Uxx = linops::NthPartialDeriv<2,0,fornfdm::linops::Centered<5>>{}; 
+  auto t = osteps::make_time(); 
+  auto ctx = osteps::make_context(mesh); 
+  bcs.MatBeforeStep<osteps::StepType::Implicit>(mat,t,ctx);
 
-  // Boundary Conditions 
-  auto left = osteps::DirichletBC(0.0); 
-  auto right = left;
-  osteps::BCPair bcs(left,right); 
-
-  // Solving ...
-  // solvers::ExplicitSolver my_solver(Ut,Uxx,std::tie(bcs)); 
-  // solvers::ImplicitSolver my_solver(Utt,expr,std::tie(forcing, bcs)); 
-  solvers::CrankNicolsonSolver my_solver(Ut,Uxx,std::tie(bcs)); 
-
-  // 1D through time 
-  my_solver.calculate(args, solvers::PrintSaver{}); 
-
-  // 1D Print 
-  // auto sol = my_solver.calculate(args, solvers::LastSaver{}); 
-  // utils::print_vec(args.initialConditions[0],"ICs"); 
-  // utils::print_vec(sol, "Sol"); 
-
-  // 2D print 
-  // auto sol = my_solver.calculate(args, solvers::LastSaver{}); 
-  // utils::print_mat(args.mesh->makeOneDimViews(args.initialConditions[0], 0), "Init"); 
-  // utils::print_mat(args.mesh->makeOneDimViews(sol, 0), "solution"); 
- 
-  // Time to last sol
-  // auto time_taken = my_solver.calculate(args, solvers::TimerSaver{}); 
-  // cout << "milliseconds: " << time_taken.count() << endl;  
-
-  // Average time to last sol
-  // std::size_t N = 40; 
-  // double sum = 0; 
-  // for(auto i=0; i<N; ++i) sum += my_solver.calculate(args, solvers::TimerSaver{}).count(); 
-  // cout << "Average time: " << (sum/N) << " ms" << endl; 
+  cout << mat.toDense() << endl;
 };
+
+// for(block in big blocks)
+// first blocks is set by lower blocks but masked by this row iterators
+// recursively goes into lower dimension
+
+// void setStencilNoFill(fornfdm::CSRMatrix& mat, std::size_t offset)
+// {
+//   if(ith_dimension == 0)
+//   {
+//     // use a row iterator to fill the top rows. 
+//     // use a row iterator to fill the bottom rows.
+//     // return/goto parent dimension
+//   }
+//   else
+//   {
+//     // setStencilFill() using THIS dimensions row iterator
+//     // fill middle blocks with setStencilNoFill() and a certain offset 
+//     // setStencilFill() using THIS dimensions row iterator 
+//   }
+// }
+
+// void setStencilFill()
+// {
+//   if(ith_dimension == 0)
+//   {
+//     // use a row iterator to fill the top rows. 
+//     // use a row iterator to fill middle rows. NEED a row iterator from parent dimension
+//     // use a row iterator to fill the bottom rows. 
+//     // How to determine parent dimension ?????
+//   }
+//   else
+//   {
+//     // setStencilFill() top block but THIS as row iterator
+//     // setStencillFill() block but PARENT as row iterator
+//     // setStencilFill() bottom block but THIS as row iterator
+//   }
+// }

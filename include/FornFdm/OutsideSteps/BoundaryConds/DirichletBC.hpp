@@ -27,25 +27,25 @@ class DirichletBC
 
     // Member Funcs ----------------------------------------------
     // change first/last (left/right boundary) row of the fornfdm stencil matrix
-    void SetStencilL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::CSRMatrix& Mat) const 
+    BoundaryRow getTopRow(fornfdm::Real t, const fornfdm::Vector& axis) const 
     {
-      Mat.topRows(1) *= 0; Mat.coeffRef(0,0)=1;
+      return BoundaryRow{ {1,0,0}, 1};
     }
-    void SetStencilR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::CSRMatrix& Mat) const 
+    BoundaryRow getBottomRow(fornfdm::Real t, const fornfdm::Vector& axis) const 
     {
-      Mat.bottomRows(1) *= 0; Mat.coeffRef(Mat.rows()-1, Mat.cols()-1)=1;
+      return BoundaryRow{ {1,0,0}, 1};
     }
 
     // change the first/last (left/right boundary) entry of a vector to implicit solution   
-    void SetImpSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
+    void SetImpSolL(fornfdm::Real t, const fornfdm::Vector& axis, fornfdm::StrideRef Sol) const 
     {Sol[0] = value;}
-    void SetImpSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
+    void SetImpSolR(fornfdm::Real t, const fornfdm::Vector& axis, fornfdm::StrideRef Sol) const 
     {Sol[Sol.size()-1] = value;}
     
     // change the first/last (left/right boundary) entry of a vector  
-    void SetSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
+    void SetSolL(fornfdm::Real t, const fornfdm::Vector& axis, fornfdm::StrideRef Sol) const 
     { Sol[0] = value;}
-    void SetSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
+    void SetSolR(fornfdm::Real t, const fornfdm::Vector& axis, fornfdm::StrideRef Sol) const 
     {Sol[Sol.size()-1] = value;}
 };
 
