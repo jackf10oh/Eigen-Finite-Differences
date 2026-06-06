@@ -167,7 +167,7 @@ auto make_Mesh(Args... args)
 #include "Coordinate.hpp" 
 
 namespace fornfdm{ 
-auto make_Discretization(const fornfdm::Mesh* m, fornfdm::Scalar a)
+auto discretize(const fornfdm::Mesh* m, fornfdm::Scalar a)
 {
   std::size_t s = m->sizesProduct(); 
   auto lam = [a](std::size_t i){ return a; }; 
@@ -175,7 +175,7 @@ auto make_Discretization(const fornfdm::Mesh* m, fornfdm::Scalar a)
 }
 
 template<class Callable>
-auto make_Discretization(const fornfdm::Mesh* m, const Callable& func)
+auto discretize(const fornfdm::Mesh* m, const Callable& func)
 {
   std::size_t s = m->sizesProduct(); 
   constexpr std::size_t N = fornfdm::internal::callable_traits<Callable>::arity; 
@@ -183,7 +183,7 @@ auto make_Discretization(const fornfdm::Mesh* m, const Callable& func)
   return Eigen::CwiseNullaryOp<decltype(lam), fornfdm::Vector>(s, 1, lam); 
 }
 
-auto make_Discretization(std::shared_ptr<const fornfdm::Mesh> mesh, fornfdm::Scalar a)
+auto discretize(std::shared_ptr<const fornfdm::Mesh> mesh, fornfdm::Scalar a)
 {
   std::size_t s = mesh->sizesProduct(); 
   auto lam = [a](std::size_t i){ return a; }; 
@@ -191,7 +191,7 @@ auto make_Discretization(std::shared_ptr<const fornfdm::Mesh> mesh, fornfdm::Sca
 }
 
 template<class Callable>
-auto make_Discretization(std::shared_ptr<const fornfdm::Mesh> mesh, const Callable& func)
+auto discretize(std::shared_ptr<const fornfdm::Mesh> mesh, const Callable& func)
 {
   std::size_t s = mesh->sizesProduct(); 
   constexpr std::size_t N = fornfdm::internal::callable_traits<Callable>::arity; 

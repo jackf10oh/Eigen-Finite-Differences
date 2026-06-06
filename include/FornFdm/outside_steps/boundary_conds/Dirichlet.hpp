@@ -1,19 +1,19 @@
-// DirichletBC.hpp 
+// Dirichlet.hpp 
 //
 // dirichlet boundary value conditions of the form 
 // U(0) = c for some constant c 
 //
 // JAF 12/8/2025
 
-#ifndef FORNFDM_OSTEPS_DIRICHLETBC_H
-#define FORNFDM_OSTEPS_DIRICHLETBC_H
+#ifndef FORNFDM_OSTEPS_DIRICHLET_H
+#define FORNFDM_OSTEPS_DIRICHLET_H
 
 #include "BCPair.hpp" // struct BoundaryRow
 
 namespace fornfdm{
   namespace osteps{
 
-class DirichletBC
+class Dirichlet
 {
   public:  
     // member data 
@@ -21,9 +21,9 @@ class DirichletBC
 
   public:
     // Constructors ---------------------------------------------
-    DirichletBC(fornfdm::Scalar val_init=0.0) : value(val_init){}; 
-    DirichletBC(const DirichletBC& other)=default; 
-    ~DirichletBC()=default; 
+    Dirichlet(fornfdm::Scalar val_init=0.0) : value(val_init){}; 
+    Dirichlet(const Dirichlet& other)=default; 
+    ~Dirichlet()=default; 
 
     // Member Funcs ----------------------------------------------
     // change first/last (left/right boundary) row of the fornfdm stencil matrix
@@ -51,4 +51,4 @@ class DirichletBC
   } // end namespace osteps
 } // end namespace fornfdm 
 
-#endif // DirichletBC.hpp
+#endif // Dirichlet.hpp

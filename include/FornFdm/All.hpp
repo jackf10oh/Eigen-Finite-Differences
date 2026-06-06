@@ -1,4 +1,4 @@
-// All.hpp 
+// all.hpp 
 //
 // Includs all files from every subdirectory,
 // except for utilitis. 
@@ -16,11 +16,11 @@
 #include "Traits.hpp"
 #include "Mesh.hpp" 
 
-#include "Diffops/All.hpp"
-#include "Coeffs/All.hpp"
-#include "OutsideSteps/All.hpp"
-#include "TExprs/All.hpp"
-#include "Solvers/All.hpp"
+#include "diffops/all.hpp"
+#include "coeffs/all.hpp"
+#include "outside_steps/all.hpp"
+#include "texprs/all.hpp"
+#include "Solvers/all.hpp"
 
 #endif
 

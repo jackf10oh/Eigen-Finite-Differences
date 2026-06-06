@@ -10,7 +10,7 @@
 #define FORNFDM_SOLVERS_SOLVERBASE_H 
 
 #include"../Types.hpp" // Matrix, Vector
-#include "../OutsideSteps/OStepBase.hpp" // StepType 
+#include "../outside_steps/OStepBase.hpp" // StepType 
 #include "SolverArgs.hpp"
 #include "SavePolicies.hpp"
 

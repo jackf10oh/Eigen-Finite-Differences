@@ -7,8 +7,8 @@
 #ifndef FORNFDM_COEFFS_COEFFPRODUCT_H
 #define FORNFDM_COEFFS_COEFFPRODUCT_H
 
-#include "../Diffops/EvaluatorBase.hpp"
-#include "../Diffops/KroneckerEvaluator.hpp"
+#include "../diffops/EvaluatorBase.hpp"
+#include "../diffops/KroneckerEvaluator.hpp"
 
 namespace fornfdm{
 namespace linops{

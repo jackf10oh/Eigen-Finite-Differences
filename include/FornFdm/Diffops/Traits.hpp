@@ -1,6 +1,6 @@
 // Traits.hpp
 //
-// Traits used by Diffops subdirectory 
+// Traits used by diffops subdirectory 
 //
 // JAF 4/14/2026 
 
@@ -161,4 +161,4 @@ struct promote_node_selector_type<T<min01>,T<min02>>
 } // end namespace linops 
 } // end namespace fornfdm
 
-#endif // Traits.hpp (Diffops)
+#endif // Traits.hpp (diffops)

@@ -5,16 +5,16 @@
 //
 // JAF 12/8/2025
 
-#ifndef FORNFDM_OSTEPS_ROBINBC_H
-#define FORNFDM_OSTEPS_ROBINBC_H
+#ifndef FORNFDM_OSTEPS_ROBIN_H
+#define FORNFDM_OSTEPS_ROBIN_H
 
-#include "../../Utilities/FornbergStackCalc.hpp"
+#include "../../utilities/FornbergStackCalc.hpp"
 #include "BCPair.hpp"
 
 namespace fornfdm{
   namespace osteps{
 
-class RobinBC
+class Robin
 {
   public:  
     // member data 
@@ -25,13 +25,13 @@ class RobinBC
   public:
     // Constructors + Destructor ---------------------------------------------
     // a*U + b*Ux = target
-    RobinBC(fornfdm::Scalar a=1.0, fornfdm::Scalar b=0.0, fornfdm::Scalar target=0.0) 
+    Robin(fornfdm::Scalar a=1.0, fornfdm::Scalar b=0.0, fornfdm::Scalar target=0.0) 
       : stiffness(a), damping(b), flux(target)
     {}; 
     // copy 
-    RobinBC(const RobinBC& other)=default; 
+    Robin(const Robin& other)=default; 
     // destructors
-    virtual ~RobinBC()=default; 
+    virtual ~Robin()=default; 
 
     // Member Funcs ----------------------------------------------
     // change first/last (left/right boundary) row of the fornfdm stencil matrix
@@ -93,4 +93,4 @@ class RobinBC
   } // end namespace osteps
 } // end namespace fornfdm 
 
-#endif // RobinBC.hpp
+#endif // Robin.hpp

@@ -12,8 +12,8 @@
 
 #include<memory>
 #include<Eigen/Core> // DiagonalMatrixBase 
-#include "../Diffops/Traits.hpp"
-#include "../Diffops/EvaluatorBase.hpp" // Coordinate struct 
+#include "../diffops/Traits.hpp"
+#include "../diffops/EvaluatorBase.hpp" // Coordinate struct 
 #include "../Coordinate.hpp"
 
 namespace fornfdm{

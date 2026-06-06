@@ -9,7 +9,7 @@
 
 #include "TimeDerivBase.hpp"
 #include "Traits.hpp"
-#include "../Diffops/Traits.hpp"
+#include "../diffops/Traits.hpp"
 
 namespace fornfdm{
 namespace texprs{

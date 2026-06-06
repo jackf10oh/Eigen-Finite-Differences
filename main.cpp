@@ -5,13 +5,13 @@
 // workaround to allow expressions of different rows/cols to be added 
 // before setMesh() sets their rows/cols to be equal
 #define eigen_assert(x)
-#include<FornFdm/All.hpp>
+#include<FornFdm/all.hpp>
 #define EIGEN_SPARSEMATRIXBASE_PLUGIN <FornFdm/EigenFdmPlugin.hpp> 
 
 #include<iostream>
 #include<iomanip>
-#include<FornFdm/Utilities/PrintVec.hpp> 
-#include<FornFdm/Utilities/BumpFunc.hpp>
+#include<FornFdm/utilities/PrintVec.hpp> 
+#include<FornFdm/utilities/BumpFunc.hpp>
 #include<Eigen/SparseCore> // macro plugin takes effect. 
 
 using namespace fornfdm; 
@@ -30,10 +30,8 @@ int main()
   }; 
 
   // Initial Conditions  
-  auto v = make_Discretization(args.mesh, [](double x){ return std::sin(x); }); 
+  auto v = fornfdm::discretize(args.mesh, [](double x){ return std::sin(x); }); 
   args.initialConditions = { std::move(v) }; 
-
-  utils::print_vec(args.initialConditions[0],"Initial"); 
 
   // LHS in time 
   auto Ut = texprs::NthTimeDeriv<1>{}; 
@@ -42,7 +40,7 @@ int main()
   auto Uxx = linops::NthPartialDeriv<2,0,fornfdm::linops::Centered<5>>{}; 
 
   // Boundary Conditions 
-  auto left = osteps::DirichletBC(0.0); 
+  auto left = osteps::Dirichlet(0.0); 
   auto right = left;
   osteps::BCPair bcs(left,right); 
 
@@ -56,7 +54,7 @@ int main()
 
   // 1D Print 
   // auto sol = my_solver.calculate(args, solvers::LastSaver{}); 
-  // utils::print_vec(args.initialConditions[0],"ICs"); 
+  // utils::print_vec(args.initialConditions[0],"Initial"); 
   // utils::print_vec(sol, "Sol"); 
 
   // 2D print 

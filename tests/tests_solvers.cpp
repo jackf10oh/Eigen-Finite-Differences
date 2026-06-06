@@ -8,7 +8,7 @@
 // workaround to allow expressions of different rows/cols to be added 
 // before setMesh() sets their rows/cols to be equal
 #define eigen_assert(x)
-#include<FornFdm/All.hpp>
+#include<FornFdm/all.hpp>
 #define EIGEN_SPARSEMATRIXBASE_PLUGIN <FornFdm/EigenFdmPlugin.hpp>
 
 #include<iostream>
@@ -32,7 +32,7 @@ TEST(SolverSuite, OneDimExplicitSolver){
   }; 
 
   // Initial Conditions  
-  auto v = make_Discretization(args.mesh, [](double x){ return std::sin(x); }); 
+  auto v = discretize(args.mesh, [](double x){ return std::sin(x); }); 
   args.initialConditions = { std::move(v) }; 
 
   // LHS in time 
@@ -42,7 +42,7 @@ TEST(SolverSuite, OneDimExplicitSolver){
   auto Uxx = linops::NthPartialDeriv<2,0,fornfdm::linops::Centered<5>>{}; 
 
   // Boundary Conditions 
-  auto left = osteps::DirichletBC(0.0); 
+  auto left = osteps::Dirichlet(0.0); 
   auto right = left;
   osteps::BCPair bcs(left,right); 
 
@@ -65,7 +65,7 @@ TEST(SolverSuite, OneDimImplicitSolver){
   }; 
 
   // Initial Conditions  
-  auto v = make_Discretization(args.mesh, [](double x){ return std::sin(x); }); 
+  auto v = discretize(args.mesh, [](double x){ return std::sin(x); }); 
   args.initialConditions = { std::move(v) }; 
 
   // LHS in time 
@@ -75,7 +75,7 @@ TEST(SolverSuite, OneDimImplicitSolver){
   auto Uxx = linops::NthPartialDeriv<2,0,fornfdm::linops::Centered<5>>{}; 
 
   // Boundary Conditions 
-  auto left = osteps::DirichletBC(0.0); 
+  auto left = osteps::Dirichlet(0.0); 
   auto right = left;
   osteps::BCPair bcs(left,right); 
 
@@ -98,7 +98,7 @@ TEST(SolverSuite, OneDimCrankNicolsonSolver){
   }; 
 
   // Initial Conditions  
-  auto v = make_Discretization(args.mesh, [](double x){ return std::sin(x); }); 
+  auto v = discretize(args.mesh, [](double x){ return std::sin(x); }); 
   args.initialConditions = { std::move(v) }; 
 
   // LHS in time 
@@ -108,7 +108,7 @@ TEST(SolverSuite, OneDimCrankNicolsonSolver){
   auto Uxx = linops::NthPartialDeriv<2,0,fornfdm::linops::Centered<5>>{}; 
 
   // Boundary Conditions 
-  auto left = osteps::DirichletBC(0.0); 
+  auto left = osteps::Dirichlet(0.0); 
   auto right = left;
   osteps::BCPair bcs(left,right); 
 
@@ -129,7 +129,7 @@ TEST(InterpolationSuite, HighDimLinearInterpolation){
   auto mesh_1d = fornfdm::make_Mesh(fornfdm::linspaced(21,-10.0,10.0),1); 
   auto mesh_1d_fine = fornfdm::make_Mesh(fornfdm::linspaced(200,-10.0,10.0),1); 
   auto lam_1d = [](double x){ return 10.54 + 32.7 * x; }; 
-  auto vec_1d = make_Discretization(mesh_1d, lam_1d); 
+  auto vec_1d = discretize(mesh_1d, lam_1d); 
   for(auto i = 0; i < mesh_1d_fine->sizeOfDim(0); ++i)
   {
     fornfdm::Coordinate<1> coord{mesh_1d_fine->getAxis(0)[i]};
@@ -142,7 +142,7 @@ TEST(InterpolationSuite, HighDimLinearInterpolation){
   auto mesh_2d = fornfdm::make_Mesh(fornfdm::linspaced(21,-10.0,10.0),2); 
   auto mesh_2d_fine = fornfdm::make_Mesh(fornfdm::linspaced(200,-10.0,10.0),2); 
   auto lam_2d = [](double x, double y){ return 10.54 + 32.7 * x + 17.2 * y; }; 
-  auto vec_2d = make_Discretization(mesh_2d, lam_2d); 
+  auto vec_2d = discretize(mesh_2d, lam_2d); 
   for(auto i = 0; i < mesh_2d_fine->sizeOfDim(0); ++i)
   {
     for(auto j = 0; j < mesh_2d_fine->sizeOfDim(1); ++j)
@@ -159,7 +159,7 @@ TEST(InterpolationSuite, HighDimLinearInterpolation){
   auto mesh_3d = fornfdm::make_Mesh(fornfdm::linspaced(10,-10.0,10.0),3); 
   auto mesh_3d_fine = fornfdm::make_Mesh(fornfdm::linspaced(50,-10.0,10.0),3); 
   auto lam_3d = [](double x, double y, double z){ return 10.54 + 32.7 * x + 17.2 * y - 26.49 * z; }; 
-  auto vec_3d = make_Discretization(mesh_3d, lam_3d); 
+  auto vec_3d = discretize(mesh_3d, lam_3d); 
   for(auto i = 0; i < mesh_3d_fine->sizeOfDim(0); ++i)
   {
     for(auto j = 0; j < mesh_3d_fine->sizeOfDim(1); ++j)
@@ -186,7 +186,7 @@ TEST(InterpolationSuite, OneDimInterpolator){
   }; 
 
   // Initial Conditions  
-  auto v = make_Discretization(args.mesh, [](double x){ return std::sin(x); }); 
+  auto v = discretize(args.mesh, [](double x){ return std::sin(x); }); 
   args.initialConditions = { std::move(v) }; 
 
   // LHS in time 
@@ -196,7 +196,7 @@ TEST(InterpolationSuite, OneDimInterpolator){
   auto Uxx = linops::NthPartialDeriv<2,0,fornfdm::linops::Centered<5>>{}; 
 
   // Boundary Conditions 
-  auto left = osteps::DirichletBC(0.0); 
+  auto left = osteps::Dirichlet(0.0); 
   auto right = left;
   osteps::BCPair bcs(left,right); 
 

@@ -22,7 +22,7 @@ struct BoundaryRow
   std::size_t nnz;
 };
 
-// Base Class for Boundary Conditions. All operators make no changes to stencil / solution 
+// Base Class for Boundary Conditions. all operators make no changes to stencil / solution 
 template<typename LBC_T,typename RBC_T>
 class BCPair: public OStepBase<BCPair<LBC_T,RBC_T>>
 {

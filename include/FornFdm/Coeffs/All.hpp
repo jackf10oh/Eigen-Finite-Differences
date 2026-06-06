@@ -1,6 +1,6 @@
-// All.hpp 
+// all.hpp 
 //
-// include everything from Coeffs subdirectory 
+// include everything from coeffs subdirectory 
 // 
 // JAF 5/3/2026 
 
@@ -12,4 +12,4 @@
 #include "TimeDepCoeff.hpp" 
 #include "CoeffProduct.hpp"
 
-#endif // All.hpp (Coeffs)
+#endif // all.hpp (coeffs)

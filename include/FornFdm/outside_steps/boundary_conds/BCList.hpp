@@ -13,10 +13,10 @@
 #include<Eigen/Dense>
 #include<utility>
 #include "../../Mesh.hpp"
-#include "../../Utilities/FillRowExpr.hpp"
-#include "../../Utilities/FillStencil.hpp"
-#include "../../Utilities/BlockDiagExpr.hpp"
-#include "../../Utilities/SparseDiagExpr.hpp"
+#include "../../utilities/FillRowExpr.hpp"
+#include "../../utilities/FillStencil.hpp"
+#include "../../utilities/BlockDiagExpr.hpp"
+#include "../../utilities/SparseDiagExpr.hpp"
 #include "../OStepBase.hpp"
 #include "BCPair.hpp"
 

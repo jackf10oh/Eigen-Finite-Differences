@@ -50,13 +50,13 @@ class ForcingTerm : public OStepBase<ForcingTerm<Callable>>
       if constexpr(STEP==StepType::Explicit)
       {
         // use left end point t[n]
-        auto xpr = fornfdm::make_Discretization(ctx.getMesh(), Binded(m_functor, t.now)); 
+        auto xpr = fornfdm::discretize(ctx.getMesh(), Binded(m_functor, t.now)); 
         u += ctx.getExecutor()->getInvCoeff() * xpr; 
       }
       else if constexpr(STEP==StepType::Implicit)
       {
         // use midpoint (t[n] + t[n+1]) / 2  
-        auto xpr = fornfdm::make_Discretization(ctx.getMesh(), Binded(m_functor, (t.now+t.next)/2));
+        auto xpr = fornfdm::discretize(ctx.getMesh(), Binded(m_functor, (t.now+t.next)/2));
         u += ctx.getExecutor()->getInvCoeff() * xpr; 
       }
     }

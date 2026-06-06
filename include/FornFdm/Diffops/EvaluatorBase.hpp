@@ -8,8 +8,8 @@
 #define FORNFDM_DIFFOPS_EVALUATORBASE_H
 
 #include<array>
-#include "../Utilities/Fornberg2.hpp"
-#include "../Utilities/FornbergStackCalc.hpp"
+#include "../utilities/Fornberg2.hpp"
+#include "../utilities/FornbergStackCalc.hpp"
 #include "../Types.hpp"
 #include "../Traits.hpp"
 #include "../Mesh.hpp" 

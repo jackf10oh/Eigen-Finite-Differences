@@ -1,20 +1,20 @@
-// NeumannBC.hpp 
+// Neumann.hpp 
 //
 // neumann boundary condtions of the form 
 // Ux = c for some value c
 //
 // JAF 12/8/2025
 
-#ifndef FORNFDM_OSTEPS_NEUMANNBC_H
-#define FORNFDM_OSTEPS_NEUMANNBC_H
+#ifndef FORNFDM_OSTEPS_NEUMANN_H
+#define FORNFDM_OSTEPS_NEUMANN_H
 
-#include "../../Utilities/FornbergStackCalc.hpp"
+#include "../../utilities/FornbergStackCalc.hpp"
 #include "BCPair.hpp" 
 
 namespace fornfdm{
   namespace osteps{
 
-class NeumannBC
+class Neumann
 {
   public:  
     // member data 
@@ -22,10 +22,10 @@ class NeumannBC
 
   public:
     // Constructors + destructor ---------------------------------------------
-    NeumannBC(fornfdm::Scalar val_init=0.0) : flux(val_init){}; 
-    NeumannBC(const NeumannBC& other) : flux(other.flux){}; 
+    Neumann(fornfdm::Scalar val_init=0.0) : flux(val_init){}; 
+    Neumann(const Neumann& other) : flux(other.flux){}; 
     // destructor
-    ~NeumannBC()=default; 
+    ~Neumann()=default; 
     // Member Funcs ----------------------------------------------
     // change first/last (left/right boundary) row of the fornfdm stencil matrix
     BoundaryRow getTopRow(fornfdm::Real t, const fornfdm::Vector& axis) const 
@@ -96,4 +96,4 @@ class NeumannBC
   } // end namespace osteps
 } // end namespace fornfdm 
 
-#endif // NeumannBC.hpp
+#endif // Neumann.hpp

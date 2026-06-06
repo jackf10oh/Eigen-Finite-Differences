@@ -1,6 +1,6 @@
-// All.hpp
+// all.hpp
 // 
-// Includes all files from TExprs subdirectory 
+// Includes all files from texprs subdirectory 
 // 
 // JAF 1/15/2026 
 
@@ -14,4 +14,4 @@
 #include "SumExpr.hpp"
 #include "Executor.hpp"
 
-#endif // All.hpp (TExprs)
+#endif // all.hpp (texprs)

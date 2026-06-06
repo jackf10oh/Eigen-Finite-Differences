@@ -16,7 +16,7 @@
 #include "../Types.hpp"
 #include "../Coordinate.hpp"
 #include "../Mesh.hpp"
-#include "../Utilities/LinearInterpolation.hpp"
+#include "../utilities/LinearInterpolation.hpp"
 
 #include "ImplicitSolver.hpp"
 

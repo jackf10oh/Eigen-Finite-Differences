@@ -1,4 +1,4 @@
-// All.hpp
+// all.hpp
 // 
 // includes everything from Solvers
 //
@@ -14,4 +14,4 @@
 #include "CrankNicolsonSolver.hpp"
 #include "Interpolator.hpp"
 
-#endif // All.hpp (Solvers)
+#endif // all.hpp (Solvers)

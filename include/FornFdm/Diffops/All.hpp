@@ -1,6 +1,6 @@
-// All.hpp 
+// all.hpp 
 //
-// include everything from Diffops 
+// include everything from diffops 
 // 
 // JAF 5/3/2026 
 
@@ -20,4 +20,4 @@
 #include "NwiseUnaryOp.hpp" 
 #include "NthPartialDeriv.hpp" 
 
-#endif // All.hpp (Diffops)
+#endif // all.hpp (diffops)
