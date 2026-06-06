@@ -45,7 +45,7 @@ class BCPair: public OStepBase<BCPair<LBC_T,RBC_T>>
 
     // Member Functions ==================================================================
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void MatBeforeStep(fornfdm::CSRMatrix& Mat, const TCtx& t, const Ctx& ctx) const
+    void applyBeforeMat(fornfdm::CSRMatrix& Mat, const TCtx& t, const Ctx& ctx) const
     {
       auto m = ctx.getMesh(); 
       if (m->numDims() != 1) throw std::runtime_error("incorrect # of dims passed to 1D boundary condition"); 
@@ -67,24 +67,24 @@ class BCPair: public OStepBase<BCPair<LBC_T,RBC_T>>
     }
 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecBeforeStep(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx) const
+    void applyBeforeVec(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx) const
     {
       auto m = ctx.getMesh(); 
       if (m->numDims() != 1) throw std::runtime_error("incorrect # of dims passed to 1D boundary condition");        
       if constexpr(STEP == StepType::Implicit){
-        left_bc.SetImpSolL(t.next, m->getAxis(0), u); 
-        right_bc.SetImpSolR(t.next, m->getAxis(0), u); 
+        left_bc.setImpSolLeft(t.next, m->getAxis(0), u); 
+        right_bc.setImpSolRight(t.next, m->getAxis(0), u); 
       }
     }
 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecAfterStep(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx) const 
+    void applyAfterVec(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx) const 
     {
       auto m = ctx.getMesh(); 
       if (m->numDims() != 1) throw std::runtime_error("incorrect # of dims passed to 1D boundary condition"); 
       if constexpr(STEP == StepType::Explicit){
-        left_bc.SetSolL(t.next, m->getAxis(0), u); 
-        right_bc.SetSolR(t.next, m->getAxis(0), u); 
+        left_bc.setExpSolLeft(t.next, m->getAxis(0), u); 
+        right_bc.setExpSolRight(t.next, m->getAxis(0), u); 
       }  
     }
 };

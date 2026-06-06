@@ -44,7 +44,7 @@ class ForcingTerm : public OStepBase<ForcingTerm<Callable>>
 
     // Member Functions ---------------- 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecBeforeStep(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx) const 
+    void applyBeforeVec(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx) const 
     {
       using Binded = typename fornfdm::internal::BindFirst<CallableCleaned>; 
       if constexpr(STEP==StepType::Explicit)

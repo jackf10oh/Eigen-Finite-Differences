@@ -28,13 +28,13 @@ struct OStepBase
     void BeforeLinAlgebra(const TCtx& t, Ctx& ctx){/* edit everything before linear algebra starts*/}
 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void MatBeforeStep(fornfdm::CSRMatrix& Mat, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
+    void applyBeforeMat(fornfdm::CSRMatrix& Mat, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
     
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecBeforeStep(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
+    void applyBeforeVec(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecAfterStep(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
+    void applyAfterVec(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}
 
 }; 
 

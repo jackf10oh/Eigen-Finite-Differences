@@ -23,22 +23,24 @@
 namespace fornfdm{
   namespace osteps{
 
-template<typename... BCPairTypes>
-class BCList : public OStepBase<BCList<BCPairTypes...>>
+template<typename... BCTypes>
+class BCList : public OStepBase<BCList<BCTypes...>>
 {
   public:
     // member data. -------------------------------------------------
-    constexpr static std::size_t numDims = sizeof...(BCPairTypes);
+    constexpr static std::size_t numDims = sizeof...(BCTypes) / 2;
     // list of boundary conditions. 1 per Dimension 
-    std::tuple< std::remove_reference_t<BCPairTypes>... > bcs_list; 
+    std::tuple< std::remove_reference_t<BCTypes>... > bcs_list; 
 
   public:
     // Constructors + Destructors =========================================
     BCList()=delete; 
     
-    BCList(BCPairTypes... args) 
-      : bcs_list(args...)
-    {} 
+    BCList(BCTypes... args) 
+      : bcs_list{args...}
+    {
+      static_assert(((sizeof...(BCTypes) % 2) == 0 ) && (sizeof...(BCTypes) >= 2), "BCList must be constructed with 2*N BCs for N>0 dimensions");
+    } 
     
     BCList(const BCList& other)=default;
     
@@ -47,10 +49,10 @@ class BCList : public OStepBase<BCList<BCPairTypes...>>
 
     // Member Funcs =================================================
     template<StepType STEP, typename TIMECTX = TimeContext<>, typename CONSTCTX = Context<> >
-    void MatBeforeStep(fornfdm::CSRMatrix& mat, const TIMECTX& t, const CONSTCTX& ctx)
+    void applyBeforeMat(fornfdm::CSRMatrix& mat, const TIMECTX& t, const CONSTCTX& ctx) const
     {      
       // check args are compaitble 
-      assert((ctx.getMesh()->numDims() == this->numDims) && "BCList MatBeforeStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
+      assert((ctx.getMesh()->numDims() == this->numDims) && "BCList applyBeforeMat error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
 
       if constexpr(STEP == StepType::Implicit)
       {    
@@ -58,44 +60,43 @@ class BCList : public OStepBase<BCList<BCPairTypes...>>
         auto boundary_row_pairs = make_row_pairs(t.next, ctx.getMesh());
         setStencilNoFill<numDims-1>(mat, 0, rolling_prods, boundary_row_pairs);
       }
-    } // end MatBeforeStep 
+    } // end applyBeforeMat 
 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecBeforeStep(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx)
+    void applyBeforeVec(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx) const
     {
       // check args are compaitble 
       auto mesh = ctx.getMesh(); 
-      assert((mesh->numDims() == this->numDims) && "BCList VecBeforeStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
+      assert((mesh->numDims() == this->numDims) && "BCList applyBeforeVec error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
 
       if constexpr(STEP == StepType::Implicit)
       {
         std::array<std::size_t, numDims> rolling_prods = make_rolling_prods((ctx.getMesh())); 
         setSolNoFill<true, numDims-1>(u.data(), 0, rolling_prods, ctx.getMesh(), t.next);
       } // end if constexpr(step)
-    } // end VecBeforeStep 
+    } // end applyBeforeVec 
 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void VecAfterStep(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx)
+    void applyAfterVec(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx) const
     {
       auto mesh = ctx.getMesh(); // get the MeshXD 
-      assert((mesh->numDims() == this->numDims) && "BCList VecAfterStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
+      assert((mesh->numDims() == this->numDims) && "BCList applyAfterVec error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
       
       if constexpr(STEP == StepType::Explicit)
       {
         std::array<std::size_t, numDims> rolling_prods = make_rolling_prods((ctx.getMesh())); 
         setSolNoFill<false, numDims-1>(u.data(), 0, rolling_prods, ctx.getMesh(), t.next);
       } // end if constexpr(step)
-    } // end VecAfterStep
+    } // end applyAfterVec
 
   private:
     // Unreachable =========================================================== 
-    auto make_rolling_prods(const fornfdm::Mesh* m)
-    {
-      constexpr std::size_t N = sizeof...(BCPairTypes); 
-      std::array<std::size_t, N> result;
+    auto make_rolling_prods(const fornfdm::Mesh* m) const
+    { 
+      std::array<std::size_t, this->numDims> result;
       auto rolling = m->sizeOfDim(0);
       result[0] = rolling; 
-      for(auto i=1; i < N; ++i)
+      for(auto i=1; i < this->numDims; ++i)
       {
         rolling *= m->sizeOfDim(i);
         result[i] = rolling; 
@@ -103,12 +104,12 @@ class BCList : public OStepBase<BCList<BCPairTypes...>>
       return result;
     }
 
-    template<std::size_t Idx>
+    template<std::size_t ithDim>
     inline auto make_row_pair_single(fornfdm::Real t, const fornfdm::Vector& axis) const
     {
       return std::make_pair(
-        std::get<Idx>(bcs_list).left_bc.getTopRow(t,axis), 
-        std::get<Idx>(bcs_list).right_bc.getTopRow(t,axis)
+        std::get<2*ithDim>(bcs_list).getTopRow(t,axis), 
+        std::get<2*ithDim+1>(bcs_list).getBottomRow(t,axis)
       ); 
     }
 
@@ -125,7 +126,7 @@ class BCList : public OStepBase<BCList<BCPairTypes...>>
 
     inline auto make_row_pairs(fornfdm::Real t, const fornfdm::Mesh* m) const
     {
-      return make_row_pairs_impl(t, m, std::make_index_sequence<numDims>{});
+      return make_row_pairs_impl(t, m, std::make_index_sequence<this->numDims>{});
     }
 
     template<std::size_t ithDim>
@@ -244,13 +245,13 @@ class BCList : public OStepBase<BCList<BCPairTypes...>>
         fornfdm::StrideView sol_1d(data + offset, mesh->sizeOfDim(0), fornfdm::Stride(0,1));
         if constexpr(useImplicit)
         {
-          std::get<0>(bcs_list).left_bc.SetImpSolL(t, mesh->getAxis(0), sol_1d);
-          std::get<0>(bcs_list).right_bc.SetImpSolR(t, mesh->getAxis(0), sol_1d);
+          std::get<0>(bcs_list).setImpSolLeft(t, mesh->getAxis(0), sol_1d);
+          std::get<1>(bcs_list).setImpSolRight(t, mesh->getAxis(0), sol_1d);
         }
         else
         {
-          std::get<0>(bcs_list).left_bc.SetSolL(t, mesh->getAxis(0), sol_1d);
-          std::get<0>(bcs_list).right_bc.SetSolR(t, mesh->getAxis(0), sol_1d);
+          std::get<0>(bcs_list).setExpSolLeft(t, mesh->getAxis(0), sol_1d);
+          std::get<1>(bcs_list).setExpSolRight(t, mesh->getAxis(0), sol_1d);
         }
       }
       else
@@ -279,11 +280,11 @@ class BCList : public OStepBase<BCList<BCPairTypes...>>
         fornfdm::StrideView sol_1d(data + offset, mesh->sizeOfDim(0), fornfdm::Stride(0,1));
         if constexpr(useImplicit)
         {
-          std::get<0>(bcs_list).left_bc.SetImpSolL(t, mesh->getAxis(0), sol_1d);
+          std::get<0>(bcs_list).setImpSolLeft(t, mesh->getAxis(0), sol_1d);
         }
         else
         {
-          std::get<0>(bcs_list).left_bc.SetSolL(t, mesh->getAxis(0), sol_1d);
+          std::get<0>(bcs_list).setExpSolLeft(t, mesh->getAxis(0), sol_1d);
         }
         for(std::size_t n=1; n < mesh->sizeOfDim(0)-1; ++n)
         {
@@ -293,11 +294,11 @@ class BCList : public OStepBase<BCList<BCPairTypes...>>
             fornfdm::StrideView sol_1d(data + offset + n, mesh->sizeOfDim(parentDim), fornfdm::Stride(0,rolling_prods[parentDim]));
             if constexpr(useImplicit)
             {
-              std::get<parentDim>(bcs_list).left_bc.SetImpSolL(t, mesh->getAxis(parentDim), sol_1d);
+              std::get<2*parentDim>(bcs_list).setImpSolLeft(t, mesh->getAxis(parentDim), sol_1d);
             }
             else
             {
-              std::get<parentDim>(bcs_list).left_bc.SetSolL(t, mesh->getAxis(parentDim), sol_1d);
+              std::get<2*parentDim>(bcs_list).setExpSolLeft(t, mesh->getAxis(parentDim), sol_1d);
             }
           }
           else
@@ -309,21 +310,21 @@ class BCList : public OStepBase<BCList<BCPairTypes...>>
             fornfdm::StrideView sol_1d(data_offset, mesh->sizeOfDim(parentDim), fornfdm::Stride(0,rolling_prods[parentDim]));
             if constexpr(useImplicit)
             {
-              std::get<parentDim>(bcs_list).right_bc.SetImpSolR(t, mesh->getAxis(parentDim), sol_1d);
+              std::get<2*parentDim+1>(bcs_list).setImpSolRight(t, mesh->getAxis(parentDim), sol_1d);
             }
             else
             {
-              std::get<parentDim>(bcs_list).right_bc.SetSolR(t, mesh->getAxis(parentDim), sol_1d);
+              std::get<2*parentDim+1>(bcs_list).setExpSolRight(t, mesh->getAxis(parentDim), sol_1d);
             }
           }
         }
         if constexpr(useImplicit)
         {
-          std::get<0>(bcs_list).right_bc.SetImpSolR(t, mesh->getAxis(0), sol_1d);
+          std::get<1>(bcs_list).setImpSolRight(t, mesh->getAxis(0), sol_1d);
         }
         else
         {
-          std::get<0>(bcs_list).right_bc.SetSolR(t, mesh->getAxis(0), sol_1d);
+          std::get<1>(bcs_list).setExpSolRight(t, mesh->getAxis(0), sol_1d);
         }
       }
       else

@@ -75,35 +75,35 @@ class SolverBase
     }
 
     template<fornfdm::osteps::StepType step, class TCtx, class Ctx>
-    void tupleMatBeforeStep(fornfdm::CSRMatrix& mat, const TCtx& time_ctx, const Ctx& ctx)
+    void tupleApplyBeforeMat(fornfdm::CSRMatrix& mat, const TCtx& time_ctx, const Ctx& ctx)
     {
       std::apply(
         [&](auto&&... lam_args)
         { 
-          ((lam_args.template MatBeforeStep<step>(mat, time_ctx, ctx)), ...); 
+          ((lam_args.template applyBeforeMat<step>(mat, time_ctx, ctx)), ...); 
         }, 
         m_osteps
       ); 
     }
 
     template<fornfdm::osteps::StepType step, class TCtx, class Ctx>
-    void tupleVecBeforeStep(fornfdm::StrideRef rhs_vector, const TCtx& time_ctx, const Ctx& ctx)
+    void tupleApplyBeforeVec(fornfdm::StrideRef rhs_vector, const TCtx& time_ctx, const Ctx& ctx)
     {
       // outside steps vector before step 
       std::apply(
-        [&](auto&&... lam_args){ ((lam_args.template VecBeforeStep<step>(rhs_vector, time_ctx, ctx)), ...); }, 
+        [&](auto&&... lam_args){ ((lam_args.template applyBeforeVec<step>(rhs_vector, time_ctx, ctx)), ...); }, 
         m_osteps
       ); 
     }
 
     template<fornfdm::osteps::StepType step, class TCtx, class Ctx>
-    void tupleVecAfterStep(fornfdm::StrideRef solution_u, const TCtx& time_ctx, const Ctx& ctx)
+    void tupleApplyAfterVec(fornfdm::StrideRef solution_u, const TCtx& time_ctx, const Ctx& ctx)
     {
       // outside steps solution after step(next_sol) 
       std::apply(
         [&](auto&... lam_args)
         { 
-          ((lam_args.template VecAfterStep<step>(solution_u, time_ctx, ctx)), ...); 
+          ((lam_args.template applyAfterVec<step>(solution_u, time_ctx, ctx)), ...); 
         }, 
         m_osteps
       );

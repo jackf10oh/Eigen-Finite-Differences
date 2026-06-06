@@ -48,30 +48,30 @@ class RobinBC
       return BoundaryRow{{damping*(-1.0/h), stiffness + damping*(1.0/h), 0}, 2};
     }; 
 
-    void SetImpSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
-    {Sol[0] = flux;};
-    void SetImpSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
-    {Sol[Sol.size()-1] = flux;};
+    void setImpSolLeft(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef sol) const 
+    {sol[0] = flux;};
+    void setImpSolRight(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef sol) const 
+    {sol[sol.size()-1] = flux;};
     
     // change the first/last (left/right boundary) entry of a vector  
-    void SetSolL(fornfdm::Real t, const fornfdm::Vector& axis, fornfdm::StrideRef Sol) const 
+    void setExpSolLeft(fornfdm::Real t, const fornfdm::Vector& axis, fornfdm::StrideRef sol) const 
     { 
       // up to 3 nodes, up to 1st order deriv
       fornfdm::utils::FornbergStackCalc<3,1> calc;
       calc.calculate(axis[0], axis.cbegin(), std::next(axis.cbegin(),3));
 
-      // get forward finite difference weights for Sol[0], Sol[1], Sol[2] 
+      // get forward finite difference weights for sol[0], sol[1], sol[2] 
       // solve the equation target = a*(S[0]) + b * ( W[0]*S[0] + W[1]*S[1] + W[2]*S[2] ) 
       // for the target value S[0] 
       double target = flux; 
-      target -= damping * calc.getArray()[4]*Sol[1]; 
-      target -= damping * calc.getArray()[5]*Sol[2];
+      target -= damping * calc.getArray()[4]*sol[1]; 
+      target -= damping * calc.getArray()[5]*sol[2];
       target /= stiffness + damping * calc.getArray()[3]; 
 
-      // assign to Sol reference
-      Sol[0] = target;  
+      // assign to sol reference
+      sol[0] = target;  
     };
-    void SetSolR(fornfdm::Real t, const fornfdm::Vector& axis, fornfdm::StrideRef Sol) const  
+    void setExpSolRight(fornfdm::Real t, const fornfdm::Vector& axis, fornfdm::StrideRef sol) const  
     {
       // up to 3 nodes, up to 1st order deriv
       fornfdm::utils::FornbergStackCalc<3,1> calc;
@@ -80,12 +80,12 @@ class RobinBC
       // solve the equation target = a*(S[N-1]) + b * ( W[0]*S[N-3] + W[1]*S[N-2] + W[2]*S[N-1] ) 
       // for the target value S[N-1] 
       fornfdm::Scalar target = flux; 
-      target -= damping * calc.getArray()[3] * Sol[Sol.size()-3]; 
-      target -= damping * calc.getArray()[4] * Sol[Sol.size()-2]; 
+      target -= damping * calc.getArray()[3] * sol[sol.size()-3]; 
+      target -= damping * calc.getArray()[4] * sol[sol.size()-2]; 
       target /= stiffness + damping * calc.getArray()[5]; 
 
-      // assign to Sol reference
-      Sol[Sol.size()-1] = target;  
+      // assign to sol reference
+      sol[sol.size()-1] = target;  
       // void return type
     };
 };

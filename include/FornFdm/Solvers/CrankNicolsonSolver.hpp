@@ -122,7 +122,7 @@ class CrankNicolsonSolver : public SolverBase<CrankNicolsonSolver<LhsType, RhsTy
         rhs_vector = (executor.getInvCoeff() * (linop_untouched * executor.getCurrentSolution())) + executor.getRhsExpression(); 
 
         // outside steps vector before step 
-        this->template tupleVecBeforeStep<fornfdm::osteps::StepType::Implicit>(rhs_vector, time_ctx, ctx);  
+        this->template tupleApplyBeforeVec<fornfdm::osteps::StepType::Implicit>(rhs_vector, time_ctx, ctx);  
         
         // store the matrix into stencil 
         if constexpr(fornfdm::linops::internal::traits<RhsType>::is_timedep){
@@ -138,14 +138,14 @@ class CrankNicolsonSolver : public SolverBase<CrankNicolsonSolver<LhsType, RhsTy
         stencil = identity - executor.getInvCoeff() * linop_untouched; 
         
         // outside steps matrix before step
-        this->template tupleMatBeforeStep<fornfdm::osteps::StepType::Implicit>(stencil, time_ctx, ctx); 
+        this->template tupleApplyBeforeMat<fornfdm::osteps::StepType::Implicit>(stencil, time_ctx, ctx); 
 
         // Implicit Step (I - D(t+1))*U(n+1) = rhs 
         m_iterative_solver->compute(stencil); 
         solution_u = m_iterative_solver->solveWithGuess(rhs_vector,rhs_vector);
         
         // outside steps solution after step(next_sol) 
-        this->template tupleVecAfterStep<fornfdm::osteps::StepType::Implicit>(solution_u, time_ctx, ctx); 
+        this->template tupleApplyAfterVec<fornfdm::osteps::StepType::Implicit>(solution_u, time_ctx, ctx); 
 
         // save oldest solution before it goes 
         save_policy.saveSolution(executor.getExpiringSolution()); 

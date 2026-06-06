@@ -104,19 +104,19 @@ class ExplicitSolver : public SolverBase<ExplicitSolver<LhsType, RhsType, OStepT
         stencil = executor.getInvCoeff() * this->m_rhs.toEigen();
         
         // outside steps matrix before step
-        this->template tupleMatBeforeStep<fornfdm::osteps::StepType::Explicit>(stencil, time_ctx, ctx); 
+        this->template tupleApplyBeforeMat<fornfdm::osteps::StepType::Explicit>(stencil, time_ctx, ctx); 
 
         // store the expression into a vector 
         rhs_vector = executor.getRhsExpression(); 
 
         // outside steps vector before step 
-        this->template tupleVecBeforeStep<fornfdm::osteps::StepType::Explicit>(rhs_vector, time_ctx, ctx); 
+        this->template tupleApplyBeforeVec<fornfdm::osteps::StepType::Explicit>(rhs_vector, time_ctx, ctx); 
 
         // Explicit Step 
         solution_u = stencil * executor.getCurrentSolution() + rhs_vector; 
         
         // outside steps solution after step(next_sol) 
-        this->template tupleVecAfterStep<fornfdm::osteps::StepType::Explicit>(solution_u, time_ctx, ctx); 
+        this->template tupleApplyAfterVec<fornfdm::osteps::StepType::Explicit>(solution_u, time_ctx, ctx); 
 
         // save oldest solution before it goes 
         save_policy.saveSolution(executor.getExpiringSolution()); 
