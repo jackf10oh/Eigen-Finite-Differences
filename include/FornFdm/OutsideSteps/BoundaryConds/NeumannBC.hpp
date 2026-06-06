@@ -49,7 +49,7 @@ class NeumannBC
     // change the first/last (left/right boundary) entry of a vector  
     void SetSolL(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
     { 
-      assert((Sol.size()<3 || mesh.size()<3) && "Discretization1D or Mesh1D size too small!(must be >= 3)"); 
+      assert((Sol.size()>=3 || mesh.size()>=3) && "Discretization1D or Mesh1D size too small!(must be >= 3)"); 
 
       // up to 3 nodes, up to 1st order deriv
       fornfdm::utils::FornbergStackCalc<3,1> calc; 
@@ -69,7 +69,7 @@ class NeumannBC
     };
     void SetSolR(fornfdm::Real t, const fornfdm::Vector& mesh, fornfdm::StrideRef Sol) const 
     {
-      assert((Sol.size()<3 || mesh.size()<3) && "Vector or Axis size too small!(must be >= 3)"); 
+      assert((Sol.size()>=3 || mesh.size()>=3) && "Vector or Axis size too small!(must be >= 3)"); 
 
       // up to 3 nodes, up to 1st order deriv
       fornfdm::utils::FornbergStackCalc<3,1> calc; 

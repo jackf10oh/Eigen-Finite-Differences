@@ -26,20 +26,23 @@ int main()
   fornfdm::CSRMatrix mat; 
   mat.resize(25, 25); 
   mat = Eigen::MatrixXd::Random(25,25).sparseView();
+  fornfdm::Vector sol = fornfdm::make_Discretization(mesh, 0.0); 
   // cout << mat.toDense() << endl;
 
-  auto bc1 = osteps::NeumannBC(0.0); 
-  // auto bc2 = osteps::DirichletBC(1.0);
+  auto bc1 = osteps::DirichletBC(1.0); 
+  auto bc2 = osteps::DirichletBC(2.0);
   // auto bc3 = osteps::RobinBC(5.0,1.0,30.0); 
 
   using osteps::BCPair;
-  osteps::BCList bcs(BCPair(bc1,bc1), BCPair(bc1,bc1));
+  osteps::BCList bcs(BCPair(bc1,bc1), BCPair(bc2,bc2));
 
   auto t = osteps::make_time(); 
   auto ctx = osteps::make_context(mesh); 
-  bcs.MatBeforeStep<osteps::StepType::Implicit>(mat,t,ctx);
+  // bcs.MatBeforeStep<osteps::StepType::Implicit>(mat,t,ctx);
+  // cout << mat.toDense() << endl;
 
-  cout << mat.toDense() << endl;
+  bcs.VecAfterStep<osteps::StepType::Explicit>(sol, t, ctx);
+  cout << sol << endl;
 };
 
 // for(block in big blocks)

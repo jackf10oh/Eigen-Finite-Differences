@@ -23,139 +23,19 @@
 namespace fornfdm{
   namespace osteps{
 
-// recursive functions to traverse the matrix in row order ---
-template<std::size_t ithDim>
-void setStencilNoFill(fornfdm::CSRMatrix& mat, std::size_t offset, const auto& rolling_prods, const auto& boundary_row_pairs);
-
-template<std::size_t ithDim, std::size_t parentDim, bool useTopRow>
-void setStencilFill(fornfdm::CSRMatrix& mat, std::size_t offset, const auto& rolling_prods, const auto& boundary_row_pairs)
-{
-  if constexpr(ithDim == 0)
-  {
-    // use a row iterator to fill the top row 
-    mat.row(offset) *= 0.0;
-    const auto& top_row = boundary_row_pairs[0].first;
-    for(auto n=0; n<top_row.nnz; ++n)
-    {
-      mat.coeffRef(offset,offset + n) = top_row.vals[n];
-    }
-
-    // use parent row iterator to fill middle rows 
-    if constexpr(useTopRow)
-    {
-      const auto& middle_row = boundary_row_pairs[parentDim].first;
-      for(auto n=1; n<rolling_prods[0]-1; ++n)
-      {
-        mat.row(offset+n) *= 0.0;
-        for(auto m=0; m<middle_row.nnz; ++m)
-        {
-          mat.coeffRef(offset+n, offset+ n + m * rolling_prods[parentDim-1]) = middle_row.vals[m];
-        }
-      }
-    }
-    else
-    {
-      const auto& middle_row = boundary_row_pairs[parentDim].second;
-      for(auto n=1; n<rolling_prods[0]-1; ++n)
-      {
-        mat.row(offset+n) *= 0.0;
-        for(auto m=0; m<middle_row.nnz; ++m)
-        {
-          mat.coeffRef(offset+n, offset + n - (middle_row.nnz-m-1) * rolling_prods[parentDim-1]) = middle_row.vals[m];
-        }
-      }
-    }
-
-    // use a row iterator to fill the bottom row 
-    mat.row(offset + rolling_prods[0]-1) *= 0.0;
-    const auto& bottom_row = boundary_row_pairs[0].second;
-    for(auto n=0; n < bottom_row.nnz; ++n)
-    {
-      mat.coeffRef(offset + rolling_prods[0]-1, offset + rolling_prods[0] - bottom_row.nnz + n) = bottom_row.vals[n];
-    } 
-
-    // return/goto parent dim
-  }
-  else
-  {
-    // setStencilFill() using THIS dimensions row iterator
-    setStencilFill<ithDim-1, ithDim, true>(mat, offset, rolling_prods, boundary_row_pairs);
-    // fill middle blocks with setStencilFill() using parent row 
-    for(auto m=1; m < rolling_prods[ithDim-1]-1; ++m)
-    {
-      setStencilFill<ithDim-1, parentDim, useTopRow>(mat, offset + m*rolling_prods[ithDim-1], rolling_prods, boundary_row_pairs);
-    }
-    // setStencilFill() using THIS dimensions row iterator 
-    setStencilFill<ithDim-1,ithDim, false>(mat,offset + rolling_prods[ithDim] - rolling_prods[ithDim-1], rolling_prods, boundary_row_pairs); 
-  }
-}
-
-template<std::size_t ithDim>
-void setStencilNoFill(fornfdm::CSRMatrix& mat, std::size_t offset, const auto& rolling_prods, const auto& boundary_row_pairs)
-{
-  if constexpr(ithDim == 0)
-  {
-    // use a row iterator to fill the top rows. 
-    mat.row(offset) *= 0.0;
-    const auto& top_row = boundary_row_pairs[0].first;
-    for(auto n=0; n < top_row.nnz; ++n)
-    {
-      mat.coeffRef(offset, offset+n) = top_row.vals[n];
-    } 
-    // use a row iterator to fill the bottom rows.
-    mat.row(offset + rolling_prods[0]-1) *= 0.0;
-    const auto& bottom_row = boundary_row_pairs[0].second;
-    for(auto n=0; n < bottom_row.nnz; ++n)
-    {
-      mat.coeffRef(offset + rolling_prods[0]-1, offset + rolling_prods[0] - bottom_row.nnz + n) = bottom_row.vals[n];
-    } 
-    // return/goto parent dimension
-  }
-  else
-  {
-    // setStencilFill() using THIS dimensions row iterator
-    setStencilFill<ithDim-1, ithDim, true>(mat, offset, rolling_prods, boundary_row_pairs);
-    // fill middle blocks with setStencilNoFill() and a certain offset 
-    for(auto m=1; m < rolling_prods[ithDim-1]-1; ++m)
-    {
-      setStencilNoFill<ithDim-1>(mat, offset + m*rolling_prods[ithDim-1], rolling_prods, boundary_row_pairs);
-    }
-    // setStencilFill() using THIS dimensions row iterator 
-    setStencilFill<ithDim-1,ithDim, false>(mat,offset + rolling_prods[ithDim] - rolling_prods[ithDim-1], rolling_prods, boundary_row_pairs); 
-  }
-}
-
 template<typename... BCPairTypes>
 class BCList : public OStepBase<BCList<BCPairTypes...>>
 {
-  private:
-    // Type Traits + Utils ----------------
-    template<typename T>
-    struct is_bc_pair_impl : public std::false_type{}; 
-
-    template<typename L, typename R>
-    struct is_bc_pair_impl<BCPair<L,R>> : public std::true_type{}; 
-
-    template<typename T>
-    using is_bc_pair = is_bc_pair_impl<std::remove_reference_t<std::remove_cv_t<T>>>; 
-
-    // member data. -------------------------------------------------
-    std::array<fornfdm::CSRMatrix, sizeof...(BCPairTypes)> m_mats; 
-    std::array<std::size_t, sizeof...(BCPairTypes)> m_rolling_prods; 
-
   public:
+    // member data. -------------------------------------------------
+    constexpr static std::size_t numDims = sizeof...(BCPairTypes);
     // list of boundary conditions. 1 per Dimension 
     std::tuple< std::remove_reference_t<BCPairTypes>... > bcs_list; 
 
+  public:
     // Constructors + Destructors =========================================
     BCList()=delete; 
     
-    template<typename = std::enable_if_t<
-      std::conjunction_v<
-          is_bc_pair<BCPairTypes> ...
-        >
-      >
-    >
     BCList(BCPairTypes... args) 
       : bcs_list(args...)
     {} 
@@ -167,17 +47,16 @@ class BCList : public OStepBase<BCList<BCPairTypes...>>
 
     // Member Funcs =================================================
     template<StepType STEP, typename TIMECTX = TimeContext<>, typename CONSTCTX = Context<> >
-    void MatBeforeStep(fornfdm::CSRMatrix& mat, const TIMECTX& t = {}, const CONSTCTX& ctx = {})
+    void MatBeforeStep(fornfdm::CSRMatrix& mat, const TIMECTX& t, const CONSTCTX& ctx)
     {      
       // check args are compaitble 
-      assert((ctx.getMesh()->numDims() == sizeof...(BCPairTypes)) && "BCList MatBeforeStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
+      assert((ctx.getMesh()->numDims() == this->numDims) && "BCList MatBeforeStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
 
       if constexpr(STEP == StepType::Implicit)
       {    
-        constexpr std::size_t N = sizeof...(BCPairTypes); 
         auto rolling_prods = make_rolling_prods(ctx.getMesh());
         auto boundary_row_pairs = make_row_pairs(t.next, ctx.getMesh());
-        setStencilNoFill<N-1>(mat, 0, rolling_prods, boundary_row_pairs);
+        setStencilNoFill<numDims-1>(mat, 0, rolling_prods, boundary_row_pairs);
       }
     } // end MatBeforeStep 
 
@@ -186,57 +65,12 @@ class BCList : public OStepBase<BCList<BCPairTypes...>>
     {
       // check args are compaitble 
       auto mesh = ctx.getMesh(); 
-      assert((mesh->numDims() == sizeof...(BCPairTypes)) && "BCList VecBeforeStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
+      assert((mesh->numDims() == this->numDims) && "BCList VecBeforeStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
 
       if constexpr(STEP == StepType::Implicit)
       {
-        // this lambda takes 1 BCPair<L,R> and applies it to Sol
-        // without double assigning to corners/edges of XDim space 
-
-        auto set_dim_boundaries_imp = [&](const auto& bc_pair, std::size_t dim){
-          // Mesh1D that this bc_pair operates on  
-          const auto& mesh_1dim = mesh->getAxis(dim); 
-          // vector of eigen stride views that "look" like Discretization1Ds along mesh_1dim 
-          using Stride_t = typename Eigen::Stride<0,Eigen::Dynamic>; 
-          using StrideView_t = typename Eigen::Map<Eigen::VectorXd, Eigen::Unaligned, Stride_t>; 
-          std::size_t mod = mesh->sizesMiddleProduct(0,dim); 
-          std::size_t num_copies = mod * mesh->sizesMiddleProduct(dim+1, mesh->numDims()); 
-          std::size_t s0 = mesh->sizeOfDim(dim); 
-          std::size_t scale = mod * s0;  
-          Stride_t stride(0, mod); 
-          
-          // iterate through views that look like Mesh1D
-          for(std::size_t i=0; i < num_copies; i++){
-            // determine if it has been set by lower dimension 
-            bool set_by_low_dim = false; 
-            std::size_t s1 = 1; 
-            for(int dim_i=0; dim_i<dim; dim_i++){
-              std::size_t s2 = mesh->sizeOfDim(dim_i); 
-              // in first group of values
-              if((i/s1)%s2 == 0) set_by_low_dim = true;  
-              // in last group of values
-              if((i/s1)%s2 == s2-1) set_by_low_dim = true;  
-              // next check uses a large bucket 
-              s1 *= s2; 
-            }
-            // if it hasn't, use BC on it. 
-            if(!set_by_low_dim){
-              std::size_t offset = (i % mod) + (scale * (i/mod)); // note: was previously using (mod? i%mod : i). shouldn't need it if mod is never == 0
-              StrideView_t view(u.data()+offset, s0, stride); 
-              bc_pair.left_bc.SetImpSolL(t.next, mesh_1dim, view); 
-              bc_pair.right_bc.SetImpSolR(t.next, mesh_1dim, view); 
-            }
-          }
-        }; // end set_dim_boundaries lambda 
-        
-        // apply set_dim_boundaries lambda along each dimension 
-        std::size_t dim = 0; 
-        std::apply(
-          [&](const auto&... args){
-            (set_dim_boundaries_imp(args, dim++), ...);
-          }, 
-          bcs_list
-        ); 
+        std::array<std::size_t, numDims> rolling_prods = make_rolling_prods((ctx.getMesh())); 
+        setSolNoFill<true, numDims-1>(u.data(), 0, rolling_prods, ctx.getMesh(), t.next);
       } // end if constexpr(step)
     } // end VecBeforeStep 
 
@@ -244,58 +78,12 @@ class BCList : public OStepBase<BCList<BCPairTypes...>>
     void VecAfterStep(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx)
     {
       auto mesh = ctx.getMesh(); // get the MeshXD 
-      assert((mesh->numDims() == sizeof...(BCPairTypes)) && "BCList VecAfterStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
+      assert((mesh->numDims() == this->numDims) && "BCList VecAfterStep error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
       
       if constexpr(STEP == StepType::Explicit)
       {
-        // this lambda takes 1 BCPair<L,R> and applies it to Sol
-        // without double assigning to corners/edges of XDim space 
-
-        auto set_dim_boundaries = [&](const auto& bc_pair, std::size_t dim){
-          using Stride_t = typename Eigen::Stride<0,Eigen::Dynamic>; 
-          using StrideView_t = typename Eigen::Map<Eigen::VectorXd, Eigen::Unaligned, Stride_t>; 
-          // Mesh1D that this bc_pair operates on  
-          const auto& mesh_1dim = mesh->getAxis(dim); // get the Mesh1D 
-          // vector of eigen stride views that "look" like Discretization1Ds along mesh_1dim 
-          std::size_t mod = mesh->sizesMiddleProduct(0,dim); 
-          std::size_t num_copies = mod * mesh->sizesMiddleProduct(dim+1, mesh->numDims()); 
-          std::size_t s0 = mesh->sizeOfDim(dim); 
-          std::size_t scale = mod * s0;  
-          Stride_t stride(0, mod); 
-
-          // iterate through views that look like Mesh1D
-          for(std::size_t i=0; i < num_copies; i++){
-            // determine if it has been set by lower dimension 
-            bool set_by_low_dim = false; 
-            std::size_t s1 = 1; 
-            for(int dim_i=0; dim_i<dim; dim_i++){
-              std::size_t s2 = mesh->sizeOfDim(dim_i); 
-              // in first group of values
-              if((i/s1)%s2 == 0) set_by_low_dim = true;  
-              // in last group of values
-              if((i/s1)%s2 == s2-1) set_by_low_dim = true;  
-              // next check uses a large bucket 
-              s1 *= s2; 
-            }
-            // if it hasn't, use BC on it. 
-            if(!set_by_low_dim){
-              std::size_t offset = (mod ? i % mod : i) + (scale * (i/mod));
-              StrideView_t view(u.data()+offset, s0, stride); 
-              bc_pair.left_bc.SetSolL(t.next, mesh_1dim, view); 
-              bc_pair.right_bc.SetSolR(t.next, mesh_1dim, view); 
-            }
-          } // end for loop through 1 dimensional views 
-
-        }; // end set_dim_boundaries lambda 
-
-        // apply set_dim_boundaries lambda along each dimension 
-        std::size_t dim = 0; 
-        std::apply(
-          [&](const auto&... args){
-            (set_dim_boundaries(args, dim++), ...);
-          }, 
-          bcs_list
-        ); 
+        std::array<std::size_t, numDims> rolling_prods = make_rolling_prods((ctx.getMesh())); 
+        setSolNoFill<false, numDims-1>(u.data(), 0, rolling_prods, ctx.getMesh(), t.next);
       } // end if constexpr(step)
     } // end VecAfterStep
 
@@ -337,7 +125,219 @@ class BCList : public OStepBase<BCList<BCPairTypes...>>
 
     inline auto make_row_pairs(fornfdm::Real t, const fornfdm::Mesh* m) const
     {
-      return make_row_pairs_impl(t, m, std::make_index_sequence<sizeof...(BCPairTypes)>{});
+      return make_row_pairs_impl(t, m, std::make_index_sequence<numDims>{});
+    }
+
+    template<std::size_t ithDim>
+    void setStencilNoFill(fornfdm::CSRMatrix& mat, 
+                          std::size_t offset,
+                           const std::array<std::size_t,numDims>& rolling_prods, 
+                           const std::array<std::pair<BoundaryRow,BoundaryRow>,numDims>& boundary_row_pairs) const
+    {
+      if constexpr(ithDim == 0)
+      {
+        // use a row iterator to fill the top rows. 
+        mat.row(offset) *= 0.0;
+        const auto& top_row = boundary_row_pairs[0].first;
+        for(auto n=0; n < top_row.nnz; ++n)
+        {
+          mat.coeffRef(offset, offset+n) = top_row.vals[n];
+        } 
+        // use a row iterator to fill the bottom rows.
+        mat.row(offset + rolling_prods[0]-1) *= 0.0;
+        const auto& bottom_row = boundary_row_pairs[0].second;
+        for(auto n=0; n < bottom_row.nnz; ++n)
+        {
+          mat.coeffRef(offset + rolling_prods[0]-1, offset + rolling_prods[0] - bottom_row.nnz + n) = bottom_row.vals[n];
+        } 
+        // return/goto parent dimension
+      }
+      else
+      {
+        // setStencilFill() using THIS dimensions row iterator
+        setStencilFill<ithDim-1, ithDim, true>(mat, offset, rolling_prods, boundary_row_pairs);
+        // fill middle blocks with setStencilNoFill() and a certain offset 
+        for(auto m=1; m < rolling_prods[ithDim-1]-1; ++m)
+        {
+          setStencilNoFill<ithDim-1>(mat, offset + m*rolling_prods[ithDim-1], rolling_prods, boundary_row_pairs);
+        }
+        // setStencilFill() using THIS dimensions row iterator 
+        setStencilFill<ithDim-1,ithDim, false>(mat,offset + rolling_prods[ithDim] - rolling_prods[ithDim-1], rolling_prods, boundary_row_pairs); 
+      }
+    }
+
+    template<std::size_t ithDim, std::size_t parentDim, bool useTopRow>
+    void setStencilFill(fornfdm::CSRMatrix& mat, 
+                        std::size_t offset,
+                        const std::array<std::size_t,numDims>& rolling_prods, 
+                        const std::array<std::pair<BoundaryRow,BoundaryRow>,numDims>& boundary_row_pairs) const
+    {
+      if constexpr(ithDim == 0)
+      {
+        // use a row iterator to fill the top row 
+        mat.row(offset) *= 0.0;
+        const auto& top_row = boundary_row_pairs[0].first;
+        for(auto n=0; n<top_row.nnz; ++n)
+        {
+          mat.coeffRef(offset,offset + n) = top_row.vals[n];
+        }
+
+        // use parent row iterator to fill middle rows 
+        if constexpr(useTopRow)
+        {
+          const auto& middle_row = boundary_row_pairs[parentDim].first;
+          for(auto n=1; n<rolling_prods[0]-1; ++n)
+          {
+            mat.row(offset+n) *= 0.0;
+            for(auto m=0; m<middle_row.nnz; ++m)
+            {
+              mat.coeffRef(offset+n, offset+ n + m * rolling_prods[parentDim-1]) = middle_row.vals[m];
+            }
+          }
+        }
+        else
+        {
+          const auto& middle_row = boundary_row_pairs[parentDim].second;
+          for(auto n=1; n<rolling_prods[0]-1; ++n)
+          {
+            mat.row(offset+n) *= 0.0;
+            for(auto m=0; m<middle_row.nnz; ++m)
+            {
+              mat.coeffRef(offset+n, offset + n - (middle_row.nnz-m-1) * rolling_prods[parentDim-1]) = middle_row.vals[m];
+            }
+          }
+        }
+
+        // use a row iterator to fill the bottom row 
+        mat.row(offset + rolling_prods[0]-1) *= 0.0;
+        const auto& bottom_row = boundary_row_pairs[0].second;
+        for(auto n=0; n < bottom_row.nnz; ++n)
+        {
+          mat.coeffRef(offset + rolling_prods[0]-1, offset + rolling_prods[0] - bottom_row.nnz + n) = bottom_row.vals[n];
+        } 
+
+        // return/goto parent dim
+      }
+      else
+      {
+        // setStencilFill() using THIS dimensions row iterator
+        setStencilFill<ithDim-1, ithDim, true>(mat, offset, rolling_prods, boundary_row_pairs);
+        // fill middle blocks with setStencilFill() using parent row 
+        for(auto m=1; m < rolling_prods[ithDim-1]-1; ++m)
+        {
+          setStencilFill<ithDim-1, parentDim, useTopRow>(mat, offset + m*rolling_prods[ithDim-1], rolling_prods, boundary_row_pairs);
+        }
+        // setStencilFill() using THIS dimensions row iterator 
+        setStencilFill<ithDim-1,ithDim, false>(mat,offset + rolling_prods[ithDim] - rolling_prods[ithDim-1], rolling_prods, boundary_row_pairs); 
+      }
+    }
+
+    template<bool useImplicit, std::size_t ithDim>
+    void setSolNoFill(fornfdm::Scalar* data, 
+                       std::size_t offset,
+                       const std::array<std::size_t,numDims>& rolling_prods,
+                       const fornfdm::Mesh* mesh,
+                       fornfdm::Real t) const
+    {
+      if constexpr(ithDim == 0)
+      {
+        fornfdm::StrideView sol_1d(data + offset, mesh->sizeOfDim(0), fornfdm::Stride(0,1));
+        if constexpr(useImplicit)
+        {
+          std::get<0>(bcs_list).left_bc.SetImpSolL(t, mesh->getAxis(0), sol_1d);
+          std::get<0>(bcs_list).right_bc.SetImpSolR(t, mesh->getAxis(0), sol_1d);
+        }
+        else
+        {
+          std::get<0>(bcs_list).left_bc.SetSolL(t, mesh->getAxis(0), sol_1d);
+          std::get<0>(bcs_list).right_bc.SetSolR(t, mesh->getAxis(0), sol_1d);
+        }
+      }
+      else
+      {
+        // fill top block with THIS dimension as parent 
+        setSolFill<useImplicit, ithDim-1, ithDim, true>(data, offset, rolling_prods, mesh, t);
+        // middle blocks don't need filled
+        for(auto n=1; n < mesh->sizeOfDim(ithDim)-1; ++n)
+        {
+          setSolNoFill<useImplicit, ithDim-1>(data, offset + n * rolling_prods[ithDim-1], rolling_prods, mesh, t);
+        }
+        // fill bottom block with THIS dimension as parent
+        setSolFill<useImplicit, ithDim-1, ithDim, false>(data, offset + rolling_prods[ithDim] - rolling_prods[ithDim-1], rolling_prods, mesh, t);
+      }
+    }
+
+    template<bool useImplicit, std::size_t ithDim, std::size_t parentDim, bool useLeftSide>
+    void setSolFill(fornfdm::Scalar* data, 
+                       std::size_t offset,
+                       const std::array<std::size_t,numDims>& rolling_prods,
+                       const fornfdm::Mesh* mesh,
+                       fornfdm::Real t) const
+    {
+      if constexpr(ithDim == 0)
+      {
+        fornfdm::StrideView sol_1d(data + offset, mesh->sizeOfDim(0), fornfdm::Stride(0,1));
+        if constexpr(useImplicit)
+        {
+          std::get<0>(bcs_list).left_bc.SetImpSolL(t, mesh->getAxis(0), sol_1d);
+        }
+        else
+        {
+          std::get<0>(bcs_list).left_bc.SetSolL(t, mesh->getAxis(0), sol_1d);
+        }
+        for(std::size_t n=1; n < mesh->sizeOfDim(0)-1; ++n)
+        {
+          if constexpr(useLeftSide)
+          {
+            // offset is just n steps forward from data+offset
+            fornfdm::StrideView sol_1d(data + offset + n, mesh->sizeOfDim(parentDim), fornfdm::Stride(0,rolling_prods[parentDim]));
+            if constexpr(useImplicit)
+            {
+              std::get<parentDim>(bcs_list).left_bc.SetImpSolL(t, mesh->getAxis(parentDim), sol_1d);
+            }
+            else
+            {
+              std::get<parentDim>(bcs_list).left_bc.SetSolL(t, mesh->getAxis(parentDim), sol_1d);
+            }
+          }
+          else
+          {
+            // offset is n steps forward from data+offset
+            // then backwards sizeOfDim(parentDim)-1 * stride
+            // making end of data_offset ptr be the exact entry at data+offset+n
+            fornfdm::Scalar* data_offset = data + offset + n - (mesh->sizeOfDim(parentDim) - 1) * rolling_prods[parentDim]; 
+            fornfdm::StrideView sol_1d(data_offset, mesh->sizeOfDim(parentDim), fornfdm::Stride(0,rolling_prods[parentDim]));
+            if constexpr(useImplicit)
+            {
+              std::get<parentDim>(bcs_list).right_bc.SetImpSolR(t, mesh->getAxis(parentDim), sol_1d);
+            }
+            else
+            {
+              std::get<parentDim>(bcs_list).right_bc.SetSolR(t, mesh->getAxis(parentDim), sol_1d);
+            }
+          }
+        }
+        if constexpr(useImplicit)
+        {
+          std::get<0>(bcs_list).right_bc.SetImpSolR(t, mesh->getAxis(0), sol_1d);
+        }
+        else
+        {
+          std::get<0>(bcs_list).right_bc.SetSolR(t, mesh->getAxis(0), sol_1d);
+        }
+      }
+      else
+      {
+        // fill top block with THIS dimension as parent 
+        setSolFill<useImplicit, ithDim-1, ithDim, true>(data, offset, rolling_prods, mesh, t);
+        // fill middle blocks by parent dimensions
+        for(auto n=1; n < mesh->sizeOfDim(ithDim)-1; ++n)
+        {
+          setSolFill<useImplicit, ithDim-1, parentDim, useLeftSide>(data, offset + n * rolling_prods[ithDim-1], rolling_prods, mesh, t);
+        }
+        // fill bottom block with THIS dimension as parent
+        setSolFill<useImplicit, ithDim-1, ithDim, false>(data, offset + rolling_prods[ithDim] - rolling_prods[ithDim-1], rolling_prods, mesh, t);
+      }
     }
 
 }; // end class BCList 
