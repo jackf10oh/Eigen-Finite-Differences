@@ -115,7 +115,7 @@ int main()
 <!-- LICENSE -->
 <h3>License</h3>
 
-Distributed under the project_license. See `LICENSE.txt` for more information.
+Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <!-- CONTACT -->
 <h3>Contact</h3>
