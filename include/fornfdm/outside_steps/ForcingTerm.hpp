@@ -11,7 +11,7 @@
 #ifndef FORNFDM_OSTEPS_FORCINGTERM_H
 #define FORNFDM_OSTEPS_FORCINGTERM_H
 
-#include "../Traits.hpp" // callable_traits 
+#include "../traits.hpp" // callable_traits 
 #include "../Coordinate.hpp"
 #include "../Mesh.hpp" 
 #include "OStepBase.hpp" 

@@ -11,7 +11,7 @@
   #define EIGEN_SPARSEMATRIXBASE_PLUGIN <FornFdm/EigenFdmPlugin.hpp> 
 #endif 
 
-#include "Traits.hpp"
+#include "traits.hpp"
 #include "Functors.hpp"
 #include "PartialDerivBase.hpp"
 #include "KroneckerEvaluator.hpp"

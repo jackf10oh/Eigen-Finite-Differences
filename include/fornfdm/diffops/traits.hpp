@@ -1,6 +1,6 @@
-// Traits.hpp
+// traits.hpp
 //
-// Traits used by diffops subdirectory 
+// traits used by diffops subdirectory 
 //
 // JAF 4/14/2026 
 
@@ -21,7 +21,7 @@
 #include<Eigen/src/SparseCore/SparseCompressedBase.h>
 
 #include "../Types.hpp"
-#include "../Traits.hpp"
+#include "../traits.hpp"
 
 // #include<Eigen/SparseCore> can't include before plugin macro takes effect! 
 
@@ -161,4 +161,4 @@ struct promote_node_selector_type<T<min01>,T<min02>>
 } // end namespace linops 
 } // end namespace fornfdm
 
-#endif // Traits.hpp (diffops)
+#endif // traits.hpp (diffops)

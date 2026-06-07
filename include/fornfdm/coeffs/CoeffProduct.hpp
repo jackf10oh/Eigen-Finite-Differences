@@ -19,7 +19,7 @@ class CoeffProduct;
 
 namespace internal{
 
-// Traits 
+// traits 
 template<class LeftCoeff, class RightDeriv>
 struct traits_impl<CoeffProduct<LeftCoeff, RightDeriv>>
 {
@@ -64,7 +64,7 @@ struct Evaluator<CoeffProduct<LeftCoeff, RightDeriv>> : public EvaluatorBase<Coe
 namespace Eigen{
 namespace internal{
 
-// Traits
+// traits
 template<class LeftCoeff, class RightDeriv>
 struct traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>
 {

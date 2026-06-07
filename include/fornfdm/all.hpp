@@ -13,7 +13,7 @@
 #endif 
 
 #include "Types.hpp"
-#include "Traits.hpp"
+#include "traits.hpp"
 #include "Mesh.hpp" 
 
 #include "diffops/all.hpp"

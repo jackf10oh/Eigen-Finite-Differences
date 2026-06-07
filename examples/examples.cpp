@@ -1,4 +1,4 @@
-// main.cpp
+// examples.cpp
 //
 // JAF 12/8/2025
 
@@ -22,8 +22,9 @@ int main()
 {
   // IO manip
   std::cout << std::setprecision(3); 
+
+  // Domain + Times  
   constexpr double pi = 3.14159265385; 
-  // Domain + Time  
   fornfdm::solvers::SolverArgs args{
     .mesh = make_Mesh(fornfdm::linspaced(20,0.0,pi), 1), 
     .times = std::make_shared<const fornfdm::Vector>(fornfdm::linspaced(100,0.0,0.5))

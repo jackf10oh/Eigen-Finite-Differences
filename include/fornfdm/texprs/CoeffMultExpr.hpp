@@ -8,8 +8,8 @@
 #define FORNFDM_TEXPRS_COEFFMULTEXPR_H
 
 #include "TimeDerivBase.hpp"
-#include "Traits.hpp"
-#include "../diffops/Traits.hpp"
+#include "traits.hpp"
+#include "../diffops/traits.hpp"
 
 namespace fornfdm{
 namespace texprs{

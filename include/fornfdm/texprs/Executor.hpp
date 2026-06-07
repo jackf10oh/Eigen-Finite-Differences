@@ -13,7 +13,7 @@
 #include<memory>
 #include<Eigen/Core>
 #include "../utilities/Fornberg2.hpp" // not using stack calc. we need a std::array<Real> not std::array<Scalar> 
-#include "Traits.hpp" 
+#include "traits.hpp" 
 #include "../Types.hpp" // Scalar, DiagMatrix
 
 namespace fornfdm{

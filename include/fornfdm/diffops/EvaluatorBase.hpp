@@ -11,7 +11,7 @@
 #include "../utilities/Fornberg2.hpp"
 #include "../utilities/FornbergStackCalc.hpp"
 #include "../Types.hpp"
-#include "../Traits.hpp"
+#include "../traits.hpp"
 #include "../Mesh.hpp" 
 #include "../Coordinate.hpp"
 #include "NodeSelector.hpp"

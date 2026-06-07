@@ -7,7 +7,7 @@
 #ifndef FORNFDM_TEXPRS_ALL_H
 #define FORNFDM_TEXPRS_ALL_H
 
-#include "Traits.hpp"
+#include "traits.hpp"
 #include "TimeDerivBase.hpp" 
 #include "NthTimeDeriv.hpp"
 #include "CoeffMultExpr.hpp"

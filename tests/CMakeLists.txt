@@ -3,7 +3,7 @@ add_executable(tests_solvers
 )
 
 target_link_libraries(tests_solvers
-  PRIVATE FornFdm
+  PRIVATE fornfdm
   PRIVATE GTest::gtest 
   PRIVATE GTest::gtest_main 
   PRIVATE pthread # required by GTest
@@ -14,7 +14,7 @@ add_executable(tests_fornberg
 )
 
 target_link_libraries(tests_fornberg
-  PRIVATE FornFdm
+  PRIVATE fornfdm
   PRIVATE GTest::gtest 
   PRIVATE GTest::gtest_main 
   PRIVATE pthread # required by GTest

@@ -12,7 +12,7 @@
 #ifndef FORNFDM_SOLVERS_EXPLICITSOLVER_H
 #define FORNFDM_SOLVERS_EXPLICITSOLVER_H
 
-#include "../texprs/Traits.hpp" // check LHS is time derivatives 
+#include "../texprs/traits.hpp" // check LHS is time derivatives 
 #include "../texprs/Executor.hpp" // marches through time 
 #include "../outside_steps/StepContexts.hpp"  // feed to outside steps tuple 
 #include "../outside_steps/OStepBase.hpp" // StepType scoped enumeration 

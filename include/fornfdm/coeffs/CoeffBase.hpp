@@ -12,7 +12,7 @@
 
 #include<memory>
 #include<Eigen/Core> // DiagonalMatrixBase 
-#include "../diffops/Traits.hpp"
+#include "../diffops/traits.hpp"
 #include "../diffops/EvaluatorBase.hpp" // Coordinate struct 
 #include "../Coordinate.hpp"
 
@@ -46,7 +46,7 @@ struct traits_impl<fornfdm::linops::CoeffBase<Derived>> : public traits<Derived>
 namespace Eigen{
 namespace internal{
 
-// Traits ------ 
+// traits ------ 
 template<typename Derived>
 struct traits<fornfdm::linops::CoeffBase<Derived>> : public traits<Derived>
 {
