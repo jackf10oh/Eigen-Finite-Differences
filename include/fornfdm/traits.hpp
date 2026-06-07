@@ -1,4 +1,4 @@
-// Traits.hpp
+// traits.hpp
 //
 // traits used by all subdirectory of fornfdm library 
 //
@@ -101,4 +101,4 @@ using is_matching = is_matching_impl<std::remove_cv_t<std::remove_reference_t<A>
 } // end namespace internal 
 } // end namespace fornfdm
 
-#endif // Traits.hpp 
+#endif // traits.hpp 

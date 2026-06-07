@@ -8,7 +8,7 @@
 #ifndef FORNFDM_TEXPRS_TIMEDERIVBASE_H
 #define FORNFDM_TEXPRS_TIMEDERIVBASE_H
 
-#include "Traits.hpp"
+#include "traits.hpp"
 
 namespace fornfdm{
   namespace texprs{

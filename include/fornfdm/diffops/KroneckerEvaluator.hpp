@@ -9,7 +9,7 @@
 #define FORNFDM_DIFFOPS_KRONECKEREVALUATOR_H
 
 #include "../Types.hpp" // CSRMatrix
-#include "../Traits.hpp" // callable_traits<>
+#include "../traits.hpp" // callable_traits<>
 
 namespace fornfdm{
 namespace linops{

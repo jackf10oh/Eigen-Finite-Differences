@@ -1,4 +1,4 @@
-// Traits.hpp
+// traits.hpp
 //
 // compile time traits for TExpr types 
 //
@@ -19,7 +19,7 @@ class NthTimeDeriv;
 template<typename Coeff, typename TimeDeriv>
 class CoeffMultExpr; 
 
-// Traits =======================================================================================
+// traits =======================================================================================
 // See if a given type T derives from TimeDerivBase ---------------------------------------------
 namespace internal{
 template<typename T, typename = void> 

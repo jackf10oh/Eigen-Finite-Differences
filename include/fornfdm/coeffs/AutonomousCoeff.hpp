@@ -19,7 +19,7 @@ class AutonomousCoeff;
 
 namespace internal{
 
-// Traits
+// traits
 template<class Callable>
 struct traits_impl<fornfdm::linops::AutonomousCoeff<Callable>>
 {
@@ -38,7 +38,7 @@ struct traits_impl<fornfdm::linops::AutonomousCoeff<Callable>>
 namespace Eigen{
 namespace internal{
 
-// Traits 
+// traits 
 template<class Callable>
 struct traits<fornfdm::linops::AutonomousCoeff<Callable>> 
   : public traits<Eigen::CwiseNullaryOp<fornfdm::linops::CyclicWrapper, Eigen::Matrix<fornfdm::Scalar, 1, Eigen::Dynamic>>>

@@ -19,7 +19,7 @@ class TimeDepCoeff;
 
 namespace internal{
 
-// Traits
+// traits
 template<class Callable>
 struct traits_impl<fornfdm::linops::TimeDepCoeff<Callable>>
 {
@@ -38,7 +38,7 @@ struct traits_impl<fornfdm::linops::TimeDepCoeff<Callable>>
 namespace Eigen{
 namespace internal{
 
-// Traits 
+// traits 
 template<class Callable>
 struct traits<fornfdm::linops::TimeDepCoeff<Callable>> 
   : public traits<Eigen::CwiseNullaryOp<fornfdm::linops::CyclicWrapper, Eigen::Matrix<fornfdm::Scalar, 1, Eigen::Dynamic>>>

@@ -10,7 +10,7 @@
 #include "KroneckerEvaluator.hpp"
 #include "EvaluatorBase.hpp"
 #include "CenteredNodeSelector.hpp"
-#include "../Traits.hpp"
+#include "../traits.hpp"
 
 namespace fornfdm{
 namespace linops{
@@ -35,7 +35,7 @@ struct Evaluator<fornfdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_
 }; 
 
 
-// Traits
+// traits
 template<std::size_t _nthOrder, int _direction, class selector_tag>
 struct traits_impl<fornfdm::linops::NthPartialDeriv<_nthOrder,_direction, selector_tag>>
 {

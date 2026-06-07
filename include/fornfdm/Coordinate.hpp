@@ -11,7 +11,7 @@
 #define FORNFDM_COORDINATE_H 
 
 #include<iostream>
-#include "Traits.hpp"
+#include "traits.hpp"
 
 namespace fornfdm{
 

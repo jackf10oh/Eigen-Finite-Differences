@@ -35,7 +35,7 @@ struct Evaluator<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>> : public Evalua
   }
 };
 
-// Traits
+// traits
 template<class UnaryOp, class XprType>
 struct traits_impl<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>> : public traits_impl<XprType>
 {

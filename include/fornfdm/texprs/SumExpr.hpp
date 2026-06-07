@@ -9,7 +9,7 @@
 #ifndef FORNFDM_TEXPRS_SUMEXPR_H
 #define FORNFDM_TEXPRS_SUMEXPR_H
 
-#include "Traits.hpp"
+#include "traits.hpp"
 #include "TimeDerivBase.hpp"
 
 namespace fornfdm{

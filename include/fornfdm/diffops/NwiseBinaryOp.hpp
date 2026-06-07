@@ -7,8 +7,8 @@
 #ifndef FORNFDM_DIFFOPS_NWISEBINARYOP_H
 #define FORNFDM_DIFFOPS_NWISEBINARYOP_H
 
-#include "../Traits.hpp"
-#include "Traits.hpp"
+#include "../traits.hpp"
+#include "traits.hpp"
 #include "KroneckerEvaluator.hpp"
 #include "EvaluatorBase.hpp"
 #include "Functors.hpp"
@@ -44,7 +44,7 @@ struct Evaluator<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> : pub
   }
 };
 
-// Traits
+// traits
 template<class BinaryOp, class LhsType, class RhsType>
 struct traits_impl<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
 {
