@@ -1,4 +1,4 @@
-// EigenPlugin.hpp 
+// plugin.hpp 
 // 
 // header file that adds functionality to 
 // ALL eigen sparse matrices to be able to 
@@ -136,4 +136,4 @@ fornfdm::Real getTime() const
   }
 }
 
-// EigenPlugin.hpp 
+// plugin.hpp 

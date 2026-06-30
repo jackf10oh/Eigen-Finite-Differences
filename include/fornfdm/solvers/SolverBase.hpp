@@ -9,7 +9,7 @@
 #ifndef FORNFDM_SOLVERS_SOLVERBASE_H
 #define FORNFDM_SOLVERS_SOLVERBASE_H 
 
-#include"../Types.hpp" // Matrix, Vector
+#include"../types.hpp" // Matrix, Vector
 #include "../outside_steps/OStepBase.hpp" // StepType 
 #include "SolverArgs.hpp"
 #include "SavePolicies.hpp"
@@ -68,7 +68,7 @@ class SolverBase
     {
         std::apply(
           [&](auto&&... lam_args){ 
-            ((lam_args.template BeforeLinAlgebra<step>(time_ctx, ctx)), ...); 
+            ((lam_args.template beforeLinAlgebra<step>(time_ctx, ctx)), ...); 
           }, 
           m_osteps
         ); 

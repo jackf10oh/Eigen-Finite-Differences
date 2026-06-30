@@ -9,7 +9,7 @@
 
 #include "EvaluatorBase.hpp"
 #include "KroneckerEvaluator.hpp"
-#include "Functors.hpp"
+#include "functors.hpp"
 
 namespace fornfdm{
 namespace linops{

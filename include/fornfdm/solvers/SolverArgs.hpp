@@ -11,7 +11,7 @@
 #include<memory>
 #include<vector>
 #include<Eigen/Core> 
-#include "../Types.hpp"
+#include "../types.hpp"
 #include "../Mesh.hpp"
 
 namespace fornfdm{

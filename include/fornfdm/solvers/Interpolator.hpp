@@ -13,7 +13,7 @@
 #include<memory>
 #include<vector>
 #include<Eigen/Core>
-#include "../Types.hpp"
+#include "../types.hpp"
 #include "../Coordinate.hpp"
 #include "../Mesh.hpp"
 #include "../utilities/LinearInterpolation.hpp"

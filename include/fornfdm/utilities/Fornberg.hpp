@@ -1,4 +1,4 @@
-// Fornberg.hpp
+// fornberg.hpp
 //
 // header file for fornberg algorithm
 //
@@ -17,7 +17,7 @@ namespace fdm{
 
 // ------------------------------------------------------------------------
 template<template<typename T,typename TAlloc> class Container, typename Real, typename RealAlloc>
-std::vector<Real> LagrangeWeights(Real x_bar, const Container<Real,RealAlloc> nodes)
+[[deprecated("use fornberg2 algorithm instead")]] std::vector<Real> LagrangeWeights(Real x_bar, const Container<Real,RealAlloc> nodes)
 {
   // number of nodes 
   int N = nodes.size();
@@ -70,7 +70,7 @@ std::vector<Real> LagrangeWeights(Real x_bar, const Container<Real,RealAlloc> no
 
 // ----------------------------------------------------------------------------------
 template<template<typename T,typename TAlloc> class Container, typename Real, typename RealAlloc>
-std::vector<Real> FornWeights(Real x_bar, int order, const Container<Real,RealAlloc> nodes) 
+[[deprecated("use fornberg2 algorithm instead")]] std::vector<Real> FornWeights(Real x_bar, int order, const Container<Real,RealAlloc> nodes) 
 {
   if(order<0) throw std::runtime_error("derivative order must be >= 0");
 

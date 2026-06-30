@@ -20,7 +20,7 @@
 #include<Eigen/src/SparseCore/CompressedStorage.h>
 #include<Eigen/src/SparseCore/SparseCompressedBase.h>
 
-#include "../Types.hpp"
+#include "../types.hpp"
 #include "../traits.hpp"
 
 // #include<Eigen/SparseCore> can't include before plugin macro takes effect! 

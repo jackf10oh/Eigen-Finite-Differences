@@ -1,4 +1,4 @@
-// Fornberg.hpp
+// FornbergCalc.hpp
 //
 // header file for stateful fornberg calc that only allocates on construction 
 //

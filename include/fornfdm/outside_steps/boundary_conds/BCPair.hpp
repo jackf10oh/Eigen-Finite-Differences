@@ -9,7 +9,7 @@
 #ifndef FORNFDM_OSTEPS_BCPAIR_H
 #define FORNFDM_OSTEPS_BCPAIR_H
 
-#include "../../Types.hpp"
+#include "../../types.hpp"
 #include "../OStepBase.hpp"
 
 namespace fornfdm{

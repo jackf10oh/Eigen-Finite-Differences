@@ -13,7 +13,7 @@
 #include<Eigen/SparseCore>
 #include "KroneckerEvaluator.hpp"
 #include "EvaluatorBase.hpp"
-#include "../Types.hpp"
+#include "../types.hpp"
 
 namespace fornfdm{
 namespace linops{

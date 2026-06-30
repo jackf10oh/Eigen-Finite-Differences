@@ -8,8 +8,8 @@
 // workaround to allow expressions of different rows/cols to be added 
 // before setMesh() sets their rows/cols to be equal
 #define eigen_assert(x)
-#include<FornFdm/all.hpp>
-#define EIGEN_SPARSEMATRIXBASE_PLUGIN <FornFdm/EigenFdmPlugin.hpp>
+#include<fornfdm/all.hpp>
+#define EIGEN_SPARSEMATRIXBASE_PLUGIN <fornfdm/plugin.hpp>
 
 #include<iostream>
 #include<iomanip>

@@ -5,8 +5,8 @@
 // 
 // JAF 5/18/2026 
 
-#include<FornFdm/Mesh.hpp>
-#include<Fornfdm/utilities/Fornberg2.hpp>
+#include<fornfdm/Mesh.hpp>
+#include<Fornfdm/utilities/fornberg2.hpp>
 #include<iostream>
 #include<iomanip>
 #include<cstdint>

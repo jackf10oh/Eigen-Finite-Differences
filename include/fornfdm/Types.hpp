@@ -1,4 +1,4 @@
-// Types.hpp 
+// types.hpp 
 //
 // forward declarations of main fornfdm classes + aliases of key Eigen types 
 //
@@ -32,7 +32,7 @@ template<std::size_t N> class Coordinate;
 
 // helpful aliases ------
 #ifndef FORNFDM_CUSTOM_SCALAR
-using Scalar = double; // might use this more consistently in the future...
+using Scalar = double;
 #else
 using Scalar = FORNFDM_CUSTOM_SCALAR;
 #endif 
@@ -52,4 +52,4 @@ using StrideView =  Eigen::Map<fornfdm::Vector, Eigen::Unaligned, Stride>;
 
 } // end namespace fornfdm 
 
-#endif // Types.hpp 
+#endif // types.hpp 

@@ -8,11 +8,16 @@
 #ifndef FORNFDM_ALL_H
 #define FORNFDM_ALL_H
 
-#ifndef EIGEN_SPARSEMATRIXBASE_PLUGIN
-  #define EIGEN_SPARSEMATRIXBASE_PLUGIN <FornFdm/EigenFdmPlugin.hpp> 
-#endif 
+#ifndef FORNFDM_PLUGIN_SET
+  #define FORNFDM_PLUGIN_SET
+  #ifndef EIGEN_SPARSEMATRIXBASE_PLUGIN
+    #define EIGEN_SPARSEMATRIXBASE_PLUGIN <fornfdm/plugin.hpp> 
+  #else
+    #error "fornfdm requires usage of EIGEN_SPARSEMATRIXBASE_PLUGIN macro. move other macros to EIGEN_SPARSEMATRIXBASE_PLUGIN_OTHER"
+  #endif
+#endif
 
-#include "Types.hpp"
+#include "types.hpp"
 #include "traits.hpp"
 #include "Mesh.hpp" 
 
@@ -20,7 +25,7 @@
 #include "coeffs/all.hpp"
 #include "outside_steps/all.hpp"
 #include "texprs/all.hpp"
-#include "Solvers/all.hpp"
+#include "solvers/all.hpp"
 
 #endif
 

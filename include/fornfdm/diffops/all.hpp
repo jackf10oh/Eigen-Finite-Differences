@@ -7,12 +7,17 @@
 #ifndef FORNFDM_DIFFOPS_ALL_H
 #define FORNFDM_DIFFOPS_ALL_H
 
-#ifndef EIGEN_SPARSEMATRIXBASE_PLUGIN
-  #define EIGEN_SPARSEMATRIXBASE_PLUGIN <FornFdm/EigenFdmPlugin.hpp> 
-#endif 
+#ifndef FORNFDM_PLUGIN_SET
+  #define FORNFDM_PLUGIN_SET
+  #ifndef EIGEN_SPARSEMATRIXBASE_PLUGIN
+    #define EIGEN_SPARSEMATRIXBASE_PLUGIN <fornfdm/plugin.hpp> 
+  #else
+    #error "fornfdm requires usage of EIGEN_SPARSEMATRIXBASE_PLUGIN macro. move other macros to EIGEN_SPARSEMATRIXBASE_PLUGIN_OTHER"
+  #endif
+#endif
 
 #include "traits.hpp"
-#include "Functors.hpp"
+#include "functors.hpp"
 #include "PartialDerivBase.hpp"
 #include "KroneckerEvaluator.hpp"
 #include "EvaluatorBase.hpp"

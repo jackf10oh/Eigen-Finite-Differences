@@ -10,7 +10,6 @@
 #include<cstdint>
 #include<string>
 #include<type_traits> // decay_t 
-#include<complex>
 #include<Eigen/Core>
 #include<Eigen/src/Core/util/Macros.h>
 #include<Eigen/src/Core/util/Constants.H> 
@@ -19,8 +18,7 @@
 #include<Eigen/src/SparseCore/SparseUtil.h> // forward declares SparseMatrix<...> 
 #include<Eigen/src/SparseCore/CompressedStorage.h>
 #include<Eigen/src/SparseCore/SparseCompressedBase.h>
-// #include<Eigen/SparseCore> can't include before plugin macro takes effect! 
-#include "Types.hpp"
+#include "types.hpp"
 
 namespace fornfdm{ 
 namespace internal{
@@ -88,9 +86,6 @@ class BindFirst<ReturnType(ClassType::*)(First, Trailing...) const>
 // detect if two classes are the same. irregardless of non class template params 
 template<class A, class B>
 struct is_matching_impl : std::is_same<A,B>{}; 
-
-// template<class A>
-// struct is_matching_impl<A,A> : std::true_type{}; 
 
 template<template< auto... > class T, auto... Ls, auto... Rs>
 struct is_matching_impl<T<Ls...>, T<Rs...>> : std::true_type{};

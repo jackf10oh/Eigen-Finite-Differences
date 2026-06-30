@@ -8,9 +8,9 @@
 #define FORNFDM_DIFFOPS_EVALUATORBASE_H
 
 #include<array>
-#include "../utilities/Fornberg2.hpp"
+#include "../utilities/fornberg2.hpp"
 #include "../utilities/FornbergStackCalc.hpp"
-#include "../Types.hpp"
+#include "../types.hpp"
 #include "../traits.hpp"
 #include "../Mesh.hpp" 
 #include "../Coordinate.hpp"
@@ -38,10 +38,13 @@ struct EvaluatorBase
   class Row
   {
     private:
+    // types
+    using Selector = NodeSelector<typename traits_t::node_selector_tag, numNodesMin>;  
+    using FornCalc = typename fornfdm::utils::FornbergStackCalc<Selector::numNodesMax, traits_t::maxOrder>;
     // member data  
     const Evaluator<Xpr>& m_eval; 
-    NodeSelector<typename traits_t::node_selector_tag, numNodesMin> m_nodes; 
-    typename fornfdm::utils::FornbergStackCalc<NodeSelector<typename traits_t::node_selector_tag, numNodesMin>::numNodesMax, traits_t::maxOrder> m_calc; 
+    Selector m_nodes; 
+    FornCalc m_calc; 
     fornfdm::Coordinate<traits_t::max_num_args_called> m_coords; 
     fornfdm::Real m_time; 
 
@@ -60,17 +63,17 @@ struct EvaluatorBase
     inline const std::size_t& size() const { return m_nodes.numNodesUsed; } 
 
     // returns indices the nodes were selected from. needs to be transformed by user of Row struct   
-    const auto& columnIndices() const { return m_nodes.nodeIndices; } 
+    inline const auto& columnIndices() const { return m_nodes.nodeIndices; } 
     
     // uses m_eval to map fornberg weights + coords into eigen expression  
-    auto values() const { return m_eval.evalWeightsCoordsTime(m_calc.getArray().data(), m_nodes.numNodesUsed, m_coords, m_time); }
+    inline auto values() const { return m_eval.evalWeightsCoordsTime(m_calc.getArray().data(), m_nodes.numNodesUsed, m_coords, m_time); }
 
     // value of non zeros / row index offset 
     inline const std::size_t& valuePtrOffset() const { return m_nodes.nonZerosOffset; }  
 
     // function to return an eigen map of innerIndexPtr / valuePtr into Eigen::VectorXd for SIMD writing.
     template<typename U>
-    auto mapToEigen(U* ptr) const { return Eigen::Map<Eigen::Matrix<U, 1, Eigen::Dynamic>>(ptr, m_nodes.numNodesUsed); }
+    inline auto mapToEigen(U* ptr) const { return Eigen::Map<Eigen::Matrix<U, 1, Eigen::Dynamic>>(ptr, m_nodes.numNodesUsed); }
   }; 
 }; 
 

@@ -8,7 +8,7 @@
 #ifndef FORNFDM_DIFFOPS_KRONECKEREVALUATOR_H
 #define FORNFDM_DIFFOPS_KRONECKEREVALUATOR_H
 
-#include "../Types.hpp" // CSRMatrix
+#include "../types.hpp" // CSRMatrix
 #include "../traits.hpp" // callable_traits<>
 
 namespace fornfdm{
@@ -167,48 +167,4 @@ struct KroneckerEvaluator<Derived,0>
 } // end namespace linops 
 } // end namespace fornfdm 
 
-// namespace Eigen {
-// namespace internal {
-
-// // // implementation depends on if max_num_args_called == 0, <= maxOrder, or > maxOrder 
-// // template<class Derived, std::size_t max_num_args_called>
-// // struct EigenEvaluator_impl; 
-
-// // reads row iterators from double kronecker products I(n) D @ I(m)
-// template<class Derived>
-// struct evaluator<fornfdm::linops::PartialDerivBase<Derived>>
-//   : public evaluator_base<fornfdm::linops::PartialDerivBase<Derived>>, 
-//   public fornfdm::linops::internal::KroneckerEvaluator<Derived,fornfdm::linops::internal::traits<Derived>::max_num_args_called>
-// {}; 
-
-
-// }  // namespace internal
-// }  // namespace Eigen
-
 #endif // KroneckerEvaluator.hpp
-
-// template<class Derived>
-// struct diffop_evaluator_base
-// {
-//   // Type Defs ----------------------------------
-//   typedef diffop_evaluator_base<Derived> Base;
-//   typedef diffop_evaluator_base<Derived>::DerivedAsNestedType NestedType;   
-//   // Member Functions ------------------------------------------------------ 
-//   static void reseatMap(Derived& eval, )
-//     void reseatMap(const Calculator& c, const int& numNodes)
-//   {
-//     new (&m_vals) = Eigen::::Map< Eigen::VectorXd>( c.getArray().data() + order * numNodes, numNodes);     
-//   }
-//   // Nested Struct -------------------------------------------------- 
-//   struct DerivedAsNestedType 
-//   {
-    
-//   }
-
-//   // CRTP casts 
-//   inline const Derived& derived() const { return *static_cast<const Derived*>(this); }
-//   inline Derived& derived() { return *static_cast<Derived*>(this); }
-//   // inline Derived& const_cast_derived() const /* not necessary? */  
-//   // { return *static_cast<Derived*>(const_cast<SparseMatrixBase*>(this)); }
-
-// } 

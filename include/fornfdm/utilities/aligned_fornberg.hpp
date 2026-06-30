@@ -1,13 +1,13 @@
-// fornberg2.hpp
+// aligned_fornberg.hpp
 //
-// Cleaner STL like interface to Fornberg Algorithm 
-// that takes forward iterators for input
-// and bidirectional iterator for  
+// same STL interface as fornberg2,
+// but places the beginning of each order 
+// of the weights to begin at fixed strides
 //
 // JAF 5/8/2026 
 
-#ifndef FORNFDM_UTILS_FORNBERG2_H
-#define FORNFDM_UTILS_FORNBERG2_H
+#ifndef FORNFDM_UTILS_ALIGNED_FORNBERG_H
+#define FORNFDM_UTILS_ALIGNED_FORNBERG_H
 
 #include<cassert>
 #include<iterator> 
@@ -16,16 +16,19 @@ namespace fornfdm{
 namespace utils{
 
 template<class ForwardItIn, class BidItOut>
-BidItOut fornberg2(
+BidItOut aligned_fornberg(
   ForwardItIn start, ForwardItIn end, 
-  const typename std::iterator_traits<ForwardItIn>::value_type& x_bar, std::size_t order, 
-  BidItOut dest  
+  const typename std::iterator_traits<ForwardItIn>::value_type& x_bar, 
+  std::size_t order,
+  std::size_t alignment, 
+  BidItOut dest
 )
 {
   using Scalar = typename std::iterator_traits<ForwardItIn>::value_type; 
   auto num_nodes_used = std::distance(start, end); 
 
   assert((num_nodes_used > order) && "Fornberg algorithm requires # nodes >= order+1.");
+  assert((num_nodes_used <= alignment) && "ALigned Fornberg algorithm requires # nodes < alignment.");
 
   switch(num_nodes_used)
   {
@@ -36,7 +39,7 @@ BidItOut fornberg2(
     case 1:
       // silly edge case of 1 node :P 
       *dest = 1.0; 
-      return std::next(dest); 
+      return std::next(dest,alignment); 
       break; 
 
     case 2:
@@ -48,11 +51,11 @@ BidItOut fornberg2(
         *dest = (x_bar - x1)/(x0-x1); 
         ++dest; 
         *dest = (x_bar - x0)/(x1-x0); 
-        ++dest; 
+        std::advance(dest, alignment-1); 
         *dest = 1/(x0-x1); 
         ++dest; 
         *dest = 1/(x1-x0); 
-        return std::next(dest); 
+        return std::next(dest,alignment-1); 
       }
       else // order == 0 
       {
@@ -62,7 +65,7 @@ BidItOut fornberg2(
         *dest = (x_bar - x1)/(x0-x1); 
         ++dest; 
         *dest = (x_bar - x0)/(x1-x0); 
-        return std::next(dest); 
+        return std::next(dest,alignment-1); 
       }
       break; 
 
@@ -71,7 +74,7 @@ BidItOut fornberg2(
       Scalar c1=1.0, c2, c3; 
       std::size_t counter=1;
       // for number of nodes n=2, ..., N (first node was zero index)
-      std::advance(dest,num_nodes_used); 
+      std::advance(dest,alignment); 
       BidItOut write01; 
       auto penultimate_node = start;
       auto node = std::next(start);  
@@ -96,14 +99,14 @@ BidItOut fornberg2(
           {
             auto write03 = std::next(write02); 
             auto read01 = write02; 
-            auto read02 = std::prev(read01,num_nodes_used); 
+            auto read02 = std::prev(read01,alignment); 
             for(auto m=std::min(order,counter); m>0; --m)
             {
               // (3.9) -------------------------------------
               *write03 = (c1/c2) * ( *read02 * m - *read01 * (*old_node - x_bar));
-              read01 = read02; // jumps read01 back -num_nodes_used
-              write03 = std::next(read01); // jumps write03 back -num_nodes_used 
-              std::advance(read02, -num_nodes_used); 
+              read01 = read02; // jumps read01 back -alignment
+              write03 = std::next(read01); // jumps write03 back -alignment 
+              std::advance(read02, -alignment); 
             }
             // (3.7) -------------------------------------
             *write03 = *std::prev(write03) * (c1/c2) * (x_bar - *old_node);
@@ -111,8 +114,8 @@ BidItOut fornberg2(
 
           for(auto m=std::min(counter,order); m>0; --m)
           {
-            auto read03 = std::prev(write02, num_nodes_used); 
             // (3.8) ----------------------------------------
+            auto read03 = std::prev(write02, alignment); 
             *write02 = (*write02 * (*node-x_bar) - *read03 * m) / c3;
             write02 = read03; 
           }
@@ -123,12 +126,12 @@ BidItOut fornberg2(
         c1 = c2;  
         if(counter<order)
         {
-          dest = std::next(write01, num_nodes_used - counter); // copy back from write01 uses less increments. 
+          dest = std::next(write01, alignment - counter); // copy back from write01 uses less increments. 
         } 
         ++counter; 
         ++penultimate_node; 
       }
-      return std::next(write01); 
+      return std::next(write01,alignment - num_nodes_used + 1); 
       break;
   }  
 }

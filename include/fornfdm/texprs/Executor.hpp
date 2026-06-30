@@ -12,9 +12,9 @@
 #include<array>
 #include<memory>
 #include<Eigen/Core>
-#include "../utilities/Fornberg2.hpp" // not using stack calc. we need a std::array<Real> not std::array<Scalar> 
+#include "../utilities/fornberg2.hpp" // not using stack calc. we need a std::array<Real> not std::array<Scalar> 
 #include "traits.hpp" 
-#include "../Types.hpp" // Scalar, DiagMatrix
+#include "../types.hpp" // Scalar, DiagMatrix
 
 namespace fornfdm{
   namespace texprs{

@@ -13,7 +13,7 @@
 #include<memory> // std::shared_ptr
 #include<Eigen/Core> // Eigen::VectorXd 
 
-#include"Types.hpp"
+#include"types.hpp"
 
 namespace fornfdm {
 
@@ -88,7 +88,7 @@ class Mesh : public std::enable_shared_from_this<Mesh>
     auto& getAxis(std::size_t i){ return (m_mesh_arr[i]); }
     const auto& getAxis(std::size_t i) const { return (m_mesh_arr[i]); }
 
-    // get a spec
+    // get a specific axis
     auto& getAxisSafe(std::size_t i)
     {
       if(i >= m_size) throw std::runtime_error("error ith_dim out of range. ");  

@@ -5,13 +5,13 @@
 // workaround to allow expressions of different rows/cols to be added 
 // before setMesh() sets their rows/cols to be equal
 #define eigen_assert(x)
-#include<FornFdm/all.hpp>
-#define EIGEN_SPARSEMATRIXBASE_PLUGIN <FornFdm/EigenFdmPlugin.hpp> 
+#include<fornfdm/all.hpp>
+#define EIGEN_SPARSEMATRIXBASE_PLUGIN <fornfdm/plugin.hpp> 
 
 #include<iostream>
 #include<iomanip>
-#include<FornFdm/utilities/PrintVec.hpp> 
-#include<FornFdm/utilities/BumpFunc.hpp>
+#include<fornfdm/utilities/print.hpp> 
+#include<fornfdm/utilities/BumpFunc.hpp>
 #include<Eigen/SparseCore> // macro plugin takes effect. 
 
 using namespace fornfdm; 
