@@ -5,16 +5,8 @@
 // 
 // JAF 5/18/2026 
 
-// workaround to allow expressions of different rows/cols to be added 
-// before setMesh() sets their rows/cols to be equal
-#define eigen_assert(x)
+#include<fornfdm/plugin.hpp>
 #include<fornfdm/all.hpp>
-#define EIGEN_SPARSEMATRIXBASE_PLUGIN <fornfdm/plugin.hpp>
-
-#include<iostream>
-#include<iomanip>
-#include<cstdint>
-#include<vector>
 #include<Eigen/Core>
 #include<Eigen/Sparse>
 #include<gtest/gtest.h>
