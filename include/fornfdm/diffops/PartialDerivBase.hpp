@@ -137,6 +137,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
     }
     
     // Eigen Interface ------- 
+    const auto& stencil() const { return m_stencil; }
     const auto& toEigen() const { return *static_cast<const Base*>(this); } // prevents custom operators from fornfdm library taking effect. 
     StorageIndex rows() const { return m_prod_before * m_prod_after * m_stencil.rows(); }
     StorageIndex cols() const { return m_prod_before * m_prod_after * m_stencil.cols(); }

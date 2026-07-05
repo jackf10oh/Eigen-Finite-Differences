@@ -37,7 +37,7 @@
 
 public: 
 // Member Functions ================================================================== 
-const auto& toEigen() const { return derived(); }
+const auto& toEigen() const { return *static_cast<const Eigen::SparseMatrixBase<Derived>*>(this); }
 
 void setMesh(const std::shared_ptr<const fornfdm::Mesh>& m) 
 {

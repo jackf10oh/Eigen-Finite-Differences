@@ -19,6 +19,13 @@ template<std::size_t numNodesMin=0> struct Centered{};
 
 namespace internal{
 
+template<std::size_t N, std::size_t M>
+struct promote_node_selector_tags<Centered<N>,Centered<M>>
+{
+  constexpr static bool is_match = true;
+  using type = Centered<std::max(N,M)>;
+};
+
 // forward declaration
 template< std::size_t numNodesMin >
 struct CenteredNodeSelector; 

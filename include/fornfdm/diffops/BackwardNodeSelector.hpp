@@ -16,6 +16,13 @@ template<std::size_t numNodesMin=0>struct Backward{};
 
 namespace internal{
 
+template<std::size_t N, std::size_t M>
+struct promote_node_selector_tags<Backward<N>,Backward<M>>
+{
+  constexpr static bool is_match = true;
+  using type = Backward<std::max(N,M)>;
+};
+
 // forward declaration
 template< std::size_t numNodesMin >
 struct BackwardNodeSelector; 

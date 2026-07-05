@@ -1,6 +1,7 @@
 // tests_solvers.cpp 
 // 
-// tests interpolate() free function 
+// tests all 3 solvers against diffusion equation with exact solution 
+// interpolate() free function 
 // in 1D, 2D, and 3D linear solutions 
 // 
 // JAF 5/18/2026 
@@ -113,6 +114,10 @@ TEST(SolverSuite, OneDimCrankNicolsonSolver){
     ASSERT_NEAR(sol[idx], exact_val, 0.025);
   }
 };
+
+// todo higher dimensions
+
+// todo irregular mesh/time
 
 // Interpolation Suite ---------------------------------------- 
 TEST(InterpolationSuite, HighDimLinearInterpolation){

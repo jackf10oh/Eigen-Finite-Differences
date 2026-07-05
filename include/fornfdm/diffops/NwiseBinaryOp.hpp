@@ -56,7 +56,7 @@ struct traits_impl<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
   static constexpr bool is_timedep = traits<LhsType>::is_timedep || traits<RhsType>::is_timedep; // if either L/R is timedep the xpr is time dep 
   static constexpr int direction = traits<LhsType>::direction; // by default mixing operators results in undefined direction... 
   static constexpr std::size_t maxOrder = std::max(traits<LhsType>::maxOrder,traits<RhsType>::maxOrder); // highest order of derivative in the expression 
-  typedef typename promote_node_selector_type<typename traits<LhsType>::node_selector_tag,typename traits<RhsType>::node_selector_tag>::type node_selector_tag; // gurantees both minimum are fulfilled
+  typedef typename promote_node_selector_tags<typename traits<LhsType>::node_selector_tag,typename traits<RhsType>::node_selector_tag>::type node_selector_tag; // gurantees both minimum are fulfilled
 }; 
 
 } // end namespace internal 
@@ -146,12 +146,11 @@ template<
   typename = std::enable_if_t<
     fornfdm::linops::internal::is_partialderiv_crtp<LeftArg>::value &&
     fornfdm::linops::internal::is_partialderiv_crtp<RightArg>::value &&  
-    fornfdm::internal::is_matching<
+    (linops::internal::traits<LeftArg>::direction == linops::internal::traits<RightArg>::direction) &&
+    fornfdm::linops::internal::promote_node_selector_tags<
       typename linops::internal::traits<LeftArg>::node_selector_tag, 
       typename linops::internal::traits<RightArg>::node_selector_tag
-    >::value &&  
-    (linops::internal::traits<LeftArg>::is_timedep == linops::internal::traits<RightArg>::is_timedep) && 
-    (linops::internal::traits<LeftArg>::direction == linops::internal::traits<RightArg>::direction)
+    >::is_match
   >
 >
 auto operator-(LeftArg&& lhs, RightArg&& rhs)
@@ -163,14 +162,13 @@ template<
   typename LeftArg,
   typename RightArg, 
   typename = std::enable_if_t<
-    fornfdm::linops::internal::is_partialderiv_crtp<LeftArg>::value &&
-    fornfdm::linops::internal::is_partialderiv_crtp<RightArg>::value &&  
-    fornfdm::internal::is_matching<
-      typename linops::internal::traits<LeftArg>::node_selector_tag, 
-      typename linops::internal::traits<RightArg>::node_selector_tag
-    >::value &&  
-    (linops::internal::traits<LeftArg>::is_timedep == linops::internal::traits<RightArg>::is_timedep) && 
-    (linops::internal::traits<LeftArg>::direction == linops::internal::traits<RightArg>::direction)
+    internal::is_partialderiv_crtp<LeftArg>::value &&
+    internal::is_partialderiv_crtp<RightArg>::value &&
+    (linops::internal::traits<LeftArg>::direction == linops::internal::traits<RightArg>::direction) &&
+    internal::promote_node_selector_tags<
+      typename internal::traits<LeftArg>::node_selector_tag,
+      typename internal::traits<RightArg>::node_selector_tag
+    >::is_match
   >
 >
 auto operator+(LeftArg&& lhs, RightArg&& rhs)

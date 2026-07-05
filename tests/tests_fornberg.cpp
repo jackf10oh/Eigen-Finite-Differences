@@ -6,11 +6,7 @@
 // JAF 5/18/2026 
 
 #include<fornfdm/Mesh.hpp>
-#include<Fornfdm/utilities/fornberg2.hpp>
-#include<iostream>
-#include<iomanip>
-#include<cstdint>
-#include<vector>
+#include<fornfdm/utilities/fornberg2.hpp>
 #include<gtest/gtest.h>
 #include<gmock/gmock.h>
 
