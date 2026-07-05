@@ -8,7 +8,7 @@
 #define FORNFDM_DIFFOPS_EVALUATORBASE_H
 
 #include<array>
-#include "../utilities/fornberg2.hpp"
+#include "../utilities/fornberg.hpp"
 #include "../utilities/FornbergStackCalc.hpp"
 #include "../types.hpp"
 #include "../traits.hpp"

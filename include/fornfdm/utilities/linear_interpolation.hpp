@@ -1,4 +1,4 @@
-// LinearInterpolation.hpp 
+// linear_interpolation.hpp 
 //
 // Utility file with some functions around 
 // linear interpolation and locating bounding interals 
@@ -83,4 +83,4 @@ ValueType linear_interpolation(
   } // end namespace utils 
 } // end namespace fornfdm 
 
-#endif // LinearInterpolation.hpp 
+#endif // linear_interpolation.hpp 

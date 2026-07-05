@@ -1,6 +1,6 @@
 // aligned_fornberg.hpp
 //
-// same STL interface as fornberg2,
+// same STL interface as fornberg,
 // but places the beginning of each order 
 // of the weights to begin at fixed strides
 //
