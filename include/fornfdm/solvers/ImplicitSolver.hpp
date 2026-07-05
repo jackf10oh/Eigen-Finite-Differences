@@ -14,7 +14,7 @@
 #include "../texprs/Executor.hpp" // marches through time 
 #include "../outside_steps/StepContexts.hpp"  // feed to outside steps tuple 
 #include "../outside_steps/OStepBase.hpp" // StepType scoped enumeration 
-#include "../utilities/RowMajorIdentityExpr.hpp"
+#include "../utilities/Identity.hpp"
 #include "SolverBase.hpp"
 #include "SolverArgs.hpp"
 #include "SavePolicies.hpp"
@@ -87,7 +87,6 @@ class ImplicitSolver : public SolverBase<ImplicitSolver<LhsType, RhsType, OStepT
       }
 
       // set up operators. 
-      fornfdm::utils::RowMajorIdentity identity(0,0); // will resize later  
       this->m_rhs.setMesh(args.mesh); 
       executor.setMesh(args.mesh); 
 
@@ -122,8 +121,7 @@ class ImplicitSolver : public SolverBase<ImplicitSolver<LhsType, RhsType, OStepT
 
         // store the matrix into stencil 
         std::size_t s = this->m_rhs.rows(); 
-        identity.resize(s,s); 
-        stencil = identity - (executor.getInvCoeff() * (this->m_rhs.toEigen()));
+        stencil = fornfdm::utils::Identity(s,s) - (executor.getInvCoeff() * (this->m_rhs.toEigen()));
         
         // outside steps matrix before step
         this->template tupleApplyBeforeMat<fornfdm::osteps::StepType::Implicit>(stencil, time_ctx, ctx); 

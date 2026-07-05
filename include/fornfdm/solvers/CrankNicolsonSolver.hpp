@@ -13,7 +13,7 @@
 #include "../texprs/Executor.hpp" // marches through time 
 #include "../outside_steps/StepContexts.hpp"  // feed to outside steps tuple 
 #include "../outside_steps/OStepBase.hpp" // StepType scoped enumeration 
-#include "../utilities/RowMajorIdentityExpr.hpp"
+#include "../utilities/Identity.hpp"
 #include "SolverBase.hpp"
 #include "SolverArgs.hpp"
 #include "SavePolicies.hpp"
@@ -85,7 +85,6 @@ class CrankNicolsonSolver : public SolverBase<CrankNicolsonSolver<LhsType, RhsTy
       }
 
       // set up operators. 
-      fornfdm::utils::RowMajorIdentity identity(0,0); // will resize later  
       this->m_rhs.setMesh(args.mesh); 
       executor.setMesh(args.mesh); 
 
@@ -134,8 +133,7 @@ class CrankNicolsonSolver : public SolverBase<CrankNicolsonSolver<LhsType, RhsTy
         }
         linop_untouched = 0.5 * (this->m_rhs.toEigen()); 
         std::size_t s = linop_untouched.rows(); 
-        identity.resize(s,s); 
-        stencil = identity - executor.getInvCoeff() * linop_untouched; 
+        stencil = fornfdm::utils::Identity(s,s) - executor.getInvCoeff() * linop_untouched; 
         
         // outside steps matrix before step
         this->template tupleApplyBeforeMat<fornfdm::osteps::StepType::Implicit>(stencil, time_ctx, ctx); 
