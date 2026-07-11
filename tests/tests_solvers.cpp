@@ -6,6 +6,7 @@
 // 
 // JAF 5/18/2026 
 
+// #define FORNFDM_CUSTOM_SCALAR float
 #include<fornfdm/plugin.hpp>
 #include<fornfdm/all.hpp>
 #include<Eigen/Core>
@@ -179,7 +180,7 @@ TEST(InterpolationSuite, OneDimInterpolator){
   // Domain + Time  
   fornfdm::solvers::SolverArgs args{
     .mesh = std::make_shared<const fornfdm::Mesh>(fornfdm::linspaced(30,0.0,pi), 1), 
-    .times = std::make_shared<const Eigen::VectorXd>(fornfdm::linspaced(300,0.0,0.5))
+    .times = std::make_shared<const fornfdm::RealVector>(fornfdm::linspaced(300,0.0,0.5))
   }; 
 
   // Initial Conditions  

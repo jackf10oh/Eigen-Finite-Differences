@@ -38,7 +38,7 @@ class Neumann
     BoundaryRow getBottomRow(fornfdm::Real t, const fornfdm::Vector& axis) const 
     {
       // first order derivative approximation 
-      fornfdm::Real h = axis[axis.size()-1] - axis[axis.size()-2];  
+      fornfdm::Scalar h = axis[axis.size()-1] - axis[axis.size()-2];  
       return BoundaryRow{{-1.0/h, 1.0/h, 0}, 2};  
     };
 

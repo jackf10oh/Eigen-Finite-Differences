@@ -1,14 +1,9 @@
 // benchmarks.cpp
 //
-//
-//
 // JAF 12/12/2025
 
-// compilation command 
-// g++ -O3 -DNDEBUG     ./benchmarks/benchmarks.cpp  -lbenchmark -lpthread     -o benchmarks_main
-
 #include<benchmark/benchmark.h>
-
+// #define FORNFDM_CUSTOM_SCALAR float
 #include<fornfdm/all.hpp>
 using namespace fornfdm;
 
@@ -89,7 +84,7 @@ static void BENCHMARK_explicit_euler_1d(benchmark::State &state)
     // uniform mesh from 0.0 to r with n_gridpoints
     solvers::SolverArgs args{
       .mesh = make_Mesh(linspaced(n_gridpoints,0.0,pi),1),
-      .times = std::make_shared<const Eigen::VectorXd>(linspaced(m_timesteps,0.0,pi))
+      .times = std::make_shared<const fornfdm::RealVector>(linspaced(m_timesteps,0.0,pi))
     };
     args.initialConditions = { discretize(args.mesh, [](fornfdm::Scalar x){ return std::sin(x); }) };
 
@@ -123,7 +118,7 @@ static void BENCHMARK_implicit_euler_1d(benchmark::State &state)
     // uniform mesh from 0.0 to r with n_gridpoints
     solvers::SolverArgs args{
       .mesh = make_Mesh(linspaced(n_gridpoints,0.0,pi),1),
-      .times = std::make_shared<const Eigen::VectorXd>(linspaced(m_timesteps,0.0,pi))
+      .times = std::make_shared<const fornfdm::RealVector>(linspaced(m_timesteps,0.0,pi))
     };
     args.initialConditions = { discretize(args.mesh, [](fornfdm::Scalar x){ return std::sin(x); }) };
 
@@ -157,7 +152,7 @@ static void BENCHMARK_crank_nicolson_1d(benchmark::State &state)
     // uniform mesh from 0.0 to r with n_gridpoints
     solvers::SolverArgs args{
       .mesh = make_Mesh(linspaced(n_gridpoints,0.0,pi),1),
-      .times = std::make_shared<const Eigen::VectorXd>(linspaced(m_timesteps,0.0,pi))
+      .times = std::make_shared<const fornfdm::RealVector>(linspaced(m_timesteps,0.0,pi))
     };
     args.initialConditions = { discretize(args.mesh, [](fornfdm::Scalar x){ return std::sin(x); }) };
 

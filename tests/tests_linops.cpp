@@ -6,6 +6,7 @@
 // 
 // JAF 7/4/2026 
 
+// #define FORNFDM_CUSTOM_SCALAR float
 #include<fornfdm/plugin.hpp>
 #include<fornfdm/all.hpp>
 #include<Eigen/Core>

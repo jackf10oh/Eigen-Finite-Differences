@@ -1,6 +1,6 @@
 // Mesh.hpp 
 //
-// list of Eigen::VectorXd representing
+// list of fornfdm::Vector representing
 // a disretization of space in any # of dimensions 
 // 
 // JAF 4/13/2026 
@@ -11,7 +11,7 @@
 #include<array> // std::array
 #include<vector> // std::vector
 #include<memory> // std::shared_ptr
-#include<Eigen/Core> // Eigen::VectorXd 
+#include<Eigen/Core> 
 
 #include"types.hpp"
 
@@ -122,7 +122,7 @@ class Mesh : public std::enable_shared_from_this<Mesh>
       return prod; 
     } 
 
-    // From a VectorXd representing flattened DiscretizationXD produce list of views that "look" like 1 dimensional slices 
+    // From a Vector representing flattened Discretization produce list of views that "look" like 1 dimensional slices 
     std::vector<fornfdm::StrideView> makeOneDimViews(fornfdm::StrideRef vec, std::size_t ith_dim=0) const 
     {
       // # of entries in vec must be == to product of mesh1D sizes
