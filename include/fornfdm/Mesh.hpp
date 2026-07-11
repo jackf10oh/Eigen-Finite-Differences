@@ -1,6 +1,6 @@
 // Mesh.hpp 
 //
-// list of Eigen::VectorXd representing
+// list of fornfdm::Vector representing
 // a disretization of space in any # of dimensions 
 // 
 // JAF 4/13/2026 
@@ -11,9 +11,9 @@
 #include<array> // std::array
 #include<vector> // std::vector
 #include<memory> // std::shared_ptr
-#include<Eigen/Core> // Eigen::VectorXd 
+#include<Eigen/Core> 
 
-#include"Types.hpp"
+#include"types.hpp"
 
 namespace fornfdm {
 
@@ -88,7 +88,7 @@ class Mesh : public std::enable_shared_from_this<Mesh>
     auto& getAxis(std::size_t i){ return (m_mesh_arr[i]); }
     const auto& getAxis(std::size_t i) const { return (m_mesh_arr[i]); }
 
-    // get a spec
+    // get a specific axis
     auto& getAxisSafe(std::size_t i)
     {
       if(i >= m_size) throw std::runtime_error("error ith_dim out of range. ");  
@@ -122,7 +122,7 @@ class Mesh : public std::enable_shared_from_this<Mesh>
       return prod; 
     } 
 
-    // From a VectorXd representing flattened DiscretizationXD produce list of views that "look" like 1 dimensional slices 
+    // From a Vector representing flattened Discretization produce list of views that "look" like 1 dimensional slices 
     std::vector<fornfdm::StrideView> makeOneDimViews(fornfdm::StrideRef vec, std::size_t ith_dim=0) const 
     {
       // # of entries in vec must be == to product of mesh1D sizes

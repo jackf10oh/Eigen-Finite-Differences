@@ -1,4 +1,4 @@
-// EigenPlugin.hpp 
+// plugin.hpp 
 // 
 // header file that adds functionality to 
 // ALL eigen sparse matrices to be able to 
@@ -14,13 +14,30 @@
 // 
 // JAF 4/13/2026 
 
-#ifdef EIGEN_SPARSEMATRIXBASE_PLUGIN_OTHER
-#include EIGEN_SPARSEMATRIXBASE_PLUGIN_OTHER
+#ifndef EIGEN_SPARSEMATRIXBASE_H
+
+#ifndef FORNFDM_PLUGIN_H
+#define FORNFDM_PLUGIN_H
+
+// fornfdm plugin dependencies
+#include "diffops/traits.hpp"
+
+// set Eigen's plugin as this file  
+#ifndef EIGEN_SPARSEMATRIXBASE_PLUGIN
+#define EIGEN_SPARSEMATRIXBASE_PLUGIN <fornfdm/plugin.hpp>
 #endif
 
-public:
+#endif // FORNFDM_PLUGIN_H
+
+#else // EIGEN_SPARSEMATRIXBASE_H
+
+#ifndef FORNFDM_DIFFOPS_TRAITS_H
+#error "<fornfdm/plugin.hpp> depends on <fornfdm/diffops/traits.hpp>"
+#endif
+
+public: 
 // Member Functions ================================================================== 
-const auto& toEigen() const { return derived(); }
+const auto& toEigen() const { return *static_cast<const Eigen::SparseMatrixBase<Derived>*>(this); }
 
 void setMesh(const std::shared_ptr<const fornfdm::Mesh>& m) 
 {
@@ -136,4 +153,6 @@ fornfdm::Real getTime() const
   }
 }
 
-// EigenPlugin.hpp 
+#endif // EIGEN_SPARSEMATRIXBASE_H
+
+// plugin.hpp 

@@ -1,4 +1,4 @@
-// Functors.hpp 
+// functors.hpp 
 //
 // Function Object declarations for NwiseUnaryOp and NwiseBinaryOp 
 //
@@ -63,4 +63,4 @@ struct BinaryMultiplyFO
 } // end namespace linops 
 } // end namespace fornfdm 
 
-#endif // Functors.hpp 
+#endif // functors.hpp 

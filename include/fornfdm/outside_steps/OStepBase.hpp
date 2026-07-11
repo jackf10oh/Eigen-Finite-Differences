@@ -8,7 +8,7 @@
 #ifndef FORNFDM_OSTEPS_OSTEPBASE_H
 #define FORNFDM_OSTEPS_OSTEPBASE_H
 
-#include "../Types.hpp"
+#include "../types.hpp"
 #include "StepContexts.hpp"
 
 namespace fornfdm{
@@ -25,7 +25,7 @@ struct OStepBase
   public:
     // Member Funcs ------------------------------------------------
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void BeforeLinAlgebra(const TCtx& t, Ctx& ctx){/* edit everything before linear algebra starts*/}
+    void beforeLinAlgebra(const TCtx& t, Ctx& ctx){/* edit everything before linear algebra starts*/}
 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
     void applyBeforeMat(fornfdm::CSRMatrix& Mat, const TCtx& t, const Ctx& ctx){/* edit the solution vector after the step */}

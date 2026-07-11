@@ -17,7 +17,7 @@
 #define FORNFDM_OSTEPS_STEPCONTEXTS_H
 
 #include<cstddef>
-#include "../Types.hpp"
+#include "../types.hpp"
 #include "../Mesh.hpp"
 
 namespace fornfdm{

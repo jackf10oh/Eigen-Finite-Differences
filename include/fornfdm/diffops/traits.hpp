@@ -20,7 +20,7 @@
 #include<Eigen/src/SparseCore/CompressedStorage.h>
 #include<Eigen/src/SparseCore/SparseCompressedBase.h>
 
-#include "../Types.hpp"
+#include "../types.hpp"
 #include "../traits.hpp"
 
 // #include<Eigen/SparseCore> can't include before plugin macro takes effect! 
@@ -149,13 +149,13 @@ struct NestedStorage<T, std::void_t<decltype(fornfdm::linops::internal::traits<T
 };
 
 // Given two tags for NodeSelector, promote them to guarantee both minimum nodes. 
+// must be specialized by actual node selectors
 template<class T, class U>
-struct promote_node_selector_type
-{using type =  std::conditional_t<std::is_same_v<T,U>, T, void>; }; 
-
-template<template<std::size_t> class T, std::size_t min01, std::size_t min02>
-struct promote_node_selector_type<T<min01>,T<min02>> 
-{using type = T<std::max(min01,min02)>; }; 
+struct promote_node_selector_tags
+{
+  constexpr static bool is_match = std::is_same_v<T,U>;  
+  using type =  std::conditional_t<is_match, T, void>; 
+}; 
 
 } // end namespace internal 
 } // end namespace linops 

@@ -8,9 +8,9 @@
 #define FORNFDM_DIFFOPS_EVALUATORBASE_H
 
 #include<array>
-#include "../utilities/Fornberg2.hpp"
+#include "../utilities/fornberg.hpp"
 #include "../utilities/FornbergStackCalc.hpp"
-#include "../Types.hpp"
+#include "../types.hpp"
 #include "../traits.hpp"
 #include "../Mesh.hpp" 
 #include "../Coordinate.hpp"
@@ -32,18 +32,22 @@ struct EvaluatorBase
 
   // estimate is for compressed matrix. need to handle block diagonals outside of Evaluator. 
   template<class Container>
-  static std::size_t nonZerosEstimate(const Container& c){ return NodeSelector<typename traits_t::node_selector_tag, numNodesMin>::sumNodesPerRow(c); } 
+  static std::size_t totalNonZeros(const Container& c){ return NodeSelector<typename traits_t::node_selector_tag, numNodesMin>::sumNodesPerRow(c); } 
   
   // holds const Evaluator&, nodes, coords, and fornberg weights 
   class Row
   {
     private:
+    // types
+    using Selector = NodeSelector<typename traits_t::node_selector_tag, numNodesMin>;  
+    using FornCalc = typename fornfdm::utils::FornbergStackCalc<Selector::numNodesMax, traits_t::maxOrder>;
     // member data  
     const Evaluator<Xpr>& m_eval; 
-    NodeSelector<typename traits_t::node_selector_tag, numNodesMin> m_nodes; 
-    typename fornfdm::utils::FornbergStackCalc<NodeSelector<typename traits_t::node_selector_tag, numNodesMin>::numNodesMax, traits_t::maxOrder> m_calc; 
+    Selector m_nodes; 
+    FornCalc m_calc; 
     fornfdm::Coordinate<traits_t::max_num_args_called> m_coords; 
     fornfdm::Real m_time; 
+    decltype (m_eval.createReader(m_coords,m_time)) m_reader;
 
     public:
     // constructor
@@ -52,25 +56,22 @@ struct EvaluatorBase
       m_nodes(m->getAxis(traits_t::direction), (row_idx / eval.m_xpr.m_prod_before) % m->sizeOfDim(traits_t::direction)), 
       m_calc(m_nodes.x_bar, m_nodes.nodeValues.cbegin(), std::next(m_nodes.nodeValues.cbegin(), m_nodes.numNodesUsed)), 
       m_coords(m, row_idx), 
-      m_time(t)
+      m_time(t),
+      m_reader(m_eval.createReader(m_coords,m_time))
     {}
 
     // Member Functions ======================================
 
-    inline const std::size_t& size() const { return m_nodes.numNodesUsed; } 
+    inline std::size_t size() const { return m_nodes.numNodesUsed; } 
 
     // returns indices the nodes were selected from. needs to be transformed by user of Row struct   
-    const auto& columnIndices() const { return m_nodes.nodeIndices; } 
-    
-    // uses m_eval to map fornberg weights + coords into eigen expression  
-    auto values() const { return m_eval.evalWeightsCoordsTime(m_calc.getArray().data(), m_nodes.numNodesUsed, m_coords, m_time); }
+    inline std::size_t index(std::size_t ith) const { return m_nodes.nodeIndices[ith]; } 
+
+    // uses m_reader to get value of a weight
+    inline fornfdm::Scalar value(std::size_t ith) const { return m_reader(m_calc.getArray().data(), ith, m_nodes.numNodesUsed); }
 
     // value of non zeros / row index offset 
-    inline const std::size_t& valuePtrOffset() const { return m_nodes.nonZerosOffset; }  
-
-    // function to return an eigen map of innerIndexPtr / valuePtr into Eigen::VectorXd for SIMD writing.
-    template<typename U>
-    auto mapToEigen(U* ptr) const { return Eigen::Map<Eigen::Matrix<U, 1, Eigen::Dynamic>>(ptr, m_nodes.numNodesUsed); }
+    inline std::size_t offset() const { return m_nodes.nonZerosOffset; }  
   }; 
 }; 
 

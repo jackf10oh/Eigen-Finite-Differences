@@ -1,21 +1,20 @@
-// RowMajorIdentityExpr.hpp
+// Identity.hpp
 //
-// takes a Eigen::SparseMatrix<double,Eigen::RowMajor> matrix of rows==1 and makes it into a diagonal matrix 
-// tightly based on eigen docs for make circulant
-// https://libeigen.gitlab.io/eigen/docs-5.0/TopicNewExpressionType.html
+// Row major expressions representing m x n identity
 // 
 // JAF 1/2/2026 
 
-#ifndef FORNFDM_UTILS_ROWMAJORIDENTITYEXPR_H
-#define FORNFDM_UTILS_ROWMAJORIDENTITYEXPR_H
+#ifndef FORNFDM_UTILS_IDENTITy_H
+#define FORNFDM_UTILS_IDENTITy_H
 
 #include<cstdint>
 #include<Eigen/Sparse>
+#include "../types.hpp"
 
 // Enum + Forward declarations ---------------------------------------------
 namespace fornfdm{
   namespace utils{
-    class RowMajorIdentity; 
+    class Identity; 
   }
 }
 
@@ -23,7 +22,7 @@ namespace fornfdm{
 namespace Eigen {
 namespace internal {
 template<>
-struct traits<fornfdm::utils::RowMajorIdentity> {
+struct traits<fornfdm::utils::Identity> {
   typedef Eigen::Sparse StorageKind;
   typedef Eigen::MatrixXpr XprKind;
   typedef typename Eigen::Index StorageIndex;
@@ -43,15 +42,15 @@ struct traits<fornfdm::utils::RowMajorIdentity> {
 namespace fornfdm{
   namespace utils{
 
-class RowMajorIdentity : public Eigen::SparseMatrixBase< RowMajorIdentity > {
+class Identity : public Eigen::SparseMatrixBase< Identity > {
   public:
     // typedefs 
     // typedefs 
-    typedef typename Eigen::internal::ref_selector<fornfdm::utils::RowMajorIdentity>::type Nested;
+    typedef typename Eigen::internal::ref_selector<fornfdm::utils::Identity>::type Nested;
     typedef Eigen::Index Index;
     
     // constructors 
-    RowMajorIdentity(std::size_t rows, std::size_t cols) : m_rows(rows), m_cols(cols){}
+    Identity(std::size_t rows, std::size_t cols) : m_rows(rows), m_cols(cols){}
     
     // member functions 
     Index rows() const { return m_rows; }
@@ -68,12 +67,13 @@ class RowMajorIdentity : public Eigen::SparseMatrixBase< RowMajorIdentity > {
 
 // the evaluator =======================================================================
 namespace Eigen {
-namespace internal {
+  namespace internal {
+
 template<>
-struct evaluator< fornfdm::utils::RowMajorIdentity > : evaluator_base< fornfdm::utils::RowMajorIdentity > {
+struct evaluator< fornfdm::utils::Identity > : evaluator_base< fornfdm::utils::Identity > {
 
   // typedefs -------------------------------------------------- 
-  typedef fornfdm::utils::RowMajorIdentity XprType;
+  typedef fornfdm::utils::Identity XprType;
   // typedef typename nested_eval<XprType::ColsAtCompileTime>::type ArgTypeNested;
   // typedef typename remove_all<ArgTypeNested>::type ArgTypeNestedCleaned;
   typedef typename XprType::CoeffReturnType CoeffReturnType;
@@ -118,17 +118,19 @@ struct evaluator< fornfdm::utils::RowMajorIdentity > : evaluator_base< fornfdm::
   std::size_t m_rows; 
   std::size_t m_cols; 
 };
-}  // namespace internal
+
+  }  // namespace internal
 }  // namespace Eigen
 
 // the entry point ======================================================================= 
 namespace fornfdm{
   namespace utils{
-    RowMajorIdentity make_RowMajorIdentity(std::size_t m, std::size_t n) {
-      return RowMajorIdentity(m,n); 
+
+Identity make_Identity(std::size_t m, std::size_t n) {
+  return Identity(m,n); 
+
     }
   }
 }
 
-
-#endif // SparseDiagExpr.hpp
+#endif // Identity.hpp

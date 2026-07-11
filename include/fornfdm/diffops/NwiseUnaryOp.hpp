@@ -9,7 +9,7 @@
 
 #include "EvaluatorBase.hpp"
 #include "KroneckerEvaluator.hpp"
-#include "Functors.hpp"
+#include "functors.hpp"
 
 namespace fornfdm{
 namespace linops{
@@ -28,10 +28,14 @@ struct Evaluator<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>> : public Evalua
   const UnarXprType& m_xpr; 
   Evaluator<typename UnarXprType::NestedExpression> m_nested_eval; 
   Evaluator(const fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>& xpr) : m_xpr(xpr), m_nested_eval(xpr.nestedExpression()){} 
+
   template<std::size_t N>
-  auto evalWeightsCoordsTime(const fornfdm::Scalar* weights, std::size_t weights_per_order, const fornfdm::Coordinate<N>& coords, fornfdm::Real t) const 
+  auto createReader(const fornfdm::Coordinate<N>& coord, fornfdm::Real t) const
   {
-    return m_xpr.functor()( m_nested_eval.evalWeightsCoordsTime(weights, weights_per_order, coords, t)); 
+    return [f = m_xpr.functor(), nested = m_nested_eval.createReader(coord,t)](const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride)
+    {
+      return f(nested(weights,idx,stride));
+    };
   }
 };
 

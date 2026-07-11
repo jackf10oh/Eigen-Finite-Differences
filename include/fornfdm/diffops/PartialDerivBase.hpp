@@ -13,7 +13,7 @@
 #include<Eigen/SparseCore>
 #include "KroneckerEvaluator.hpp"
 #include "EvaluatorBase.hpp"
-#include "../Types.hpp"
+#include "../types.hpp"
 
 namespace fornfdm{
 namespace linops{
@@ -137,10 +137,11 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
     }
     
     // Eigen Interface ------- 
+    const auto& stencil() const { return m_stencil; }
     const auto& toEigen() const { return *static_cast<const Base*>(this); } // prevents custom operators from fornfdm library taking effect. 
     StorageIndex rows() const { return m_prod_before * m_prod_after * m_stencil.rows(); }
     StorageIndex cols() const { return m_prod_before * m_prod_after * m_stencil.cols(); }
-    StorageIndex nonZerosEstimate() const {return m_prod_before * m_prod_after * m_stencil.nonZeros(); }
+    StorageIndex totalNonZeros() const {return m_prod_before * m_prod_after * m_stencil.nonZeros(); }
 
     // Operators ====================================================================== 
     
@@ -177,7 +178,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
         m_prod_after = m->sizesMiddleProduct(traits_t::direction+1, m->numDims());
 
         // resize + reserve the stencil 
-        std::size_t nnz = Evaluator::nonZerosEstimate(axis); 
+        std::size_t nnz = Evaluator::totalNonZeros(axis); 
         m_stencil.reserve(nnz); 
         m_stencil.resize(axis_size, axis_size); 
         
@@ -187,9 +188,11 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
           // use node selector 
           typename Evaluator::Row row(eval, m, m_prod_before * row_idx, t); 
           // copy the indices into m_stencil's inner indices ptr
-          m_stencil.outerIndexPtr()[row_idx] = row.valuePtrOffset(); 
-          std::copy_n(row.columnIndices().cbegin(), row.size(), m_stencil.innerIndexPtr() + row.valuePtrOffset());  
-          row.mapToEigen(m_stencil.valuePtr() + row.valuePtrOffset()) = row.values(); 
+          m_stencil.outerIndexPtr()[row_idx] = row.offset(); 
+          for(auto i=0; i<row.size(); ++i){
+            m_stencil.innerIndexPtr()[row.offset() + i] = row.index(i);
+            m_stencil.valuePtr()[row.offset() + i] = row.value(i);
+          }
         }
         // very last outer index needs set. 
         m_stencil.outerIndexPtr()[axis_size] = nnz; 
@@ -201,7 +204,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
         m_prod_after = m->sizesMiddleProduct(traits_t::direction+1, m->numDims()); 
 
         // resize + reserve the stencil 
-        std::size_t nnz = product_before * Evaluator::nonZerosEstimate(axis); 
+        std::size_t nnz = product_before * Evaluator::totalNonZeros(axis); 
         m_stencil.reserve(nnz); 
         m_stencil.resize(product_before*axis_size, product_before*axis_size); 
 
@@ -211,16 +214,13 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
           // use node selector 
           typename Evaluator::Row row(eval, m, row_idx, t);
           // // copy the indices into m_stencil's inner indices ptr
-          std::size_t inner_offset = (row.valuePtrOffset() * product_before)+(row.size()*(row_idx%product_before)); 
+          std::size_t inner_offset = (row.offset() * product_before)+(row.size()*(row_idx%product_before)); 
           std::size_t inset = row_idx%product_before; 
-          std::transform(
-            row.columnIndices().cbegin(), 
-            std::next(row.columnIndices().cbegin(), row.size()), 
-            m_stencil.innerIndexPtr() + inner_offset, 
-            [&](std::size_t idx){ return inset + product_before*idx; }
-          ); 
           m_stencil.outerIndexPtr()[row_idx] = inner_offset; 
-          row.mapToEigen(m_stencil.valuePtr() + inner_offset) = row.values(); 
+          for(auto i=0; i<row.size(); ++i){
+            m_stencil.innerIndexPtr()[inner_offset + i] = inset + product_before * row.index(i);
+            m_stencil.valuePtr()[inner_offset + i] = row.value(i);
+          }
         }
         // very last outer index needs set. 
         m_stencil.outerIndexPtr()[product_before*axis_size] = nnz; 
@@ -232,7 +232,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
         std::size_t num_repeats = m->sizesMiddleProduct(traits_t::direction+1, traits_t::max_num_args_called); 
         m_prod_after = m->sizesMiddleProduct(traits_t::max_num_args_called, m->numDims()); 
 
-        std::size_t nnz = product_before * Evaluator::nonZerosEstimate(axis); 
+        std::size_t nnz = product_before * Evaluator::totalNonZeros(axis); 
         m_stencil.reserve(num_repeats * nnz); 
         m_stencil.resize(num_repeats*product_before*axis_size, num_repeats*product_before*axis_size); 
 
@@ -240,16 +240,13 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
         for(std::size_t row_idx=0; row_idx < num_repeats*product_before*axis_size; ++row_idx)
         {
           typename Evaluator::Row row(eval, m, row_idx, t); 
-          std::size_t inner_offset = (nnz)*(row_idx/(product_before*axis_size))+(row.valuePtrOffset() * product_before)+(row.size()*(row_idx%product_before)); 
+          std::size_t inner_offset = (nnz)*(row_idx/(product_before*axis_size))+(row.offset() * product_before)+(row.size()*(row_idx%product_before)); 
           std::size_t inset = (product_before*axis_size)*(row_idx/(product_before*axis_size)) + (row_idx%product_before); 
-          std::transform(
-            row.columnIndices().cbegin(), 
-            std::next(row.columnIndices().cbegin(), row.size()), 
-            m_stencil.innerIndexPtr() + inner_offset, 
-            [&](std::size_t idx){ return inset + product_before*idx; }
-          ); 
           m_stencil.outerIndexPtr()[row_idx] = inner_offset; 
-          row.mapToEigen(m_stencil.valuePtr() + inner_offset) = row.values();
+          for(auto i=0; i<row.size(); ++i){
+            m_stencil.innerIndexPtr()[inner_offset + i] = inset + product_before * row.index(i);
+            m_stencil.valuePtr()[inner_offset + i] = row.value(i);
+          }
         }
         // very last outer index needs set. 
         m_stencil.outerIndexPtr()[num_repeats*product_before*axis_size] = num_repeats * nnz; 

@@ -1,20 +1,14 @@
 // tests_solvers.cpp 
 // 
-// tests interpolate() free function 
+// tests all 3 solvers against diffusion equation with exact solution 
+// interpolate() free function 
 // in 1D, 2D, and 3D linear solutions 
 // 
 // JAF 5/18/2026 
 
-// workaround to allow expressions of different rows/cols to be added 
-// before setMesh() sets their rows/cols to be equal
-#define eigen_assert(x)
-#include<FornFdm/all.hpp>
-#define EIGEN_SPARSEMATRIXBASE_PLUGIN <FornFdm/EigenFdmPlugin.hpp>
-
-#include<iostream>
-#include<iomanip>
-#include<cstdint>
-#include<vector>
+// #define FORNFDM_CUSTOM_SCALAR float
+#include<fornfdm/plugin.hpp>
+#include<fornfdm/all.hpp>
 #include<Eigen/Core>
 #include<Eigen/Sparse>
 #include<gtest/gtest.h>
@@ -122,6 +116,10 @@ TEST(SolverSuite, OneDimCrankNicolsonSolver){
   }
 };
 
+// todo higher dimensions
+
+// todo irregular mesh/time
+
 // Interpolation Suite ---------------------------------------- 
 TEST(InterpolationSuite, HighDimLinearInterpolation){
 
@@ -182,7 +180,7 @@ TEST(InterpolationSuite, OneDimInterpolator){
   // Domain + Time  
   fornfdm::solvers::SolverArgs args{
     .mesh = std::make_shared<const fornfdm::Mesh>(fornfdm::linspaced(30,0.0,pi), 1), 
-    .times = std::make_shared<const Eigen::VectorXd>(fornfdm::linspaced(300,0.0,0.5))
+    .times = std::make_shared<const fornfdm::RealVector>(fornfdm::linspaced(300,0.0,0.5))
   }; 
 
   // Initial Conditions  

@@ -23,5 +23,6 @@ struct NodeSelector{};
 #include "CenteredNodeSelector.hpp"
 #include "ForwardNodeSelector.hpp"
 #include "BackwardNodeSelector.hpp"
+#include "PeriodicNodeSelector.hpp"
 
 #endif // NodeSelector.hpp 

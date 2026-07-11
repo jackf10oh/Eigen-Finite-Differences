@@ -8,11 +8,8 @@
 #ifndef FORNFDM_ALL_H
 #define FORNFDM_ALL_H
 
-#ifndef EIGEN_SPARSEMATRIXBASE_PLUGIN
-  #define EIGEN_SPARSEMATRIXBASE_PLUGIN <FornFdm/EigenFdmPlugin.hpp> 
-#endif 
-
-#include "Types.hpp"
+// #include "plugin.hpp" // not forced in includes
+#include "types.hpp"
 #include "traits.hpp"
 #include "Mesh.hpp" 
 
@@ -20,7 +17,7 @@
 #include "coeffs/all.hpp"
 #include "outside_steps/all.hpp"
 #include "texprs/all.hpp"
-#include "Solvers/all.hpp"
+#include "solvers/all.hpp"
 
 #endif
 

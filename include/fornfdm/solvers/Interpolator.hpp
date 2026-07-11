@@ -13,10 +13,10 @@
 #include<memory>
 #include<vector>
 #include<Eigen/Core>
-#include "../Types.hpp"
+#include "../types.hpp"
 #include "../Coordinate.hpp"
 #include "../Mesh.hpp"
-#include "../utilities/LinearInterpolation.hpp"
+#include "../utilities/linear_interpolation.hpp"
 
 #include "ImplicitSolver.hpp"
 
@@ -66,7 +66,7 @@ fornfdm::Scalar interpolate(const fornfdm::Coordinate<numDimsMax>& coords, const
 
 template<
   typename StoredSolver, 
-  typename C = Eigen::VectorXd // container of times 
+  typename C = fornfdm::RealVector // container of times 
 >
 class Interpolator
 {
@@ -82,7 +82,7 @@ class Interpolator
     }; 
 
     // Member Data ------------------------------
-    std::vector<Eigen::VectorXd> m_data; 
+    std::vector<fornfdm::Vector> m_data; 
     std::remove_reference_t<StoredSolver> m_solver; 
     SolverArgs<const fornfdm::Mesh,C> m_args; 
     bool m_calculated; 

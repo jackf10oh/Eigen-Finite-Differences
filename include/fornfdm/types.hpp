@@ -1,4 +1,4 @@
-// Types.hpp 
+// types.hpp 
 //
 // forward declarations of main fornfdm classes + aliases of key Eigen types 
 //
@@ -32,7 +32,7 @@ template<std::size_t N> class Coordinate;
 
 // helpful aliases ------
 #ifndef FORNFDM_CUSTOM_SCALAR
-using Scalar = double; // might use this more consistently in the future...
+using Scalar = double;
 #else
 using Scalar = FORNFDM_CUSTOM_SCALAR;
 #endif 
@@ -44,6 +44,7 @@ using Real = FORNFDM_CUSTOM_REAL;
 #endif
  
 using Vector = typename Eigen::Matrix<fornfdm::Scalar, Eigen::Dynamic, 1>; 
+using RealVector = typename Eigen::Matrix<fornfdm::Real, Eigen::Dynamic, 1>; 
 using CSRMatrix = Eigen::SparseMatrix<Scalar, Eigen::RowMajor>; // Compressed Sparse Row (CSR) Matrix
 using DiagMatrix = Eigen::DiagonalMatrix<fornfdm::Scalar,Eigen::Dynamic>; // Diagonal Matrix 
 using StrideRef = typename Eigen::Ref<fornfdm::Vector, 0, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>; 
@@ -52,4 +53,4 @@ using StrideView =  Eigen::Map<fornfdm::Vector, Eigen::Unaligned, Stride>;
 
 } // end namespace fornfdm 
 
-#endif // Types.hpp 
+#endif // types.hpp 

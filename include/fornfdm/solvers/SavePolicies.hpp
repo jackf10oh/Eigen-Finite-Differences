@@ -13,7 +13,7 @@
 #define FORNFDM_SOLVERS_SAVEPOLICIES_H
 
 #include<chrono>
-#include "../Types.hpp"
+#include "../types.hpp"
 
 namespace fornfdm{
   namespace solvers{ 

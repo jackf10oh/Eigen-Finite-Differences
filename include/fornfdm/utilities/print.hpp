@@ -1,4 +1,4 @@
-// PrintVec.hpp 
+// print.hpp 
 //
 // prints vectors in a pythonic way: 
 // i.e. comment: [x0, x1, ..., xn] 
@@ -83,4 +83,4 @@ void print_mat(const Cont2D& A, std::string comment="")
   } // end namespace utils 
 } // end namespace fornfdm 
 
-#endif // PrintVec.hpp
+#endif // print.hpp

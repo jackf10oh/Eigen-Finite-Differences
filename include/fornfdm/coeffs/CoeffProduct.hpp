@@ -46,15 +46,22 @@ struct Evaluator<CoeffProduct<LeftCoeff, RightDeriv>> : public EvaluatorBase<Coe
   {}
 
   template<std::size_t N>
-  auto evalWeightsCoordsTime(const fornfdm::Scalar* weights, std::size_t weights_per_order, const Coordinate<N>& coords, fornfdm::Real t) const 
+  auto createReader(const fornfdm::Coordinate<N>& coord, fornfdm::Real t) const
   {
     if constexpr(fornfdm::linops::internal::traits<LeftCoeff>::is_timedep){
-      return m_xpr.functor()(coords.applyBindFirst(m_xpr.lhs().callable(), t), m_rhs_eval.evalWeightsCoordsTime(weights, weights_per_order, coords, t)); 
+      return [c = coord.applyBindFirst(m_xpr.lhs().callable(), t), nested = m_rhs_eval.createReader(coord,t)](const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride)
+      {
+        return c * nested(weights, idx, stride);
+      };
     }
     else{
-      return m_xpr.functor()(coords.apply(m_xpr.lhs().callable()), m_rhs_eval.evalWeightsCoordsTime(weights, weights_per_order, coords, t)); 
+      return [c = coord.apply(m_xpr.lhs().callable()), nested = m_rhs_eval.createReader(coord,t)](const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride)
+      {
+        return c * nested(weights, idx, stride);
+      };
     }
   }
+
 }; 
 
 } // end namespace internal 

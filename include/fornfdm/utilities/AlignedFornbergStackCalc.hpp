@@ -1,52 +1,54 @@
-// FornbergStackCalc.hpp
+// fornberg.hpp
 //
 // Redo of FornbergCalc that uses compile time fixed size array instead of vector
 // header file for stateful fornberg calc that only allocates on construction 
 //
 // JAF 4/3/2026
 
-#ifndef FORNFDM_UTILS_FORNBERGSTACKCALC_H
-#define FORNFDM_UTILS_FORNBERGSTACKCALC_H
+#ifndef FORNFDM_UTILS_ALIGNEDFORNBERGSTACKCALC_H
+#define FORNFDM_UTILS_ALIGNEDFORNBERGSTACKCALC_H
 
 #include<cmath>
 #include<cassert>
 #include<array>
 #include<string> 
 #include<iostream> 
-#include "fornberg.hpp" // actual implementation of algorithm 
+#include "aligned_fornberg.hpp"
 
 namespace fornfdm{
   namespace utils{
 
 // stateful Fornberg weight calculator. owns a fixed size array  
 template<std::size_t M, std::size_t N>
-class FornbergStackCalc
+class AlignedFornbergStackCalc
 {
   public:
     // Member Data ----------------------------------------------------------
-    static constexpr std::size_t order = N;                // maximum order of derivative stencil  
-    static constexpr std::size_t numNodesMax = M;              // number of nodes to use in approximation
+    static constexpr std::size_t alignment = EIGEN_MAX_ALIGN_BYTES / sizeof(fornfdm::Scalar);
+    static constexpr std::size_t order = N;                                           // maximum order of derivative stencil
+    static constexpr std::size_t numNodesMax = alignment*((M+alignment-1)/alignment); // first multiple of S such that k*S >= M.         
   private:
-    std::array<fornfdm::Scalar, M*(N+1)> m_arr;          // single allocation of memory rows*cols big 
-    std::size_t m_nodes_used; // stores how many nodes were actually used in the algorithm
+    EIGEN_ALIGN_MAX std::array<fornfdm::Scalar, numNodesMax*(N+1)> m_arr;  // single allocation of memory rows*cols big 
+    std::size_t m_nodes_used;                                              // stores how many nodes were actually used in the algorithm
+  
   public:
     // Constructors + Destructor =========================================================
-    FornbergStackCalc()
+    AlignedFornbergStackCalc()
     { 
       static_assert(M >= N + 1, "FornbergArrayCalc requires NUM_NODES >= ORDER + 1"); 
     }
     
     template<typename Iter>
-    FornbergStackCalc(fornfdm::Scalar x_bar, Iter start, Iter end)
+    AlignedFornbergStackCalc(fornfdm::Scalar x_bar, Iter start, Iter end)
     { 
       static_assert(M >= N + 1, "FornbergArrayCalc requires NUM_NODES >= ORDER + 1"); 
       calculate(x_bar,start,end); 
     }
     
-    FornbergStackCalc(const FornbergStackCalc& other)=default; 
+    AlignedFornbergStackCalc(const AlignedFornbergStackCalc& other)=default; 
     
     // destructor 
-    ~FornbergStackCalc()=default; 
+    ~AlignedFornbergStackCalc()=default; 
     
     // Member Funcs ======================================================================================
     
@@ -60,9 +62,9 @@ class FornbergStackCalc
     {
       // make sure distance(start,end) <= numNodesMax 
       auto d = std::distance(start,end); 
-      assert((d <= numNodesMax) && "FornbergStackCalc error: distance(start,end) > numNodesMax");  
+      assert((d <= numNodesMax) && "AlignedFornbergStackCalc error: distance(start,end) > numNodesMax");  
       m_nodes_used = d; 
-      fornfdm::utils::fornberg(start,end,x_bar,order,m_arr.begin()); 
+      fornfdm::utils::aligned_fornberg(start,end,x_bar,order,numNodesMax,m_arr.begin()); 
     }
 };
 
