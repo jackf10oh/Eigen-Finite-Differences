@@ -8,6 +8,10 @@
 #ifndef FORNFDM_DIFFOPS_BACKWARDNODESELECTOR_H
 #define FORNFDM_DIFFOPS_BACKWARDNODESELECTOR_H
 
+#include<array>
+#include "../types.hpp"
+#include "NodeSelector.hpp"
+
 namespace fornfdm{
 namespace linops{
 

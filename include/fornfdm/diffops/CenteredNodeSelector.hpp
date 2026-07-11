@@ -8,8 +8,9 @@
 #ifndef FORNFDM_DIFFOPS_CENTEREDNODESELECTOR_H
 #define FORNFDM_DIFFOPS_CENTEREDNODESELECTOR_H 
 
+#include<array>
+#include "../types.hpp"
 #include "NodeSelector.hpp"
-#include "EvaluatorBase.hpp"
 
 namespace fornfdm{
 namespace linops{
