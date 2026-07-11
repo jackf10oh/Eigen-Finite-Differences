@@ -10,6 +10,11 @@
 // #include "../plugin.hpp" // not forced in includes
 #include "traits.hpp"
 #include "functors.hpp"
+#include "NodeSelector.hpp"
+#include "BackwardNodeSelector.hpp"
+#include "ForwardNodeSelector.hpp"
+#include "CenteredNodeSelector.hpp"
+#include "PeriodicNodeSelector.hpp"
 #include "PartialDerivBase.hpp"
 #include "KroneckerEvaluator.hpp"
 #include "EvaluatorBase.hpp"
