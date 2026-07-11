@@ -35,12 +35,12 @@ struct Evaluator<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> : pub
   {}
 
   template<std::size_t N>
-  auto evalWeightsCoordsTime(const fornfdm::Scalar* weights, std::size_t weights_per_order, const fornfdm::Coordinate<N>& coords, fornfdm::Real t) const 
+  auto createReader(const fornfdm::Coordinate<N>& coord, fornfdm::Real t) const
   {
-    return m_xpr.functor()( 
-      m_lhs_eval.evalWeightsCoordsTime(weights, weights_per_order, coords, t), 
-      m_rhs_eval.evalWeightsCoordsTime(weights, weights_per_order, coords, t)
-    ); 
+    return [f = m_xpr.functor(), n1 = m_lhs_eval.createReader(coord,t), n2 = m_rhs_eval.createReader(coord,t)](const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride)
+    {
+      return f(n1(weights,idx,stride), n2(weights,idx,stride));
+    };
   }
 };
 
