@@ -10,10 +10,11 @@
 #ifndef FORNFDM_DIFFOPS_PARTIALDERIVBASE_H
 #define FORNFDM_DIFFOPS_PARTIALDERIVBASE_H
 
+#include<cstdint>
+#include<Eigen/Core>
 #include<Eigen/SparseCore>
-#include "KroneckerEvaluator.hpp"
-#include "EvaluatorBase.hpp"
 #include "../types.hpp"
+#include "EvaluatorBase.hpp"
 
 namespace fornfdm{
 namespace linops{
@@ -21,6 +22,10 @@ namespace linops{
 template<class Derived> class PartialDerivBase; 
 
 namespace internal{ 
+
+// forward declaration ---
+template<class Derived, std::size_t num_args = linops::internal::traits<Derived>::max_num_args_called>
+struct KroneckerEvaluator;
 
 // Member data that is only used by time dependent partial derivs 
 template<bool isTimeDep>
@@ -256,5 +261,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
 
 } // end namespace linops
 } // end namespace fornfdm 
+
+#include "KroneckerEvaluator.hpp"
 
 #endif // PartialDerivBase.hpp  

@@ -9,6 +9,8 @@
 #ifndef FORNFDM_TEXPRS_NTHTIMEDERIV_H
 #define FORNFDM_TEXPRS_NTHTIMEDERIV_H
 
+#include<cstdint>
+#include "traits.hpp"
 #include "TimeDerivBase.hpp"
 
 namespace fornfdm{

@@ -8,12 +8,15 @@
 #ifndef FORNFDM_OSTEPS_BCLIST_H
 #define FORNFDM_OSTEPS_BCLIST_H
 
+#include<cstdint>
 #include<cassert>
 #include<tuple>
-#include<Eigen/Dense>
-#include<utility>
+#include<Eigen/Core>
+#include<Eigen/SparseCore>
+#include "../../types.hpp"
 #include "../../Mesh.hpp"
 #include "../OStepBase.hpp"
+#include "BCPair.hpp"
 
 namespace fornfdm{
   namespace osteps{

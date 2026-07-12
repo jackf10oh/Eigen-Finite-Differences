@@ -7,6 +7,11 @@
 #ifndef FORNFDM_TEXPR_TRAITS_H
 #define FORNFDM_TEXPR_TRAITS_H
 
+#include<cstdint>
+#include<tuple>
+#include<type_traits>
+#include "../types.hpp"
+
 namespace fornfdm{
   namespace texprs{
 

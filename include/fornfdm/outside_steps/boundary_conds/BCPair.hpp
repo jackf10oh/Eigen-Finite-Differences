@@ -9,6 +9,11 @@
 #ifndef FORNFDM_OSTEPS_BCPAIR_H
 #define FORNFDM_OSTEPS_BCPAIR_H
 
+#include<array>
+#include<cstdint>
+#include<type_traits>
+#include<Eigen/Core>
+#include<Eigen/SparseCore>
 #include "../../types.hpp"
 #include "../OStepBase.hpp"
 

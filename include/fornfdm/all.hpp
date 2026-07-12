@@ -12,11 +12,12 @@
 #include "types.hpp"
 #include "traits.hpp"
 #include "Mesh.hpp" 
+#include "Coordinate.hpp"
 
 #include "diffops/all.hpp"
 #include "coeffs/all.hpp"
-#include "outside_steps/all.hpp"
 #include "texprs/all.hpp"
+#include "outside_steps/all.hpp"
 #include "solvers/all.hpp"
 
 #endif

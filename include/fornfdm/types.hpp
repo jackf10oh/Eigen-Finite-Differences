@@ -8,20 +8,19 @@
 #define FORNFDM_TYPES_H 
 
 #include<cstdint>
-#include<type_traits> // decay_t 
 #include<memory> // smart ptrs 
-#include<Eigen/Core>
-#include<Eigen/src/Core/NumTraits.h> // convert scalar -> real 
-#include<Eigen/src/Core/util/Macros.h>
-#include<Eigen/src/Core/util/Constants.h> 
-#include<Eigen/src/Core/util/ForwardDeclarations.h>  // CwiseUnaryOp, CwiseBinaryOp, 
-#include<Eigen/src/Core/EigenBase.h> 
-#include<Eigen/src/SparseCore/SparseUtil.h> // forward declares SparseMatrix<...> 
-#include<Eigen/src/SparseCore/CompressedStorage.h>
-#include<Eigen/src/SparseCore/SparseCompressedBase.h>
+#include<Eigen/Core> // Forward declares SparseMatrixBase, etc...
+
+// forward declare ------ 
+namespace Eigen{
+template<typename _Scalar, int _Options, typename _StorageIndex>
+class SparseMatrix;
+
+template<class Derived>
+class SparseCompressedBase;
+}
 
 namespace fornfdm{
-
 // forward declare ------ 
 class Mesh; 
 using SharedMesh = std::shared_ptr<Mesh>; 
@@ -45,8 +44,8 @@ using Real = FORNFDM_CUSTOM_REAL;
  
 using Vector = typename Eigen::Matrix<fornfdm::Scalar, Eigen::Dynamic, 1>; 
 using RealVector = typename Eigen::Matrix<fornfdm::Real, Eigen::Dynamic, 1>; 
-using CSRMatrix = Eigen::SparseMatrix<Scalar, Eigen::RowMajor>; // Compressed Sparse Row (CSR) Matrix
-using DiagMatrix = Eigen::DiagonalMatrix<fornfdm::Scalar,Eigen::Dynamic>; // Diagonal Matrix 
+using CSRMatrix = Eigen::SparseMatrix<Scalar, Eigen::RowMajor, Eigen::Index>; // Compressed Sparse Row (CSR) Matrix
+using DiagMatrix = Eigen::DiagonalMatrix<fornfdm::Scalar,::Eigen::Dynamic>; // Diagonal Matrix 
 using StrideRef = typename Eigen::Ref<fornfdm::Vector, 0, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>; 
 using Stride =  Eigen::Stride<0,Eigen::Dynamic>; 
 using StrideView =  Eigen::Map<fornfdm::Vector, Eigen::Unaligned, Stride>;

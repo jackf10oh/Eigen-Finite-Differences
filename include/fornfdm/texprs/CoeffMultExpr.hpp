@@ -7,9 +7,11 @@
 #ifndef FORNFDM_TEXPRS_COEFFMULTEXPR_H
 #define FORNFDM_TEXPRS_COEFFMULTEXPR_H
 
-#include "TimeDerivBase.hpp"
-#include "traits.hpp"
+#include<cstdint>
+#include<tuple>
 #include "../diffops/traits.hpp"
+#include "traits.hpp"
+#include "TimeDerivBase.hpp"
 
 namespace fornfdm{
 namespace texprs{
@@ -65,7 +67,6 @@ auto operator*(Lhs&& c, Rhs&& rhs)
 {
   // false if Rhs is any form of SumExpr. We don't want to mess with expressions like c*(A+B)
   static_assert(std::tuple_size<decltype(rhs.toTuple())>::value == 1, "operator*(c,TimeDeriv) only meant for single TimeDeriv"); 
-  std::cout << "Product Made! lhs is lval? " << std::is_lvalue_reference<Lhs>::value << " rhs is lval? " << std::is_lvalue_reference<Rhs>::value << std::endl; 
   return CoeffMultExpr<Lhs,Rhs>(std::forward<Lhs>(c), std::forward<Rhs>(rhs)); 
 } 
 

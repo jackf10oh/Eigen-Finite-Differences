@@ -10,7 +10,10 @@
 #ifndef FORNFDM_COORDINATE_H
 #define FORNFDM_COORDINATE_H 
 
+#include<array>
+#include<cstdint>
 #include<iostream>
+#include "types.hpp"
 #include "traits.hpp"
 
 namespace fornfdm{

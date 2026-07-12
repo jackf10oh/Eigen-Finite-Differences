@@ -12,6 +12,10 @@
 #ifndef FORNFDM_SOLVERS_EXPLICITSOLVER_H
 #define FORNFDM_SOLVERS_EXPLICITSOLVER_H
 
+#include<cstdint>
+#include<Eigen/Core>
+#include<Eigen/SparseCore>
+#include "../diffops/traits.hpp" // check RHS is_timedep
 #include "../texprs/traits.hpp" // check LHS is time derivatives 
 #include "../texprs/Executor.hpp" // marches through time 
 #include "../outside_steps/StepContexts.hpp"  // feed to outside steps tuple 

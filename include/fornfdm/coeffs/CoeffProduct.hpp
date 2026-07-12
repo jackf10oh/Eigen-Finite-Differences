@@ -7,7 +7,11 @@
 #ifndef FORNFDM_COEFFS_COEFFPRODUCT_H
 #define FORNFDM_COEFFS_COEFFPRODUCT_H
 
+#include "../types.hpp"
+#include "../diffops/traits.hpp"
+#include "../diffops/functors.hpp"
 #include "../diffops/EvaluatorBase.hpp"
+#include "../diffops/PartialDerivBase.hpp"
 #include "../diffops/KroneckerEvaluator.hpp"
 
 namespace fornfdm{

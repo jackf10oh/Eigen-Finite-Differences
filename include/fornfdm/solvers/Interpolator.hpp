@@ -10,9 +10,11 @@
 #define FORNFDM_SOLVERS_INTERPOLATOR_H
 
 #include<cassert>
+#include<cstdint>
 #include<memory>
 #include<vector>
 #include<Eigen/Core>
+#include<Eigen/SparseCore>
 #include "../types.hpp"
 #include "../Coordinate.hpp"
 #include "../Mesh.hpp"

@@ -8,16 +8,7 @@
 #define FORNFDM_TRAITS_H
 
 #include<cstdint>
-#include<string>
 #include<type_traits> // decay_t 
-#include<Eigen/Core>
-#include<Eigen/src/Core/util/Macros.h>
-#include<Eigen/src/Core/util/Constants.h> 
-#include<Eigen/src/Core/util/ForwardDeclarations.h>  // CwiseUnaryOp, CwiseBinaryOp, 
-#include<Eigen/src/Core/EigenBase.h> 
-#include<Eigen/src/SparseCore/SparseUtil.h> // forward declares SparseMatrix<...> 
-#include<Eigen/src/SparseCore/CompressedStorage.h>
-#include<Eigen/src/SparseCore/SparseCompressedBase.h>
 #include "types.hpp"
 
 namespace fornfdm{ 

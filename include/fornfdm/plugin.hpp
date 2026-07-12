@@ -25,6 +25,7 @@
 // set Eigen's plugin as this file  
 #ifndef EIGEN_SPARSEMATRIXBASE_PLUGIN
 #define EIGEN_SPARSEMATRIXBASE_PLUGIN <fornfdm/plugin.hpp>
+#define FORNFDM_PLUGIN_INJECTED
 #endif
 
 #endif // FORNFDM_PLUGIN_H

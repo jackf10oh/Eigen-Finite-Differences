@@ -17,6 +17,7 @@
 #define FORNFDM_OSTEPS_STEPCONTEXTS_H
 
 #include<cstddef>
+#include<memory>
 #include "../types.hpp"
 #include "../Mesh.hpp"
 

@@ -7,6 +7,8 @@
 #ifndef FORNFDM_DIFFOPS_FUNCTORS_H
 #define FORNFDM_DIFFOPS_FUNCTORS_H 
 
+#include<type_traits>
+
 namespace fornfdm{
 namespace linops{
 namespace internal{

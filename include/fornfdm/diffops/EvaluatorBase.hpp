@@ -7,13 +7,15 @@
 #ifndef FORNFDM_DIFFOPS_EVALUATORBASE_H
 #define FORNFDM_DIFFOPS_EVALUATORBASE_H
 
+#include<cstdint>
 #include<array>
-#include "../utilities/fornberg.hpp"
-#include "../utilities/FornbergStackCalc.hpp"
 #include "../types.hpp"
 #include "../traits.hpp"
 #include "../Mesh.hpp" 
 #include "../Coordinate.hpp"
+#include "../utilities/fornberg.hpp"
+#include "../utilities/FornbergStackCalc.hpp"
+#include "traits.hpp"
 #include "NodeSelector.hpp"
 
 namespace fornfdm{

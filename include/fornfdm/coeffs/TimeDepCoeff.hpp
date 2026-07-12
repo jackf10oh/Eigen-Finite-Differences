@@ -8,6 +8,14 @@
 #ifndef FORNFDM_COEFFS_TIMEDEPCOEFF_H
 #define FORNFDM_COEFFS_TIMEDEPCOEFF_H
 
+#include<cstdint>
+#include<Eigen/Core> // DiagonalMatrixBase 
+#include "../types.hpp"
+#include "../traits.hpp"
+#include "../diffops/traits.hpp"
+#include "../diffops/functors.hpp"
+#include "../Mesh.hpp"
+#include "../Coordinate.hpp"
 #include "CoeffBase.hpp"
 
 namespace fornfdm{

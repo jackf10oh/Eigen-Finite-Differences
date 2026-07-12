@@ -14,7 +14,10 @@
 #define FORNFDM_DIFFOPS_PERIODICNODESELECTOR_H
 
 #include<array>
+#include<cstdint>
+#include<Eigen/Core>
 #include "../types.hpp"
+#include "traits.hpp"
 #include "NodeSelector.hpp"
 
 namespace fornfdm{

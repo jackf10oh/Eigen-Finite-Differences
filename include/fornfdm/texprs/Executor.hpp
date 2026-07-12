@@ -10,11 +10,12 @@
 
 #include<algorithm>
 #include<array>
-#include<memory>
+#include<cstdint>
+#include<tuple>
 #include<Eigen/Core>
+#include "../types.hpp" // Scalar, DiagMatrix
 #include "../utilities/fornberg.hpp" // not using stack calc. we need a std::array<Real> not std::array<Scalar> 
 #include "traits.hpp" 
-#include "../types.hpp" // Scalar, DiagMatrix
 
 namespace fornfdm{
   namespace texprs{

@@ -9,6 +9,8 @@
 #ifndef FORNFDM_TEXPRS_SUMEXPR_H
 #define FORNFDM_TEXPRS_SUMEXPR_H
 
+#include<cstdint>
+#include<tuple>
 #include "traits.hpp"
 #include "TimeDerivBase.hpp"
 

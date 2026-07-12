@@ -8,6 +8,8 @@
 #ifndef FORNFDM_DIFFOPS_NODESELECTOR_H
 #define FORNFDM_DIFFOPS_NODESELECTOR_H
 
+#include<cstdint>
+
 namespace fornfdm{
 namespace linops{
 namespace internal{
@@ -19,10 +21,5 @@ struct NodeSelector{};
 } // end namespace internal 
 } // end namespace linops 
 } // end namespace fornfdm
-
-#include "CenteredNodeSelector.hpp"
-#include "ForwardNodeSelector.hpp"
-#include "BackwardNodeSelector.hpp"
-#include "PeriodicNodeSelector.hpp"
 
 #endif // NodeSelector.hpp 

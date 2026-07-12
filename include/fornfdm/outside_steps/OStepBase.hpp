@@ -8,6 +8,9 @@
 #ifndef FORNFDM_OSTEPS_OSTEPBASE_H
 #define FORNFDM_OSTEPS_OSTEPBASE_H
 
+#include<cstdint>
+#include<Eigen/Core>
+#include<Eigen/SparseCore>
 #include "../types.hpp"
 #include "StepContexts.hpp"
 

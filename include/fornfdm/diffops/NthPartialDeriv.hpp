@@ -7,10 +7,13 @@
 #ifndef FORNFDM_DIFFOPS_NTHPARTIALDERIV_H
 #define FORNFDM_DIFFOPS_NTHPARTIALDERIV_H
 
-#include "KroneckerEvaluator.hpp"
+#include<cstdint>
+#include "../types.hpp"
+#include "traits.hpp"
 #include "EvaluatorBase.hpp"
+#include "PartialDerivBase.hpp"
+#include "KroneckerEvaluator.hpp"
 #include "CenteredNodeSelector.hpp"
-#include "../traits.hpp"
 
 namespace fornfdm{
 namespace linops{

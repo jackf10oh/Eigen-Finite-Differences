@@ -7,7 +7,11 @@
 #ifndef FORNFDM_DIFFOPS_NWISEUNARYOP_H
 #define FORNFDM_DIFFOPS_NWISEUNARYOP_H
 
+#include<cstdint>
+#include "../types.hpp"
+#include "traits.hpp"
 #include "EvaluatorBase.hpp"
+#include "PartialDerivBase.hpp"
 #include "KroneckerEvaluator.hpp"
 #include "functors.hpp"
 

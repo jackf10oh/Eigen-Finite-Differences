@@ -8,8 +8,15 @@
 #ifndef FORNFDM_OSTEPS_NEUMANN_H
 #define FORNFDM_OSTEPS_NEUMANN_H
 
+#include<array>
+#include<cstdint>
+#include<type_traits>
+#include<Eigen/Core>
+#include<Eigen/SparseCore>
+#include "../../types.hpp"
 #include "../../utilities/FornbergStackCalc.hpp"
-#include "BCPair.hpp" 
+#include "../OStepBase.hpp"
+#include "BCPair.hpp"
 
 namespace fornfdm{
   namespace osteps{

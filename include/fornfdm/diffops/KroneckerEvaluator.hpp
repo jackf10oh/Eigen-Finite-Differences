@@ -8,15 +8,20 @@
 #ifndef FORNFDM_DIFFOPS_KRONECKEREVALUATOR_H
 #define FORNFDM_DIFFOPS_KRONECKEREVALUATOR_H
 
+#include<cstdint>
+#include<Eigen/Core>
+#include<Eigen/SparseCore>
 #include "../types.hpp" // CSRMatrix
 #include "../traits.hpp" // callable_traits<>
+#include "PartialDerivBase.hpp"
 
 namespace fornfdm{
 namespace linops{
+
 namespace internal{
 
 // Generic Case. Use single kronecker product to make block diagonal: I @ D 
-template<class Derived, std::size_t num_args = linops::internal::traits<Derived>::max_num_args_called>
+template<class Derived, std::size_t num_args>
 struct KroneckerEvaluator
 {
   // Type Defs --------------

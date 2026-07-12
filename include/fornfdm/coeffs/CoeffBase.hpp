@@ -10,10 +10,13 @@
 #ifndef FORNFDM_COEFFS_COEFFSBASE_H
 #define FORNFDM_COEFFS_COEFFSBASE_H
 
-#include<memory>
+#include<cstdint>
 #include<Eigen/Core> // DiagonalMatrixBase 
+#include "../types.hpp"
+#include "../traits.hpp"
 #include "../diffops/traits.hpp"
-#include "../diffops/EvaluatorBase.hpp" // Coordinate struct 
+#include "../diffops/functors.hpp"
+#include "../Mesh.hpp"
 #include "../Coordinate.hpp"
 
 namespace fornfdm{

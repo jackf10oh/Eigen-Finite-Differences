@@ -8,6 +8,8 @@
 #ifndef FORNFDM_TEXPRS_TIMEDERIVBASE_H
 #define FORNFDM_TEXPRS_TIMEDERIVBASE_H
 
+#include<cstdint>
+#include "../types.hpp"
 #include "traits.hpp"
 
 namespace fornfdm{

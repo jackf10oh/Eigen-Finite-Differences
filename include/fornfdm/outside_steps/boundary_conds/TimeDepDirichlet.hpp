@@ -8,7 +8,14 @@
 #ifndef FORNFDM_OSTEPS_TIMEDEPDIRICHLET_H
 #define FORNFDM_OSTEPS_TIMEDEPDIRICHLET_H
 
-#include "BCPair.hpp" // struct BoundaryRow
+#include<array>
+#include<cstdint>
+#include<type_traits>
+#include<Eigen/Core>
+#include<Eigen/SparseCore>
+#include "../../types.hpp"
+#include "../OStepBase.hpp"
+#include "BCPair.hpp"
 
 namespace fornfdm{
   namespace osteps{
