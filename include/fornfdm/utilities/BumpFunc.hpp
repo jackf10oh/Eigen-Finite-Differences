@@ -7,6 +7,10 @@
 #ifndef FORNFDM_UTILS_BUMPFUNC_H
 #define FORNFDM_UTILS_BUMPFUNC_H 
 
+#include<cmath>
+#include<exception>
+#include "../types.hpp"
+
 namespace fornfdm{
   namespace utils{
 

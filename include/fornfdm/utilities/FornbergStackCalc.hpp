@@ -8,11 +8,10 @@
 #ifndef FORNFDM_UTILS_FORNBERGSTACKCALC_H
 #define FORNFDM_UTILS_FORNBERGSTACKCALC_H
 
+#include<array>
 #include<cmath>
 #include<cassert>
-#include<array>
-#include<string> 
-#include<iostream> 
+#include "../types.hpp"
 #include "fornberg.hpp" // actual implementation of algorithm 
 
 namespace fornfdm{

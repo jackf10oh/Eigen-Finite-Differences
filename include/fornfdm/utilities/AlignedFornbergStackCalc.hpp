@@ -8,11 +8,12 @@
 #ifndef FORNFDM_UTILS_ALIGNEDFORNBERGSTACKCALC_H
 #define FORNFDM_UTILS_ALIGNEDFORNBERGSTACKCALC_H
 
+#include<array>
+#include<cstdint>
 #include<cmath>
 #include<cassert>
-#include<array>
-#include<string> 
-#include<iostream> 
+#include<Eigen/Core>
+#include "../types.hpp"
 #include "aligned_fornberg.hpp"
 
 namespace fornfdm{

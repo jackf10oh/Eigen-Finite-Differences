@@ -8,6 +8,7 @@
 #ifndef FORNFDM_UTILS_PRINTVEC_H
 #define FORNFDM_UTILS_PRINTVEC_H
 
+#include<cstdint>
 #include<iostream>
 #include<Eigen/Core> 
 
