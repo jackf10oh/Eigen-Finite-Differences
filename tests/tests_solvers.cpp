@@ -21,8 +21,8 @@ TEST(SolverSuite, OneDimExplicitSolver){
   constexpr double pi = 3.14159265385; 
   // Domain + Time  
   fornfdm::solvers::SolverArgs args{
-    .mesh = make_Mesh(fornfdm::linspaced(30,0.0,pi), 1), 
-    .times = std::make_shared<const fornfdm::Vector>(fornfdm::linspaced(300,0.0,0.5))
+    /*.mesh=*/make_Mesh(fornfdm::linspaced(30,0.0,pi), 1), 
+    /*.times=*/std::make_shared<const fornfdm::Vector>(fornfdm::linspaced(300,0.0,0.5))
   }; 
 
   // Initial Conditions  
@@ -54,8 +54,8 @@ TEST(SolverSuite, OneDimImplicitSolver){
   constexpr double pi = 3.14159265385; 
   // Domain + Time  
   fornfdm::solvers::SolverArgs args{
-    .mesh = make_Mesh(fornfdm::linspaced(30,0.0,pi), 1), 
-    .times = std::make_shared<const fornfdm::Vector>(fornfdm::linspaced(300,0.0,0.5))
+    /*.mesh=*/make_Mesh(fornfdm::linspaced(30,0.0,pi), 1), 
+    /*.times=*/std::make_shared<const fornfdm::Vector>(fornfdm::linspaced(300,0.0,0.5))
   }; 
 
   // Initial Conditions  
@@ -87,8 +87,8 @@ TEST(SolverSuite, OneDimCrankNicolsonSolver){
   constexpr double pi = 3.14159265385; 
   // Domain + Time  
   fornfdm::solvers::SolverArgs args{
-    .mesh = make_Mesh(fornfdm::linspaced(30,0.0,pi), 1), 
-    .times = std::make_shared<const fornfdm::Vector>(fornfdm::linspaced(300,0.0,0.5))
+    /*.mesh=*/make_Mesh(fornfdm::linspaced(30,0.0,pi), 1), 
+    /*.times=*/std::make_shared<const fornfdm::Vector>(fornfdm::linspaced(300,0.0,0.5))
   }; 
 
   // Initial Conditions  
@@ -179,8 +179,8 @@ TEST(InterpolationSuite, OneDimInterpolator){
   constexpr double pi = 3.14159265385; 
   // Domain + Time  
   fornfdm::solvers::SolverArgs args{
-    .mesh = std::make_shared<const fornfdm::Mesh>(fornfdm::linspaced(30,0.0,pi), 1), 
-    .times = std::make_shared<const fornfdm::RealVector>(fornfdm::linspaced(300,0.0,0.5))
+    /*.mesh=*/std::make_shared<const fornfdm::Mesh>(fornfdm::linspaced(30,0.0,pi), 1), 
+    /*.times=*/std::make_shared<const fornfdm::RealVector>(fornfdm::linspaced(300,0.0,0.5))
   }; 
 
   // Initial Conditions  

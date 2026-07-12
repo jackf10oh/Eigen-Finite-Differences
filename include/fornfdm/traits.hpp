@@ -12,7 +12,7 @@
 #include<type_traits> // decay_t 
 #include<Eigen/Core>
 #include<Eigen/src/Core/util/Macros.h>
-#include<Eigen/src/Core/util/Constants.H> 
+#include<Eigen/src/Core/util/Constants.h> 
 #include<Eigen/src/Core/util/ForwardDeclarations.h>  // CwiseUnaryOp, CwiseBinaryOp, 
 #include<Eigen/src/Core/EigenBase.h> 
 #include<Eigen/src/SparseCore/SparseUtil.h> // forward declares SparseMatrix<...> 

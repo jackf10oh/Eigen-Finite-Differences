@@ -194,7 +194,7 @@ template<class Callable>
 auto discretize(std::shared_ptr<const fornfdm::Mesh> mesh, const Callable& func)
 {
   std::size_t s = mesh->sizesProduct(); 
-  constexpr std::size_t N = fornfdm::internal::callable_traits<Callable>::arity; 
+  static constexpr std::size_t N = fornfdm::internal::callable_traits<Callable>::arity; 
   auto lam = [func, m = std::move(mesh)](std::size_t i){ return fornfdm::Coordinate<N>(m.get(), i).apply(func); }; 
   return Eigen::CwiseNullaryOp<decltype(lam), fornfdm::Vector>(s, 1, std::move(lam)); 
 }

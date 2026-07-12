@@ -60,13 +60,13 @@ TEST(FornbergSuite, BasicNodes){
 
   // forward. 9 nodes. 3rd order -> 45 entries
   fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+9, nodes[0], 3, result.begin()); 
-  fornfdm::Scalar forward_third_09[45] = {
+  fornfdm::Scalar forward_third_09[36] = {
     1, 0, 0, 0, 0, 0, 0, 0, 0,
     -761.0/280, 8, -14, 56.0/3, -35.0/2, 56.0/5, -14.0/3, 8.0/7, -1.0/8, 
     29531.0/5040, -962.0/35, 621.0/10, -4006.0/45, 691.0/8, -282.0/5, 2143.0/90, -206.0/35, 363.0/560, 
     -801.0/80, 349.0/6, -18353.0/120, 2391.0/10, -1457.0/6, 4891.0/30, -561.0/8, 527.0/30, -469.0/240
   }; 
-  validate_weights(forward_third_09, 45); 
+  validate_weights(forward_third_09, 36); 
 };
 
 TEST(FornbergSuite, ShiftedNodes01){
@@ -118,13 +118,13 @@ TEST(FornbergSuite, ShiftedNodes01){
 
   // forward. 9 nodes. 3rd order -> 45 entries
   fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+9, nodes[0], 3, result.begin()); 
-  fornfdm::Scalar forward_third_09[45] = {
+  fornfdm::Scalar forward_third_09[36] = {
     1, 0, 0, 0, 0, 0, 0, 0, 0,
     -761.0/280, 8, -14, 56.0/3, -35.0/2, 56.0/5, -14.0/3, 8.0/7, -1.0/8, 
     29531.0/5040, -962.0/35, 621.0/10, -4006.0/45, 691.0/8, -282.0/5, 2143.0/90, -206.0/35, 363.0/560, 
     -801.0/80, 349.0/6, -18353.0/120, 2391.0/10, -1457.0/6, 4891.0/30, -561.0/8, 527.0/30, -469.0/240
   }; 
-  validate_weights(forward_third_09, 45); 
+  validate_weights(forward_third_09, 36); 
 };
 
 TEST(FornbergSuite, ShiftedNodes02){
@@ -176,13 +176,13 @@ TEST(FornbergSuite, ShiftedNodes02){
 
   // forward. 9 nodes. 3rd order -> 45 entries
   fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+9, nodes[0], 3, result.begin()); 
-  fornfdm::Scalar forward_third_09[45] = {
+  fornfdm::Scalar forward_third_09[36] = {
     1, 0, 0, 0, 0, 0, 0, 0, 0,
     -761.0/280, 8, -14, 56.0/3, -35.0/2, 56.0/5, -14.0/3, 8.0/7, -1.0/8, 
     29531.0/5040, -962.0/35, 621.0/10, -4006.0/45, 691.0/8, -282.0/5, 2143.0/90, -206.0/35, 363.0/560, 
     -801.0/80, 349.0/6, -18353.0/120, 2391.0/10, -1457.0/6, 4891.0/30, -561.0/8, 527.0/30, -469.0/240
   }; 
-  validate_weights(forward_third_09, 45); 
+  validate_weights(forward_third_09, 36); 
 };
 
 TEST(FornbergSuite, ScaledNodes01){

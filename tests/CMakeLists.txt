@@ -4,9 +4,8 @@ add_executable(tests_fornberg
 
 target_link_libraries(tests_fornberg
   PRIVATE fornfdm
-  PRIVATE GTest::gtest 
-  PRIVATE GTest::gtest_main 
-  PRIVATE pthread # required by GTest
+  PRIVATE GTest::gmock_main 
+  # PRIVATE pthread # required by GTest # removed for MSVC to compile.
 )
 
 add_executable(tests_linops
@@ -15,9 +14,8 @@ add_executable(tests_linops
 
 target_link_libraries(tests_linops
   PRIVATE fornfdm
-  PRIVATE GTest::gtest 
-  PRIVATE GTest::gtest_main 
-  PRIVATE pthread # required by GTest
+  PRIVATE GTest::gmock_main 
+  # PRIVATE pthread # required by GTest # removed for MSVC to compile.
 )
 
 add_executable(tests_solvers
@@ -26,9 +24,8 @@ add_executable(tests_solvers
 
 target_link_libraries(tests_solvers
   PRIVATE fornfdm
-  PRIVATE GTest::gtest 
-  PRIVATE GTest::gtest_main 
-  PRIVATE pthread # required by GTest
+  PRIVATE GTest::gmock_main 
+  # PRIVATE pthread # required by GTest # removed for MSVC to compile.
 )
 
 include(GoogleTest)

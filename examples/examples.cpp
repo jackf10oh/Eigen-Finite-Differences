@@ -22,8 +22,8 @@ int main()
   // Domain + Times  
   constexpr double pi = 3.14159265385; 
   fornfdm::solvers::SolverArgs args{
-    .mesh = make_Mesh(fornfdm::linspaced(20,0.0,pi), 1), 
-    .times = std::make_shared<const fornfdm::Vector>(fornfdm::linspaced(100,0.0,0.5))
+    /*.mesh=*/ make_Mesh(fornfdm::linspaced(20,0.0,pi), 1), 
+    /*.times=*/ std::make_shared<const fornfdm::Vector>(fornfdm::linspaced(100,0.0,0.5))
   }; 
 
   // Initial Conditions  
