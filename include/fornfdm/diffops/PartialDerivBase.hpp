@@ -47,9 +47,9 @@ struct Evaluator<PartialDerivBase<Derived>> : public EvaluatorBase<PartialDerivB
   Evaluator(const PartialDerivBase<Derived>& xpr) : m_derived_eval(xpr.derived()){}
 
   template<std::size_t N>
-  auto evalWeightsCoordsTime(const fornfdm::Scalar* weights, std::size_t weights_per_order, const fornfdm::Coordinate<N>& coords, fornfdm::Real t)
-  {
-    return m_derived_eval.evalWeightsCoordsTime(weights, weights_per_order, coords, t); 
+  auto createReader(const fornfdm::Coordinate<N>& coord, fornfdm::Real t) const
+  { 
+    return m_derived_eval.template createReader<N>(coord,t);
   }
 }; 
 
