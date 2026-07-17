@@ -300,7 +300,6 @@ class Executor
       }
       else{
         // otherwise return product of 1/(sum(scalar) + (sum(Mats))
-        std::cout << "correct branch hit" << std::endl; 
         fornfdm::Real s = std::apply(
             [this](auto&&... coeffs){
               return (coeffs.template coeffAt<numStoredTimes-1, numStoredTimes>(m_weights_arr) + ...); 

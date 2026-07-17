@@ -7,7 +7,26 @@
 #include<fornfdm/all.hpp>
 using namespace fornfdm;
 
-static void BENCHMARK_setMesh_order_1_direction_0(benchmark::State &state)
+static void fornberg_algo(benchmark::State &state)
+{
+  for (auto _ : state)
+  {
+    state.PauseTiming();
+    int n_nodes = state.range(0);  
+    int order_m = state.range(1);
+    fornfdm::Vector v = fornfdm::linspaced(n_nodes, 0.0, n_nodes - 1);  
+    fornfdm::Vector u(n_nodes * (order_m + 1));  
+    state.ResumeTiming(); 
+    fornfdm::utils::fornberg(
+      v.cbegin(), std::next(v.cbegin(),n_nodes), 
+      0.0, 
+      order_m, 
+      u.begin()
+    );
+  }
+};
+
+static void setMesh_order_1_direction_0(benchmark::State &state)
 {
   for (auto _ : state)
   {
@@ -20,7 +39,7 @@ static void BENCHMARK_setMesh_order_1_direction_0(benchmark::State &state)
   }
 };
 
-static void BENCHMARK_setMesh_order_2_direction_0(benchmark::State &state)
+static void setMesh_order_2_direction_0(benchmark::State &state)
 {
   for (auto _ : state)
   {
@@ -33,7 +52,7 @@ static void BENCHMARK_setMesh_order_2_direction_0(benchmark::State &state)
   }
 };
 
-static void BENCHMARK_setMesh_order_3_direction_0(benchmark::State &state)
+static void setMesh_order_3_direction_0(benchmark::State &state)
 {
   for (auto _ : state)
   {
@@ -46,7 +65,7 @@ static void BENCHMARK_setMesh_order_3_direction_0(benchmark::State &state)
   }
 };
 
-static void BENCHMARK_setMesh_saxby(benchmark::State &state)
+static void setMesh_saxby(benchmark::State &state)
 {
   for (auto _ : state)
   {
@@ -59,7 +78,7 @@ static void BENCHMARK_setMesh_saxby(benchmark::State &state)
   }
 }; 
 
-static void BENCHMARK_setMesh_sum(benchmark::State &state)
+static void setMesh_sum(benchmark::State &state)
 {
   for (auto _ : state)
   {
@@ -72,7 +91,7 @@ static void BENCHMARK_setMesh_sum(benchmark::State &state)
   }
 }; 
 
-static void BENCHMARK_explicit_euler_1d(benchmark::State &state)
+static void explicit_euler_1d(benchmark::State &state)
 {
   for(auto _ : state)
   {
@@ -106,7 +125,7 @@ static void BENCHMARK_explicit_euler_1d(benchmark::State &state)
   }
 }
 
-static void BENCHMARK_implicit_euler_1d(benchmark::State &state)
+static void implicit_euler_1d(benchmark::State &state)
 {
   for(auto _ : state)
   {
@@ -140,7 +159,7 @@ static void BENCHMARK_implicit_euler_1d(benchmark::State &state)
   }
 }
 
-static void BENCHMARK_crank_nicolson_1d(benchmark::State &state)
+static void crank_nicolson_1d(benchmark::State &state)
 {
   for(auto _ : state)
   {
@@ -174,13 +193,14 @@ static void BENCHMARK_crank_nicolson_1d(benchmark::State &state)
   }
 }
 
-BENCHMARK(BENCHMARK_setMesh_order_1_direction_0)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
-BENCHMARK(BENCHMARK_setMesh_order_2_direction_0)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
-BENCHMARK(BENCHMARK_setMesh_order_3_direction_0)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
-BENCHMARK(BENCHMARK_setMesh_saxby)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
-BENCHMARK(BENCHMARK_setMesh_sum)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
-BENCHMARK(BENCHMARK_explicit_euler_1d)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});
-BENCHMARK(BENCHMARK_implicit_euler_1d)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});
-BENCHMARK(BENCHMARK_crank_nicolson_1d)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});
+BENCHMARK(fornberg_algo)->Args({1,2})->Args({1,3})->Args({2,3})->Args({1,4})->Args({2,4})->Args({3,4});
+BENCHMARK(setMesh_order_1_direction_0)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(setMesh_order_2_direction_0)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(setMesh_order_3_direction_0)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(setMesh_saxby)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(setMesh_sum)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(explicit_euler_1d)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});
+BENCHMARK(implicit_euler_1d)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});
+BENCHMARK(crank_nicolson_1d)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});
 
 BENCHMARK_MAIN();
