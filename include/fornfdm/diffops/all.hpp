@@ -16,6 +16,7 @@
 #include "BackwardNodeSelector.hpp"
 #include "PeriodicNodeSelector.hpp"
 #include "EvaluatorBase.hpp"
+#include "TimeEvaluation.hpp"
 #include "PartialDerivBase.hpp"
 #include "KroneckerEvaluator.hpp"
 #include "NthPartialDeriv.hpp"

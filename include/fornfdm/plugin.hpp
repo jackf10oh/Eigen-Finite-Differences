@@ -119,7 +119,7 @@ void setTime(fornfdm::Real t)
   // else leaf matrices do nothing by default; 
 }
 
-fornfdm::Real getTime() const 
+fornfdm::Real getTime() const &
 {
   if constexpr(fornfdm::linops::internal::traits<Derived>::is_binop){
     // binary expressions hook lhs/rhs
@@ -151,6 +151,19 @@ fornfdm::Real getTime() const
   else{
     // leaf matrices return -1.0 by default 
     return -1.0;  
+  }
+}
+
+decltype(auto) evalTime(fornfdm::Real t) const
+{
+  if constexpr(fornfdm::linops::internal::traits<Derived>::is_binop){
+    return derived().functor()(derived().lhs().derived().evalTime(t), derived().rhs().derived().evalTime(t));
+  }
+  else if constexpr(fornfdm::linops::internal::traits<Derived>::is_unarop){
+    return derived().functor()(derived().nestedExpression().derived().evalTime(t));
+  }
+  else{
+    return derived(); // all other matrices just return themselves. 
   }
 }
 

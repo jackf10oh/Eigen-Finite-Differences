@@ -49,48 +49,45 @@ class BCPair: public OStepBase<BCPair<LBC_T,RBC_T>>
     ~BCPair()=default; 
 
     // Member Functions ==================================================================
+    using OStepBase<BCPair<LBC_T,RBC_T>>::applyBeforeMat;
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void applyBeforeMat(fornfdm::CSRMatrix& Mat, const TCtx& t, const Ctx& ctx) const
+    std::enable_if_t<STEP==StepType::Implicit, void> applyBeforeMat(fornfdm::CSRMatrix& Mat, const TCtx& t, const Ctx& ctx) const
     {
       auto m = ctx.getMesh(); 
-      if (m->numDims() != 1) throw std::runtime_error("incorrect # of dims passed to 1D boundary condition"); 
-      if constexpr(STEP == StepType::Implicit){ 
-        const auto& axis = m->getAxis(0);
-        Mat.row(0) *= 0.0;
-        BoundaryRow top_row = left_bc.getTopRow(t.next, axis);
-        for(auto n=0; n<top_row.nnz; ++n)
-        {
-          Mat.coeffRef(0,n) = top_row.vals[n];
-        }
-        Mat.row(axis.size()-1) *= 0.0;
-        BoundaryRow bottom_row = right_bc.getBottomRow(t.next, axis);
-        for(auto n=0; n<bottom_row.nnz; ++n)
-        {
-          Mat.coeffRef(axis.size()-1,axis.size()-bottom_row.nnz+n) = bottom_row.vals[n];
-        }
+      assert((m->numDims() == 1) && "incorrect # of dims passed to 1D boundary condition. use BCList instead");
+      const auto& axis = m->getAxis(0);
+      Mat.row(0) *= 0.0;
+      BoundaryRow top_row = left_bc.getTopRow(t.next, axis);
+      for(auto n=0; n<top_row.nnz; ++n)
+      {
+        Mat.coeffRef(0,n) = top_row.vals[n];
+      }
+      Mat.row(axis.size()-1) *= 0.0;
+      BoundaryRow bottom_row = right_bc.getBottomRow(t.next, axis);
+      for(auto n=0; n<bottom_row.nnz; ++n)
+      {
+        Mat.coeffRef(axis.size()-1,axis.size()-bottom_row.nnz+n) = bottom_row.vals[n];
       }
     }
 
+    using OStepBase<BCPair<LBC_T,RBC_T>>::applyBeforeVec;
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void applyBeforeVec(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx) const
+    std::enable_if_t<STEP==StepType::Implicit, void> applyBeforeVec(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx) const
     {
       auto m = ctx.getMesh(); 
-      if (m->numDims() != 1) throw std::runtime_error("incorrect # of dims passed to 1D boundary condition");        
-      if constexpr(STEP == StepType::Implicit){
-        left_bc.setImpSolLeft(t.next, m->getAxis(0), u); 
-        right_bc.setImpSolRight(t.next, m->getAxis(0), u); 
-      }
+      assert((m->numDims()==1) && "incorrect # of dims passed to 1D boundary condition");        
+      left_bc.setImpSolLeft(t.next, m->getAxis(0), u); 
+      right_bc.setImpSolRight(t.next, m->getAxis(0), u); 
     }
 
+    using OStepBase<BCPair<LBC_T,RBC_T>>::applyAfterVec;
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
-    void applyAfterVec(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx) const 
+    std::enable_if_t<STEP==StepType::Explicit, void> applyAfterVec(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx) const 
     {
       auto m = ctx.getMesh(); 
-      if (m->numDims() != 1) throw std::runtime_error("incorrect # of dims passed to 1D boundary condition"); 
-      if constexpr(STEP == StepType::Explicit){
-        left_bc.setExpSolLeft(t.next, m->getAxis(0), u); 
-        right_bc.setExpSolRight(t.next, m->getAxis(0), u); 
-      }  
+      assert((m->numDims() == 1) && "incorrect # of dims passed to 1D boundary condition"); 
+      left_bc.setExpSolLeft(t.next, m->getAxis(0), u); 
+      right_bc.setExpSolRight(t.next, m->getAxis(0), u); 
     }
 };
 
