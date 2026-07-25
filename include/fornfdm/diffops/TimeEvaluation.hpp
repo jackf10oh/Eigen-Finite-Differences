@@ -19,7 +19,7 @@ namespace fornfdm{
   namespace linops{
 
 // Forward Declaration ----------
-template<class ArgType, std::size_t max_args = internal::traits<ArgType>::max_num_args_called>
+template<class ArgType, std::size_t max_args> // also in PartialDerivBase.hpp with defaults for max_args
 class TimeEvaluation;
 
 namespace internal{

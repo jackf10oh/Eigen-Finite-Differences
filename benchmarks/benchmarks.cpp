@@ -91,6 +91,39 @@ static void setMesh_sum(benchmark::State &state)
   }
 }; 
 
+static void setTime_assignment(benchmark::State &state)
+{
+  for (auto _ : state)
+  {
+    state.PauseTiming();
+    int r = state.range(0);  
+    auto mesh = make_Mesh(linspaced(r+1,0.0,double(r)), 1);
+    linops::TimeDepCoeff func = [](fornfdm::Real t, fornfdm::Scalar x){ return t + x*x; };  
+    auto D = func * linops::NthPartialDeriv<1,0>{} + linops::NthPartialDeriv<2,0>{}; 
+    D.setMesh(mesh); 
+    state.ResumeTiming(); 
+    D.setTime(10.0); 
+    fornfdm::CSRMatrix stencil = D;
+    benchmark::DoNotOptimize(stencil);
+  }
+}; 
+
+static void evalTime_assignment(benchmark::State &state)
+{
+  for (auto _ : state)
+  {
+    state.PauseTiming();
+    int r = state.range(0);  
+    auto mesh = make_Mesh(linspaced(r+1,0.0,double(r)), 1);
+    linops::TimeDepCoeff func = [](fornfdm::Real t, fornfdm::Scalar x){ return t + x*x; };  
+    auto D = func * linops::NthPartialDeriv<1,0>{} + linops::NthPartialDeriv<2,0>{}; 
+    D.setMesh(mesh); 
+    state.ResumeTiming(); 
+    fornfdm::CSRMatrix stencil = D.evalTime(10.0);
+    benchmark::DoNotOptimize(stencil);
+  }
+}; 
+
 static void explicit_euler_1d(benchmark::State &state)
 {
   for(auto _ : state)
@@ -199,6 +232,8 @@ BENCHMARK(setMesh_order_2_direction_0)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(setMesh_order_3_direction_0)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(setMesh_saxby)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(setMesh_sum)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(setTime_assignment)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(evalTime_assignment)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(explicit_euler_1d)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});
 BENCHMARK(implicit_euler_1d)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});
 BENCHMARK(crank_nicolson_1d)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});

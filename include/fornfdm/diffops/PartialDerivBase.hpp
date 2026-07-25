@@ -15,16 +15,18 @@
 #include<Eigen/SparseCore>
 #include "../types.hpp"
 #include "EvaluatorBase.hpp"
-#include "TimeEvaluation.hpp"
 
 namespace fornfdm{
 namespace linops{
 
+// Forward Declarations ----------
 template<class Derived> class PartialDerivBase; 
+
+template<class ArgType, std::size_t max_args = internal::traits<ArgType>::max_num_args_called>
+class TimeEvaluation;
 
 namespace internal{ 
 
-// forward declaration ---
 template<class Derived, std::size_t num_args = linops::internal::traits<Derived>::max_num_args_called>
 struct KroneckerEvaluator;
 
@@ -131,8 +133,9 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
 
     decltype(auto) evalTime(fornfdm::Real t) const &
     {
-      if constexpr(fornfdm::linops::internal::traits<Derived>::is_timedep){
-        return TimeEvaluation(derived(), this->m_mesh_raw, t);
+      using traits_t = fornfdm::linops::internal::traits<Derived>;
+      if constexpr(traits_t::is_timedep){
+        return linops::TimeEvaluation<Derived, traits_t::max_num_args_called>(derived(), this->m_mesh_raw, t);
       }
       else{
         return *this; // autonomous operators just return themselves. 
@@ -275,5 +278,6 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
 } // end namespace fornfdm 
 
 #include "KroneckerEvaluator.hpp"
+#include "TimeEvaluation.hpp"
 
 #endif // PartialDerivBase.hpp  
