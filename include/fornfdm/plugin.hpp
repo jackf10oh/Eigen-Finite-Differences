@@ -21,6 +21,7 @@
 
 // fornfdm plugin dependencies
 #include "diffops/traits.hpp"
+#include "diffops/functors.hpp"
 
 // set Eigen's plugin as this file  
 #ifndef EIGEN_SPARSEMATRIXBASE_PLUGIN
@@ -31,10 +32,6 @@
 #endif // FORNFDM_PLUGIN_H
 
 #else // EIGEN_SPARSEMATRIXBASE_H
-
-#ifndef FORNFDM_DIFFOPS_TRAITS_H
-#error "<fornfdm/plugin.hpp> depends on <fornfdm/diffops/traits.hpp>"
-#endif
 
 public: 
 // Member Functions ================================================================== 
@@ -157,10 +154,10 @@ fornfdm::Real getTime() const &
 decltype(auto) evalTime(fornfdm::Real t) const
 {
   if constexpr(fornfdm::linops::internal::traits<Derived>::is_binop){
-    return derived().functor()(derived().lhs().derived().evalTime(t), derived().rhs().derived().evalTime(t));
+    return fornfdm::linops::internal::ConvertedFO(derived().functor())(derived().lhs().derived().evalTime(t), derived().rhs().derived().evalTime(t));
   }
   else if constexpr(fornfdm::linops::internal::traits<Derived>::is_unarop){
-    return derived().functor()(derived().nestedExpression().derived().evalTime(t));
+    return fornfdm::linops::internal::ConvertedFO(derived().functor())(derived().nestedExpression().derived().evalTime(t));
   }
   else{
     return derived(); // all other matrices just return themselves. 
