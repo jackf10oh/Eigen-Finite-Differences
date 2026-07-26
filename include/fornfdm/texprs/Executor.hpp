@@ -50,7 +50,7 @@ class Executor
     std::array<fornfdm::Real, numStoredTimes> m_stored_times; 
 
     // list of solutions u0, u1, ..., un-1 at times t0, t1, ..., tn-1 
-    std::array<fornfdm::Vector, numStoredTimes-1> m_stored_sols; 
+    std::array<fornfdm::Vector, numStoredSols> m_stored_sols; 
 
     // forberg weights calculator 
     std::array<fornfdm::Real, numStoredTimes * (TimeDeriv::maxOrder+1)> m_weights_arr; 
@@ -154,16 +154,16 @@ class Executor
     Iter pushSolutionRange(Iter start, Iter end)
     {
       std::size_t d = std::distance(start,end); 
-      if(d >= numStoredTimes-1) 
+      if(d >= numStoredSols) 
       {
-        // move [start+d-numStoredTimes-1,end) to last entries of m_stored_sols
-        auto it = std::next(start, d - (numStoredTimes-1)); 
+        // move [start+d-numStoredSols,end) to last entries of m_stored_sols
+        auto it = std::next(start, d - numStoredSols); 
         std::move(it, end, m_stored_sols.begin());
         return it; 
       }
       else
       {
-        // push numStoredTimes - 1 - d solutions to front of m_stored_sols
+        // push numStoredSols - d solutions to front of m_stored_sols
         std::move( 
             std::prev(m_stored_sols.end(), d),
             m_stored_sols.end(),
@@ -173,7 +173,7 @@ class Executor
         std::move(
             start,
             end,
-            std::next(m_stored_sols.begin(), numStoredTimes - 1 - d)
+            std::next(m_stored_sols.begin(), numStoredSols - d)
         ); 
         return start;
       }
@@ -217,7 +217,7 @@ class Executor
 
     decltype(auto) getRhsExpression()
     {
-      return getRhsExpression_impl(std::make_index_sequence<numStoredTimes-1>{}); 
+      return getRhsExpression_impl(std::make_index_sequence<numStoredSols>{}); 
     }
 
     // getters to m_inv_coeff + m_rhs_vec 
