@@ -75,7 +75,7 @@ int main()
   // Domain + Times
   fornfdm::solvers::SolverArgs args{
     /*.mesh=*/ make_Mesh(fornfdm::linspaced(20,0.0,3.14159), 1), // equal spaced on [0,pi] 
-    /*.times=*/ std::make_shared<fornfdm::RealVector>(fornfdm::linspaced(100,0.0,0.5)) 
+    /*.times=*/ std::make_shared<const fornfdm::RealVector>(fornfdm::linspaced(100,0.0,0.5)) 
   }; 
 
   // Initial Conditions
