@@ -4,11 +4,10 @@
 
 #include<iostream>
 #include<iomanip>
-#include<fornfdm/plugin.hpp>
-#include<fornfdm/all.hpp>
-#include<fornfdm/utilities/print.hpp> 
-#include<fornfdm/utilities/BumpFunc.hpp>
-#include<Eigen/SparseCore> // macro plugin takes effect. 
+#include<fornfdm/plugin.hpp> // defines EIGEN_SPARSEMATRIXBASE_PLUGIN macro
+#include<fornfdm/all.hpp> // plugin macro takes effect
+#include<fornfdm/utilities/print.hpp>
+#include<Eigen/SparseCore>
 
 using namespace fornfdm; 
 
