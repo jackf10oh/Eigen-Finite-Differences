@@ -21,6 +21,7 @@
 
 // fornfdm plugin dependencies
 #include "diffops/traits.hpp"
+#include "diffops/functors.hpp"
 
 // set Eigen's plugin as this file  
 #ifndef EIGEN_SPARSEMATRIXBASE_PLUGIN
@@ -31,10 +32,6 @@
 #endif // FORNFDM_PLUGIN_H
 
 #else // EIGEN_SPARSEMATRIXBASE_H
-
-#ifndef FORNFDM_DIFFOPS_TRAITS_H
-#error "<fornfdm/plugin.hpp> depends on <fornfdm/diffops/traits.hpp>"
-#endif
 
 public: 
 // Member Functions ================================================================== 
@@ -119,7 +116,7 @@ void setTime(fornfdm::Real t)
   // else leaf matrices do nothing by default; 
 }
 
-fornfdm::Real getTime() const 
+fornfdm::Real getTime() const &
 {
   if constexpr(fornfdm::linops::internal::traits<Derived>::is_binop){
     // binary expressions hook lhs/rhs
@@ -151,6 +148,19 @@ fornfdm::Real getTime() const
   else{
     // leaf matrices return -1.0 by default 
     return -1.0;  
+  }
+}
+
+decltype(auto) evalTime(fornfdm::Real t) const
+{
+  if constexpr(fornfdm::linops::internal::traits<Derived>::is_binop){
+    return fornfdm::linops::internal::ConvertedFO(derived().functor())(derived().lhs().derived().evalTime(t), derived().rhs().derived().evalTime(t));
+  }
+  else if constexpr(fornfdm::linops::internal::traits<Derived>::is_unarop){
+    return fornfdm::linops::internal::ConvertedFO(derived().functor())(derived().nestedExpression().derived().evalTime(t));
+  }
+  else{
+    return derived(); // all other matrices just return themselves. 
   }
 }
 

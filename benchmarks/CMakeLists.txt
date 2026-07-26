@@ -7,9 +7,8 @@ target_compile_definitions(benchmarks PRIVATE NDEBUG)
 target_link_libraries(benchmarks
   PRIVATE fornfdm 
   PRIVATE benchmark::benchmark
-  PRIVATE GTest::gtest 
-  PRIVATE GTest::gtest_main 
-  PRIVATE pthread # required by GTest
+  PRIVATE GTest::gmock_main
+  # PRIVATE pthread # required by GTest # unnecessary.
 )
 
 if(USE_OPENMP)

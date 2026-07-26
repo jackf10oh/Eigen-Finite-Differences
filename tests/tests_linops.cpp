@@ -31,6 +31,7 @@ struct TestStruct
     static_assert(std::is_same_v<ResultTag, CheckTag>, "node selector doesn't take maximum!");
   };
 };
+
 TEST(NodeSelectorSuite, BasicInterface){
   // centered
   TestStruct<linops::Centered, linops::Centered>::CheckTags<0,1>{};
@@ -280,6 +281,77 @@ TEST(LinopsSuite, TimeDepProduct1D){
   test_lam([](fornfdm::Real t, fornfdm::Scalar x){ return t*x*x + 2.0*t*x - 7.5*x + 4.3; });
   test_lam([](fornfdm::Real t, fornfdm::Scalar x){ return x*std::sin(t); });
 };
+
+TEST(LinopsSuite, EvalTimeMatchesSetTime1D){
+  linops::TimeDepCoeff c = [](fornfdm::Real t, fornfdm::Scalar x){ return t + x*x; };
+  auto xpr = c * linops::NthPartialDeriv<1,0>{} + linops::NthPartialDeriv<2,0>{}; 
+
+  auto test_lam = [&](int nrows, fornfdm::Real t)
+  {
+    auto mesh = make_Mesh(fornfdm::linspaced(nrows, 0.0, nrows-1),1);
+    xpr.setMesh(mesh); 
+    fornfdm::CSRMatrix eval_stencil = xpr.evalTime(t); 
+    
+    xpr.setTime(t); 
+    fornfdm::CSRMatrix set_stencil = xpr; 
+
+    for(int i=0; i<nrows; ++i)
+    {
+      for(int j=0; j<nrows; ++j)
+      {
+        ASSERT_EQ(eval_stencil.coeff(i,j), set_stencil.coeff(i,j));
+      }
+    }
+  };
+  test_lam(20, 0.0); 
+  test_lam(20, 1.0); 
+  test_lam(20, 4.0);
+  test_lam(100, 0.0); 
+  test_lam(100, 1.0); 
+  test_lam(100, 4.0);
+}
+
+TEST(LinopsSuite, EvalTimeMatchesSetTime2D){
+
+  linops::AutonomousCoeff a = [](fornfdm::Scalar x, fornfdm::Scalar y){ return x * y + y;}; 
+  auto dir_00 = a * linops::NthPartialDeriv<2,0>{};
+
+  linops::TimeDepCoeff c = [](fornfdm::Real t, fornfdm::Scalar x){ return t + x*x; };
+  auto dir_01 = c * linops::NthPartialDeriv<1,1>{} + linops::NthPartialDeriv<2,1>{}; 
+
+  auto xpr = dir_01 - dir_00;
+
+  auto test_lam = [&](int n, int m, fornfdm::Real t)
+  {
+    auto mesh = make_Mesh(fornfdm::linspaced(n, 0.0, n-1),fornfdm::linspaced(m, 0.0, m-1));
+    
+    xpr.setMesh(mesh); 
+    fornfdm::CSRMatrix eval_stencil = xpr.evalTime(t); 
+    
+    xpr.setTime(t); 
+    fornfdm::CSRMatrix set_stencil = xpr; 
+
+    for(int i=0; i < n*m; ++i)
+    {
+      for(int j=0; j < n*m; ++j)
+      {
+        ASSERT_EQ(eval_stencil.coeff(i,j), set_stencil.coeff(i,j));
+      }
+    }
+  };
+  test_lam(11, 11, 0.0);
+  test_lam(11, 11, 0.0);
+  test_lam(11, 11, 0.0); 
+
+  test_lam(11, 21, 0.0);
+  test_lam(11, 21, 0.0);
+  test_lam(11, 21, 0.0); 
+
+  test_lam(21, 21, 0.0);
+  test_lam(21, 21, 0.0);
+  test_lam(21, 21, 0.0); 
+  
+}
 
 // todo Kronecker evaluator
 

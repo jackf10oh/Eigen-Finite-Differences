@@ -11,6 +11,7 @@
 #include<cstdint>
 #include<cassert>
 #include<tuple>
+#include<type_traits>
 #include<Eigen/Core>
 #include<Eigen/SparseCore>
 #include "../../types.hpp"
@@ -49,48 +50,46 @@ class BCList : public OStepBase<BCList<BCTypes...>>
     template<StepType STEP, typename TIMECTX = TimeContext<>, typename CONSTCTX = Context<> >
     void applyBeforeMat(fornfdm::CSRMatrix& mat, const TIMECTX& t, const CONSTCTX& ctx) const
     {      
-      // check args are compaitble 
-      assert((ctx.getMesh()->numDims() == this->numDims) && "BCList applyBeforeMat error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
-
-      if constexpr(STEP == StepType::Implicit)
-      {    
+      if constexpr(STEP==StepType::Implicit)
+      {
+        // check args are compaitble 
+        assert((ctx.getMesh()->numDims() == this->numDims) && "BCList applyBeforeMat error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
         auto rolling_prods = make_rolling_prods(ctx.getMesh());
         auto boundary_row_pairs = make_row_pairs(t.next, ctx.getMesh());
         setStencilNoFill<numDims-1>(mat, 0, rolling_prods, boundary_row_pairs);
       }
-    } // end applyBeforeMat 
+    } 
 
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
     void applyBeforeVec(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx) const
     {
-      // check args are compaitble 
-      auto mesh = ctx.getMesh(); 
-      assert((mesh->numDims() == this->numDims) && "BCList applyBeforeVec error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
-
-      if constexpr(STEP == StepType::Implicit)
+      if constexpr(STEP==StepType::Implicit)
       {
+        // check args are compaitble 
+        auto mesh = ctx.getMesh(); 
+        assert((mesh->numDims() == this->numDims) && "BCList applyBeforeVec error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
         std::array<std::size_t, numDims> rolling_prods = make_rolling_prods((ctx.getMesh())); 
         setSolNoFill<true, numDims-1>(u.data(), 0, rolling_prods, ctx.getMesh(), t.next);
-      } // end if constexpr(step)
-    } // end applyBeforeVec 
+      }
+    }
 
+    using OStepBase<BCList<BCTypes...>>::applyAfterVec;
     template<StepType STEP, typename TCtx=TimeContext<>, typename Ctx=Context<> >
     void applyAfterVec(fornfdm::StrideRef u, const TCtx& t, const Ctx& ctx) const
     {
-      auto mesh = ctx.getMesh(); // get the MeshXD 
-      assert((mesh->numDims() == this->numDims) && "BCList applyAfterVec error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
-      
-      if constexpr(STEP == StepType::Explicit)
+      if constexpr(STEP==StepType::Explicit)
       {
+        auto mesh = ctx.getMesh(); // get the MeshXD 
+        assert((mesh->numDims() == this->numDims) && "BCList applyAfterVec error: Mesh.numDims() != size of tuple / list of 1D BCs "); 
         std::array<std::size_t, numDims> rolling_prods = make_rolling_prods((ctx.getMesh())); 
         setSolNoFill<false, numDims-1>(u.data(), 0, rolling_prods, ctx.getMesh(), t.next);
-      } // end if constexpr(step)
-    } // end applyAfterVec
+      }
+    }
 
   private:
     // Unreachable =========================================================== 
     auto make_rolling_prods(const fornfdm::Mesh* m) const
-    { 
+    {
       std::array<std::size_t, this->numDims> result;
       auto rolling = m->sizeOfDim(0);
       result[0] = rolling; 

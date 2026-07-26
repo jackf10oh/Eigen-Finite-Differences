@@ -19,11 +19,14 @@
 namespace fornfdm{
 namespace linops{
 
+// Forward Declarations ----------
 template<class Derived> class PartialDerivBase; 
+
+template<class ArgType, std::size_t max_args = internal::traits<ArgType>::max_num_args_called>
+class TimeEvaluation;
 
 namespace internal{ 
 
-// forward declaration ---
 template<class Derived, std::size_t num_args = linops::internal::traits<Derived>::max_num_args_called>
 struct KroneckerEvaluator;
 
@@ -47,9 +50,9 @@ struct Evaluator<PartialDerivBase<Derived>> : public EvaluatorBase<PartialDerivB
   Evaluator(const PartialDerivBase<Derived>& xpr) : m_derived_eval(xpr.derived()){}
 
   template<std::size_t N>
-  auto evalWeightsCoordsTime(const fornfdm::Scalar* weights, std::size_t weights_per_order, const fornfdm::Coordinate<N>& coords, fornfdm::Real t)
-  {
-    return m_derived_eval.evalWeightsCoordsTime(weights, weights_per_order, coords, t); 
+  auto createReader(const fornfdm::Coordinate<N>& coord, fornfdm::Real t) const
+  { 
+    return m_derived_eval.template createReader<N>(coord,t);
   }
 }; 
 
@@ -127,6 +130,18 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
       }
     }
     SharedConstMesh getMesh() const { return m_mesh_observed.lock(); }
+
+    decltype(auto) evalTime(fornfdm::Real t) const &
+    {
+      using traits_t = fornfdm::linops::internal::traits<Derived>;
+      if constexpr(traits_t::is_timedep){
+        return linops::TimeEvaluation<Derived, traits_t::max_num_args_called>(derived(), this->m_mesh_raw, t);
+      }
+      else{
+        return toEigen(); // autonomous operators go to Eigen matrix type
+      }
+    }
+
     void setTime(fornfdm::Real t){ 
       if constexpr(fornfdm::linops::internal::traits<Derived>::is_timedep){
         // update m_current_time + update m_stencil matrix 
@@ -191,7 +206,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
         for(std::size_t row_idx=0; row_idx<axis_size; ++row_idx)
         {
           // use node selector 
-          typename Evaluator::Row row(eval, m, m_prod_before * row_idx, t); 
+          typename Evaluator::Row row(eval, m, row_idx % m->sizeOfDim(traits_t::direction), row_idx, t); 
           // copy the indices into m_stencil's inner indices ptr
           m_stencil.outerIndexPtr()[row_idx] = row.offset(); 
           for(auto i=0; i<row.size(); ++i){
@@ -217,7 +232,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
         for(std::size_t row_idx=0; row_idx < product_before*axis_size; ++row_idx)
         {
           // use node selector 
-          typename Evaluator::Row row(eval, m, row_idx, t);
+          typename Evaluator::Row row(eval, m, (row_idx/product_before)%(m->sizeOfDim(traits_t::direction)), row_idx, t);
           // // copy the indices into m_stencil's inner indices ptr
           std::size_t inner_offset = (row.offset() * product_before)+(row.size()*(row_idx%product_before)); 
           std::size_t inset = row_idx%product_before; 
@@ -244,7 +259,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
         // write node wise expressions into each row of stencil 
         for(std::size_t row_idx=0; row_idx < num_repeats*product_before*axis_size; ++row_idx)
         {
-          typename Evaluator::Row row(eval, m, row_idx, t); 
+          typename Evaluator::Row row(eval, m, (row_idx/product_before)%(m->sizeOfDim(traits_t::direction)), row_idx, t); 
           std::size_t inner_offset = (nnz)*(row_idx/(product_before*axis_size))+(row.offset() * product_before)+(row.size()*(row_idx%product_before)); 
           std::size_t inset = (product_before*axis_size)*(row_idx/(product_before*axis_size)) + (row_idx%product_before); 
           m_stencil.outerIndexPtr()[row_idx] = inner_offset; 
@@ -263,5 +278,6 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
 } // end namespace fornfdm 
 
 #include "KroneckerEvaluator.hpp"
+#include "TimeEvaluation.hpp"
 
 #endif // PartialDerivBase.hpp  

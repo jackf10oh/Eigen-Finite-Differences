@@ -56,7 +56,7 @@ class ImplicitSolver : public SolverBase<ImplicitSolver<LhsType, RhsType, OStepT
     )
       : Base(l_init, r_init, std::move(ostep_init)), m_iterative_solver(std::move(s_init))
     {
-      static_assert(std::is_same_v<typename SparseIterativeSolver::MatrixType, fornfdm::CSRMatrix>, "must use iterative solver on fmd::Matrix"); 
+      static_assert(std::is_same_v<typename SparseIterativeSolver::MatrixType, fornfdm::CSRMatrix>, "must use iterative solver on fornfdm::CSRMatrix"); 
     }
 
     // not copyable!
@@ -108,15 +108,7 @@ class ImplicitSolver : public SolverBase<ImplicitSolver<LhsType, RhsType, OStepT
       { 
         time_ctx.next = *it; 
 
-        if constexpr(fornfdm::linops::internal::traits<RhsType>::is_timedep){
-          // set the operator to the right side of the step [t(n), t(n+1)] for implicit steps 
-          this->m_rhs.setTime(time_ctx.next); 
-          // should build an autonomous solver for these linops, since it evaluate the 
-          // expression at every step. but still save a little time
-          // we also can't check that outside steps won't change the mesh we operate on.  
-        }
-
-        // again using left side of [t(n), t(n+1)] time step 
+        // using right side of [t(n), t(n+1)] time step 
         executor.pushTime(time_ctx.next); 
         executor.calculate(time_ctx.next); 
 
@@ -125,7 +117,7 @@ class ImplicitSolver : public SolverBase<ImplicitSolver<LhsType, RhsType, OStepT
 
         // store the matrix into stencil 
         std::size_t s = this->m_rhs.rows(); 
-        stencil = fornfdm::utils::Identity(s,s) - (executor.getInvCoeff() * (this->m_rhs.toEigen()));
+        stencil = fornfdm::utils::Identity(s,s) - (executor.getInvCoeff() * (this->m_rhs.evalTime(time_ctx.next)));
         
         // outside steps matrix before step
         this->template tupleApplyBeforeMat<fornfdm::osteps::StepType::Implicit>(stencil, time_ctx, ctx); 
