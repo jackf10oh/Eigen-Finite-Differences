@@ -68,47 +68,33 @@ git clone https://github.com/jackf10oh/Fornberg-Finite-Differences
 <h3>Usage</h3>
 
 ```cpp
-// workaround to allow expressions of different rows/cols to be added 
-// before setMesh() sets their rows/cols to be equal
-#define eigen_assert(x)
+#include<fornfdm/plugin.hpp> 
 #include<fornfdm/all.hpp>
-#define EIGEN_SPARSEMATRIXBASE_PLUGIN <fornfdm/plugin.hpp> 
-
-#include<iostream>
-#include<iomanip>
-#include<fornfdm/utilities/print.hpp> 
-#include<fornfdm/utilities/BumpFunc.hpp>
-#include<Eigen/SparseCore> // macro plugin takes effect. 
-
-using namespace fornfdm; 
-
 int main()
 {
-  // Domain + Times  
-  constexpr double pi = 3.14159265385; 
+  // Domain + Times
   fornfdm::solvers::SolverArgs args{
-    .mesh = make_Mesh(fornfdm::linspaced(20,0.0,pi), 1), 
-    .times = std::make_shared<const fornfdm::Vector>(fornfdm::linspaced(100,0.0,0.5))
+    /*.mesh=*/ make_Mesh(fornfdm::linspaced(20,0.0,3.14159), 1), // equal spaced on [0,pi] 
+    /*.times=*/ std::make_shared<fornfdm::RealVector>(fornfdm::linspaced(100,0.0,0.5)) 
   }; 
 
-  // Initial Conditions  
+  // Initial Conditions
   auto v = fornfdm::discretize(args.mesh, [](double x){ return std::sin(x); }); 
-  args.initialConditions = { std::move(v) }; 
+  args.initialConditions = { v }; 
 
-  // LHS in time 
-  auto Ut = texprs::NthTimeDeriv<1>{}; 
+  // LHS in time
+  fornfdm::texprs::NthTimeDeriv<1> Ut; 
 
-  // RHS in space 
-  auto Uxx = linops::NthPartialDeriv<2,0>{}; 
+  // RHS in space
+  fornfdm::linops::NthPartialDeriv<2,0> Uxx; 
 
-  // Boundary Conditions 
-  auto left = osteps::Dirichlet(0.0); 
-  auto right = left;
-  osteps::BCPair bcs(left,right); 
+  // Boundary Conditions
+  fornfdm::osteps::Dirichlet left(0.0), right(0.0);
+  fornfdm::osteps::BCPair bcs(left,right); 
 
   // Solving. prints to std::cout.
-  solvers::ExplicitSolver my_solver(Ut,Uxx,std::tie(bcs));  
-  my_solver.calculate(args, solvers::PrintSaver{});
+  fornfdm::solvers::ExplicitSolver my_solver(Ut,Uxx,std::tie(bcs));  
+  my_solver.calculate(args, fornfdm::solvers::PrintSaver{});
 }
 ```
 
