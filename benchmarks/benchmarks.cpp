@@ -124,6 +124,50 @@ static void evalTime_assignment(benchmark::State &state)
   }
 }; 
 
+template<std::size_t M>
+static void Executor_getRhsExpression_assignment(benchmark::State &state)
+{
+  for(auto _ : state)
+  {
+    state.PauseTiming();
+    int r = state.range(0);
+    texprs::NthTimeDeriv<1> Ut; 
+    auto exec = texprs::make_Executor<M+1>(Ut);
+    for(int i=0; i< M+1; ++i)
+    {
+      fornfdm::Scalar t = i;
+      exec.pushTime(t);
+      fornfdm::Vector s = fornfdm::linspaced(r, (r-1) * i, (r-1) * (i+1));
+      exec.pushSolution(s);
+    }
+    fornfdm::Vector dest(r); // size r. don't want allocation in the benchmark. 
+    state.ResumeTiming(); 
+    dest = exec.getRhsExpression();
+    benchmark::DoNotOptimize(dest);
+  }
+}
+
+template<std::size_t M>
+static void Executor_rotateStoredSolutions(benchmark::State &state)
+{
+  for(auto _ : state)
+  {
+    state.PauseTiming();
+    int r = state.range(0);
+    texprs::NthTimeDeriv<1> Ut; 
+    auto exec = texprs::make_Executor<M+1>(Ut);
+    for(int i=0; i< M+1; ++i)
+    {
+      fornfdm::Scalar t = i;
+      exec.pushTime(t);
+      fornfdm::Vector s = fornfdm::linspaced(r, (r-1) * i, (r-1) * (i+1));
+      exec.pushSolution(s);
+    }
+    state.ResumeTiming(); 
+    exec.rotateStoredSolutions(1);
+  }
+}
+
 static void explicit_euler_1d(benchmark::State &state)
 {
   for(auto _ : state)
@@ -234,6 +278,12 @@ BENCHMARK(setMesh_saxby)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(setMesh_sum)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(setTime_assignment)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(evalTime_assignment)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(Executor_getRhsExpression_assignment<1>)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(Executor_getRhsExpression_assignment<2>)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(Executor_getRhsExpression_assignment<4>)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(Executor_rotateStoredSolutions<1>)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(Executor_rotateStoredSolutions<2>)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(Executor_rotateStoredSolutions<4>)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(explicit_euler_1d)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});
 BENCHMARK(implicit_euler_1d)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});
 BENCHMARK(crank_nicolson_1d)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});
