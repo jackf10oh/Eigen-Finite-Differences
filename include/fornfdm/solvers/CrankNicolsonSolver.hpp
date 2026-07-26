@@ -102,11 +102,7 @@ class CrankNicolsonSolver : public SolverBase<CrankNicolsonSolver<LhsType, RhsTy
       fornfdm::Vector solution_u;  
 
       // need to get first linop at time.now before it caches the next time steps... 
-      
-      if constexpr(fornfdm::linops::internal::traits<RhsType>::is_timedep){
-        this->m_rhs.setTime(time_ctx.now); 
-      }
-      linop_untouched = 0.5 * (this->m_rhs.toEigen()); 
+      linop_untouched = 0.5 * (this->m_rhs.evalTime(time_ctx.now)); 
 
       // hot loop through times
       auto end = time_ctx.container->cend();
@@ -128,14 +124,7 @@ class CrankNicolsonSolver : public SolverBase<CrankNicolsonSolver<LhsType, RhsTy
         this->template tupleApplyBeforeVec<fornfdm::osteps::StepType::Implicit>(rhs_vector, time_ctx, ctx);  
         
         // store the matrix into stencil 
-        if constexpr(fornfdm::linops::internal::traits<RhsType>::is_timedep){
-          // set the operator to the right side of the step [t(n), t(n+1)] for implicit steps 
-          this->m_rhs.setTime(time_ctx.next); 
-          // should build an autonomous solver for these linops, since it evaluate the 
-          // expression at every step. but still save a little time
-          // we also can't check that outside steps won't change the mesh we operate on.  
-        }
-        linop_untouched = 0.5 * (this->m_rhs.toEigen()); 
+        linop_untouched = 0.5 * (this->m_rhs.evalTime(time_ctx.next)); 
         std::size_t s = linop_untouched.rows(); 
         stencil = fornfdm::utils::Identity(s,s) - executor.getInvCoeff() * linop_untouched; 
         

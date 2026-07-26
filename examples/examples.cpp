@@ -35,37 +35,12 @@ int main()
 
   // RHS in space 
   auto Uxx = linops::NthPartialDeriv<2,0,fornfdm::linops::Centered<5>>{}; 
+  Uxx.setMesh(args.mesh); 
 
-  // Boundary Conditions 
-  auto left = osteps::Dirichlet(0.0); 
-  auto right = left;
-  osteps::BCPair bcs(left,right); 
+  fornfdm::CSRMatrix stencil = 0.5 * Uxx.evalTime(20.0); 
 
-  // Solving ...
-  // solvers::ExplicitSolver my_solver(Ut,Uxx,std::tie(bcs)); 
-  // solvers::ImplicitSolver my_solver(Utt,expr,std::tie(forcing, bcs)); 
-  solvers::CrankNicolsonSolver my_solver(Ut,Uxx,std::tie(bcs)); 
+  cout << stencil << endl;
 
-  // 1D through time 
-  my_solver.calculate(args, solvers::PrintSaver{}); 
+  cout << Uxx << endl;
 
-  // 1D Print 
-  // auto sol = my_solver.calculate(args, solvers::LastSaver{}); 
-  // utils::print_vec(args.initialConditions[0],"Initial"); 
-  // utils::print_vec(sol, "Sol"); 
-
-  // 2D print 
-  // auto sol = my_solver.calculate(args, solvers::LastSaver{}); 
-  // utils::print_mat(args.mesh->makeOneDimViews(args.initialConditions[0], 0), "Init"); 
-  // utils::print_mat(args.mesh->makeOneDimViews(sol, 0), "solution"); 
- 
-  // Time to last sol
-  // auto time_taken = my_solver.calculate(args, solvers::TimerSaver{}); 
-  // cout << "milliseconds: " << time_taken.count() << endl;  
-
-  // Average time to last sol
-  // std::size_t N = 40; 
-  // double sum = 0; 
-  // for(auto i=0; i<N; ++i) sum += my_solver.calculate(args, solvers::TimerSaver{}).count(); 
-  // cout << "Average time: " << (sum/N) << " ms" << endl; 
 };

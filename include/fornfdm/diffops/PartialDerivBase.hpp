@@ -138,7 +138,7 @@ class PartialDerivBase : public Eigen::SparseMatrixBase<Derived>, protected lino
         return linops::TimeEvaluation<Derived, traits_t::max_num_args_called>(derived(), this->m_mesh_raw, t);
       }
       else{
-        return *this; // autonomous operators just return themselves. 
+        return toEigen(); // autonomous operators go to Eigen matrix type
       }
     }
 

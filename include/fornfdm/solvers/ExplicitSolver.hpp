@@ -67,7 +67,6 @@ class ExplicitSolver : public SolverBase<ExplicitSolver<LhsType, RhsType, OStepT
       auto sol_end = executor.pushSolutionRange(args.initialConditions.begin(), args.initialConditions.end()); 
       for(auto sol_it=args.initialConditions.begin(); sol_it != sol_end; ++sol_it)
       {
-        // Eventually want save policies to take by (solution, time) 
         save_policy.saveSolution(std::move(*sol_it)); 
       }
 
@@ -89,14 +88,6 @@ class ExplicitSolver : public SolverBase<ExplicitSolver<LhsType, RhsType, OStepT
       { 
         time_ctx.next = *it; 
 
-        if constexpr(fornfdm::linops::internal::traits<RhsType>::is_timedep){
-          // set the operator to the left side of the step [t(n), t(n+1)] for explicit steps 
-          this->m_rhs.setTime(time_ctx.now); 
-          // should build an autonomous solver for these linops, since it evaluate the 
-          // expression at every step. but still save a little time
-          // we also can't check that outside steps won't change the mesh we operate on.  
-        }
-
         // again using left side of [t(n), t(n+1)] time step 
         executor.pushTime(time_ctx.next); 
         executor.calculate(time_ctx.now); 
@@ -105,7 +96,7 @@ class ExplicitSolver : public SolverBase<ExplicitSolver<LhsType, RhsType, OStepT
         this->template tupleBeforeLinAlgebra<fornfdm::osteps::StepType::Explicit>(time_ctx,ctx); 
         
         // store the matrix into stencil 
-        stencil = executor.getInvCoeff() * this->m_rhs.toEigen();
+        stencil = executor.getInvCoeff() * (this->m_rhs.evalTime(time_ctx.now));
         
         // outside steps matrix before step
         this->template tupleApplyBeforeMat<fornfdm::osteps::StepType::Explicit>(stencil, time_ctx, ctx); 
