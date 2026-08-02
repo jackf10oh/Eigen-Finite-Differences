@@ -28,9 +28,9 @@ class CoeffBase;
 
 // helper struct 
 struct CyclicWrapper{
-  const Eigen::Matrix<fornfdm::Scalar, 1, Eigen::Dynamic>& m_wrapped; 
+  const fornfdm::Vector& m_wrapped; 
   std::size_t m_mod; 
-  CyclicWrapper(const Eigen::Matrix<fornfdm::Scalar, 1, Eigen::Dynamic>& v, std::size_t m)
+  CyclicWrapper(const fornfdm::Vector& v, std::size_t m)
     : m_wrapped(v), m_mod(m)
   {} 
   const fornfdm::Scalar& operator()(std::size_t idx) const { return m_wrapped[idx%m_mod]; }
@@ -70,7 +70,7 @@ class CoeffBase: public Eigen::DiagonalBase<Derived>
   public:
     // Type Defs ------------------------
     typedef typename Eigen::DiagonalBase<Derived> Base; 
-    typedef typename Eigen::CwiseNullaryOp<CyclicWrapper, Eigen::Matrix<fornfdm::Scalar, 1, Eigen::Dynamic>> DiagonalVectorType; 
+    typedef typename Eigen::CwiseNullaryOp<CyclicWrapper, fornfdm::Vector> DiagonalVectorType; 
     // typedef typename Eigen::internal::traits<Derived>::DiagonalVectorType DiagonalVectorType;
     typedef typename DiagonalVectorType::Scalar Scalar;
     typedef typename DiagonalVectorType::RealScalar RealScalar;
@@ -90,7 +90,7 @@ class CoeffBase: public Eigen::DiagonalBase<Derived>
 
   protected:
     // Member Data ------------------------ 
-    typename Eigen::Matrix<fornfdm::Scalar, 1, Eigen::Dynamic> m_diagonal; 
+    typename fornfdm::Vector m_diagonal; 
     StorageIndex m_prod_after; 
     DiagonalVectorType m_cyclic_wrapper; 
 
@@ -99,7 +99,7 @@ class CoeffBase: public Eigen::DiagonalBase<Derived>
     CoeffBase()
       : m_diagonal(0), 
       m_prod_after(0), 
-      m_cyclic_wrapper(1,0,CyclicWrapper(m_diagonal, m_prod_after))
+      m_cyclic_wrapper(0,1,CyclicWrapper(m_diagonal, m_prod_after))
     {} 
 
     // Member Functions -------------------

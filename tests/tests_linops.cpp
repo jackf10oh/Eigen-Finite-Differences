@@ -116,7 +116,7 @@ TEST(LinopsSuite, BinaryAddition){
   {
     for(auto j=0; j<n; ++j)
     {
-      auto val = Ux.stencil().coeff(i,j) + Uxx.stencil().coeff(i,j);
+      auto val = Ux.getStencil().coeff(i,j) + Uxx.getStencil().coeff(i,j);
       ASSERT_EQ(result.coeff(i,j), val);
     }
   }
@@ -139,7 +139,7 @@ TEST(LinopsSuite, BinarySubtraction){
   {
     for(auto j=0; j<n; ++j)
     {
-      auto val = Ux.stencil().coeff(i,j) - Uxx.stencil().coeff(i,j);
+      auto val = Ux.getStencil().coeff(i,j) - Uxx.getStencil().coeff(i,j);
       ASSERT_EQ(result.coeff(i,j), val);
     }
   }
@@ -162,7 +162,7 @@ TEST(LinopsSuite, UnaryNegation){
   {
     for(auto j=0; j<n; ++j)
     {
-      auto val = -Ux.stencil().coeff(i,j);
+      auto val = -Ux.getStencil().coeff(i,j);
       ASSERT_EQ(result.coeff(i,j), val);
     }
   }
@@ -190,8 +190,8 @@ TEST(LinopsSuite, ScalarLeftMultiply){
     {
       for(auto j=0; j<n; ++j)
       {
-        auto val01 = c * Ux.stencil().coeff(i,j);
-        auto val02 = c * Uxx.stencil().coeff(i,j);
+        auto val01 = c * Ux.getStencil().coeff(i,j);
+        auto val02 = c * Uxx.getStencil().coeff(i,j);
         ASSERT_EQ(result01.coeff(i,j), val01);
         ASSERT_EQ(result02.coeff(i,j), val02);
       }
@@ -227,8 +227,8 @@ TEST(LinopsSuite, AutonCoeffProduct1D){
       fornfdm::Scalar eval = callable(mesh->getAxis(0)[i]);
       for(auto j=0; j<n; ++j)
       {
-        auto val01 = eval * Ux.stencil().coeff(i,j);
-        auto val02 = eval * Uxx.stencil().coeff(i,j);
+        auto val01 = eval * Ux.getStencil().coeff(i,j);
+        auto val02 = eval * Uxx.getStencil().coeff(i,j);
         ASSERT_EQ(result01.coeff(i,j), val01);
         ASSERT_EQ(result02.coeff(i,j), val02);
       }
@@ -268,8 +268,8 @@ TEST(LinopsSuite, TimeDepProduct1D){
         fornfdm::Scalar eval = callable(t, mesh->getAxis(0)[i]);
         for(auto j=0; j<n; ++j)
         {
-          auto val01 = eval * Ux.stencil().coeff(i,j);
-          auto val02 = eval * Uxx.stencil().coeff(i,j);
+          auto val01 = eval * Ux.getStencil().coeff(i,j);
+          auto val02 = eval * Uxx.getStencil().coeff(i,j);
           ASSERT_EQ(result01.coeff(i,j), val01);
           ASSERT_EQ(result02.coeff(i,j), val02);
         }
@@ -353,6 +353,4 @@ TEST(LinopsSuite, EvalTimeMatchesSetTime2D){
   
 }
 
-// todo Kronecker evaluator
-
-// todo higher dimension tests
+// TODO higher dimension tests

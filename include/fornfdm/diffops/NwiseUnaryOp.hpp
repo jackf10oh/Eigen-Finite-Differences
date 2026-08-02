@@ -12,7 +12,7 @@
 #include "traits.hpp"
 #include "EvaluatorBase.hpp"
 #include "PartialDerivBase.hpp"
-#include "KroneckerEvaluator.hpp"
+#include "EigenEvaluatorImpl.hpp"
 #include "functors.hpp"
 
 namespace fornfdm{
@@ -41,6 +41,28 @@ struct Evaluator<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>> : public Evalua
       return f(nested(weights,idx,stride));
     };
   }
+
+  template<std::size_t N>
+  class ExactReader
+  {
+    using NestedReader = decltype(std::declval<const Evaluator<typename UnarXprType::NestedExpression>&>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>(), std::declval<fornfdm::Real>()));
+    const UnarXprType& m_xpr;
+    NestedReader m_nested; 
+    ExactReader(const UnarXprType& xpr, NestedReader nested) 
+    : m_xpr(xpr), m_nested(nested)
+    {};
+    template<std::size_t... orders>
+    operator()(const fornfdm::Scalar* data, std::size_t idx, std::size_t stride, std::index_sequence<orders...>) const
+    {
+      return m_xpr.functor()(m_nested(data, idx, stride, std::index_sequence<orders...>{}));
+    }
+  };
+
+  template<std::size_t N>
+  auto createExactReader(const fornfdm::Coordinate<N> coord, fornfdm::Real t) const
+  {
+    return ExactReader<N>(m_xpr, m_nested_eval.template createExactReader<N>(coord, t));
+  }
 };
 
 // traits
@@ -55,8 +77,13 @@ struct traits_impl<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>> : public trai
   static constexpr bool is_timedep = traits<XprType>::is_timedep; // if either L/R is timedep the xpr is time dep 
   static constexpr int direction = traits<XprType>::direction; // by default mixing operators results in undefined direction... 
   static constexpr std::size_t maxOrder = traits<XprType>::maxOrder; // highest order of derivative in the expression 
+  typedef typename traits<XprType>::orders orders;
   typedef typename traits<XprType>::node_selector_tag node_selector_tag; // give priority to lhs 
 }; 
+
+// map to base tag 
+template<class UnaryOp, class XprType>
+struct map_to_base_tag<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>> : map_to_base_tag<std::remove_cv_t<std::remove_reference_t<XprType>>>{};
 
 } // end namespace internal 
 } // end namespace linops
@@ -84,11 +111,11 @@ struct traits<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>>
 
 template<class UnaryOp, class _XprType>
 struct evaluator<fornfdm::linops::NwiseUnaryOp<UnaryOp,_XprType>> 
-  : public evaluator_base<fornfdm::linops::NwiseUnaryOp<UnaryOp,_XprType>>, 
-  public fornfdm::linops::internal::KroneckerEvaluator<fornfdm::linops::NwiseUnaryOp<UnaryOp,_XprType>>
+  : public fornfdm::linops::internal::EigenEvaluatorImpl<fornfdm::linops::NwiseUnaryOp<UnaryOp,_XprType>>
 {
   using XprType = fornfdm::linops::NwiseUnaryOp<UnaryOp,_XprType>; 
-  using Impl = typename fornfdm::linops::internal::KroneckerEvaluator<fornfdm::linops::NwiseUnaryOp<UnaryOp,_XprType>>; 
+  using Impl = typename fornfdm::linops::internal::EigenEvaluatorImpl<XprType>; 
+  enum {CoeffReadCost = Impl::CoeffReadCost, Flags = Impl::Flags};
   using InnerIterator = typename Impl::InnerIterator; 
   evaluator(const XprType& xpr)
     : Impl(xpr)
@@ -110,12 +137,6 @@ class NwiseUnaryOp : public fornfdm::linops::PartialDerivBase<NwiseUnaryOp<Unary
     EIGEN_SPARSE_PUBLIC_INTERFACE(NwiseUnaryOp)
     typedef typename fornfdm::linops::internal::NestedStorage<XprType>::type XprTypeNested;
     typedef typename std::remove_reference<std::remove_cv_t<XprType>>::type NestedExpression;
-
-    // Friends ------------------------------- 
-    friend Eigen::internal::evaluator<NwiseUnaryOp>; 
-    friend fornfdm::linops::internal::KroneckerEvaluator<NwiseUnaryOp>; 
-    friend fornfdm::linops::internal::EvaluatorBase<NwiseUnaryOp>; 
-    friend fornfdm::linops::internal::Evaluator<NwiseUnaryOp>;
 
   protected:
     // Member data ----------------------------------- 

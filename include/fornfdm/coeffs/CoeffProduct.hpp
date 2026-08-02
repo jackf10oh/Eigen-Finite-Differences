@@ -12,7 +12,7 @@
 #include "../diffops/functors.hpp"
 #include "../diffops/EvaluatorBase.hpp"
 #include "../diffops/PartialDerivBase.hpp"
-#include "../diffops/KroneckerEvaluator.hpp"
+#include "../diffops/EigenEvaluatorImpl.hpp"
 
 namespace fornfdm{
 namespace linops{
@@ -36,6 +36,7 @@ struct traits_impl<CoeffProduct<LeftCoeff, RightDeriv>>
   static constexpr int direction = traits<RightDeriv>::direction; // give priority to RHS 
   static constexpr std::size_t maxOrder = traits<RightDeriv>::maxOrder; // highest order of derivative in the expression 
   typedef typename traits<RightDeriv>::node_selector_tag node_selector_tag; // give priority to RHS 
+  typedef typename traits<RightDeriv>::orders orders; // LeftCoeff never has any orders 
 }; 
 
 // Evaluator
@@ -66,7 +67,107 @@ struct Evaluator<CoeffProduct<LeftCoeff, RightDeriv>> : public EvaluatorBase<Coe
     }
   }
 
+  template<std::size_t N>
+  struct AutonomousExactReader
+  {
+    using RhsReader = decltype(std::declval<const Evaluator<typename XprType::Rhs>&>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>(), std::declval<fornfdm::Real>()));    
+    AutonomousExactReader(const Evaluator& eval, const fornfdm::Coordinate<N>& coord, fornfdm::Real t)
+      : m_rhs_reader(eval.m_rhs_eval.template createExactReader<N>(coord, t)),
+      m_coeff(coord.apply(eval.m_xpr.lhs().callable()))
+    {}
+    RhsReader m_rhs_reader;
+    fornfdm::Scalar m_coeff; 
+    template<std::size_t... orders>
+    fornfdm::Scalar operator()(const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride, std::index_sequence<orders...>) const
+    {
+      return m_coeff * m_rhs_reader(weights, idx, stride, std::index_sequence<orders...>{});
+    }
+  };
+
+  template<std::size_t N>
+  struct TimeDepExactReader
+  {
+    using RhsReader = decltype(std::declval<const Evaluator<typename XprType::Rhs>&>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>(), std::declval<fornfdm::Real>()));    
+    TimeDepExactReader(const Evaluator& eval, const fornfdm::Coordinate<N>& coord, fornfdm::Real t)
+      : m_rhs_reader(eval.m_rhs_eval.template createExactReader<N>(coord, t)),
+      m_coeff(coord.applyBindFirst(eval.m_xpr.lhs().callable(), t))
+    {}
+    RhsReader m_rhs_reader;
+    fornfdm::Scalar m_coeff; 
+    template<std::size_t... orders>
+    fornfdm::Scalar operator()(const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride, std::index_sequence<orders...>) const
+    {
+      return m_coeff * m_rhs_reader(weights, idx, stride, std::index_sequence<orders...>{});
+    }
+  };
+
+  template<std::size_t N>
+  auto createExactReader(const fornfdm::Coordinate<N>& coord, fornfdm::Real t) const
+  {
+    if constexpr(traits<LeftCoeff>::is_timedep){
+      return TimeDepExactReader<N>(*this, coord, t);
+    }
+    else{
+      return AutonomousExactReader<N>(*this, coord, t);
+    }
+  }
 }; 
+
+// ==============================
+// map_to_base specializations 
+// ==============================
+
+// (direction 0 && max_num_args <= 1) --> LeftKroneckerTag or TimeDepLeftKroneckerTag
+template<class LeftCoeff, class RightDeriv>
+struct map_to_base_tag<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>,
+  std::enable_if_t<
+    (traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::direction == 0 && 
+    traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::max_num_args_called <= 1)
+  >
+>
+{
+  using traits_t = traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>;
+  using type = typename std::conditional<traits_t::is_timedep, TimeDepLeftKroneckerTag, LeftKroneckerTag>::type;
+};
+
+// (direction != 0 && max_num_args == 0) --> DoubleKroneckerTag or TimeDepDoubleKroneckerTag
+template<class LeftCoeff, class RightDeriv>
+struct map_to_base_tag<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>,
+  std::enable_if_t<
+    (traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::direction != 0 && 
+    traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::max_num_args_called == 0)
+  >
+>
+{
+  using traits_t = traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>;
+  using type = typename std::conditional<traits_t::is_timedep, TimeDepDoubleKroneckerTag, DoubleKroneckerTag>::type;
+};
+
+// (direction 0 && max_num_args > 1) --> StoredWeightsTag or TimeDepStoredWeightsTag
+template<class LeftCoeff, class RightDeriv>
+struct map_to_base_tag<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>,
+  std::enable_if_t<
+    (traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::direction == 0 && 
+    traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::max_num_args_called > 1)
+  >
+>
+{
+  using traits_t = traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>;
+  using type = typename std::conditional<traits_t::is_timedep, TimeDepStoredWeightsTag, StoredWeightsTag>::type;
+};
+
+// (direction != 0 && max_num_args != 0) --> StoredWeightsTag or TimeDepStoredWeightsTag
+template<class LeftCoeff, class RightDeriv>
+struct map_to_base_tag<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>,
+  std::enable_if_t<
+    (traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::direction != 0 && 
+    traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::max_num_args_called != 0)
+  >
+>
+{
+  using traits_t = traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>;
+  using type = typename std::conditional<traits_t::is_timedep, TimeDepStoredWeightsTag, StoredWeightsTag>::type;
+};
 
 } // end namespace internal 
 } // end namespace linops 
@@ -93,19 +194,17 @@ struct traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>
   };
 }; 
 
-// Evaluator 
 template<class LeftCoeff, class RightDeriv>
 struct evaluator<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>> 
-  : public evaluator_base<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>, 
-  public fornfdm::linops::internal::KroneckerEvaluator<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>
+  : public fornfdm::linops::internal::EigenEvaluatorImpl<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>
 {
   using XprType = fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>; 
-  using Impl = typename fornfdm::linops::internal::KroneckerEvaluator<fornfdm::linops::CoeffProduct<LeftCoeff,RightDeriv>>; 
-  using InnerIterator = typename Impl::InnerIterator; 
+  using Impl = typename fornfdm::linops::internal::EigenEvaluatorImpl<XprType>; 
+  using InnerIterator = typename Impl::InnerIterator;
   evaluator(const XprType& xpr)
     : Impl(xpr)
   {}
-}; 
+};
 
 } // end namespace internal 
 } // end namespace Eigen 
@@ -124,12 +223,6 @@ class CoeffProduct : public fornfdm::linops::PartialDerivBase<CoeffProduct<LeftC
     typedef typename std::remove_cv_t<std::remove_reference_t<RightDeriv>> Rhs; 
     typedef typename fornfdm::linops::internal::NestedStorage<LeftCoeff>::type LhsNested;
     typedef typename fornfdm::linops::internal::NestedStorage<RightDeriv>::type RhsNested;
-
-    // Friends --------------------------- 
-    friend Eigen::internal::evaluator<CoeffProduct>; 
-    friend fornfdm::linops::internal::KroneckerEvaluator<CoeffProduct>; 
-    friend fornfdm::linops::internal::EvaluatorBase<CoeffProduct>; 
-    friend fornfdm::linops::internal::Evaluator<CoeffProduct>; 
 
   protected:
     // Member data ----------------------------------- 

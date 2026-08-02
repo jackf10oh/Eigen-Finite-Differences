@@ -12,7 +12,7 @@
 #include "traits.hpp"
 #include "EvaluatorBase.hpp"
 #include "PartialDerivBase.hpp"
-#include "KroneckerEvaluator.hpp"
+#include "EigenEvaluatorImpl.hpp"
 #include "functors.hpp"
 
 namespace fornfdm{
@@ -44,6 +44,34 @@ struct Evaluator<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> : pub
       return f(n1(weights,idx,stride), n2(weights,idx,stride));
     };
   }
+
+  template<std::size_t N>
+  struct ExactReader
+  {
+    using LeftNestedReader = decltype(std::declval<const Evaluator<typename XprType::Lhs>&>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>(), std::declval<fornfdm::Real>()));
+    using RightNestedReader = decltype(std::declval<const Evaluator<typename XprType::Rhs>&>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>(), std::declval<fornfdm::Real>()));
+    const XprType& m_xpr;
+    LeftNestedReader m_nested_left;
+    RightNestedReader m_nested_right;
+
+    ExactReader(const Evaluator& eval, const fornfdm::Coordinate<N>& coord, fornfdm::Real t)
+      : m_xpr(eval.m_xpr), 
+      m_nested_left(eval.m_lhs_eval.template createExactReader<N>(coord,t)),
+      m_nested_right(eval.m_rhs_eval.template createExactReader<N>(coord,t))
+    {}
+
+    template<std::size_t... orders>
+    operator()(const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride, std::index_sequence<orders...>) const
+    {
+      return m_xpr.functor()(m_nested_left(weights, idx, stride, std::index_sequence<orders...>{}), m_nested_right(weights, idx, stride, std::index_sequence<orders...>{}));
+    }
+  };
+
+  template<std::size_t N>
+  auto createExactReader(const fornfdm::Coordinate<N>& coord, fornfdm::Real t) const
+  {
+    return ExactReader<N>(*this, coord, t);
+  }
 };
 
 // traits
@@ -59,7 +87,64 @@ struct traits_impl<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
   static constexpr int direction = traits<LhsType>::direction; // by default mixing operators results in undefined direction... 
   static constexpr std::size_t maxOrder = std::max(traits<LhsType>::maxOrder,traits<RhsType>::maxOrder); // highest order of derivative in the expression 
   typedef typename promote_node_selector_tags<typename traits<LhsType>::node_selector_tag,typename traits<RhsType>::node_selector_tag>::type node_selector_tag; // gurantees both minimum are fulfilled
-}; 
+  typedef typename merge_orders< typename traits<LhsType>::orders, typename traits<RhsType>::orders>::type orders;
+};
+
+// ==============================
+// map_to_base specializations 
+// ==============================
+
+// (direction 0 && max_num_args <= 1) --> LeftKroneckerTag or TimeDepLeftKroneckerTag
+template<class BinaryOp, class LhsType, class RhsType>
+struct map_to_base_tag<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>,
+  std::enable_if_t<
+    traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::direction == 0 && 
+    traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::max_num_args_called <= 1 
+  >
+>
+{
+  using traits_t = traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>;
+  using type = typename std::conditional<traits_t::is_timedep, TimeDepLeftKroneckerTag, LeftKroneckerTag>::type;
+};
+
+// (direction 0 && max_num_args > 1) --> StoredWeightsTag or TimeDepStoredWeightsTag
+template<class BinaryOp, class LhsType, class RhsType>
+struct map_to_base_tag<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>,
+  std::enable_if_t<
+    (traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::direction == 0 && 
+    traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::max_num_args_called > 1)
+  >
+>
+{
+  using traits_t = traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>;
+  using type = typename std::conditional<traits_t::is_timedep, TimeDepStoredWeightsTag, StoredWeightsTag>::type;
+};
+
+// (direction != 0 && max_num_args == 0) --> DoubleKroneckerTag or TimeDepDoubleKroneckerTag
+template<class BinaryOp, class LhsType, class RhsType>
+struct map_to_base_tag<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>,
+  std::enable_if_t<
+    (traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::direction != 0 && 
+    traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::max_num_args_called == 0)
+  >
+>
+{
+  using traits_t = traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>;
+  using type = typename std::conditional<traits_t::is_timedep, TimeDepDoubleKroneckerTag, DoubleKroneckerTag>::type;
+};
+
+// (direction != 0 && max_num_args != 0) --> StoredWeightsTag or TimeDepStoredWeightsTag
+template<class BinaryOp, class LhsType, class RhsType>
+struct map_to_base_tag<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>,
+  std::enable_if_t<
+    (traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::direction != 0 && 
+    traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::max_num_args_called != 0)
+  >
+>
+{
+  using traits_t = traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>;
+  using type = typename std::conditional<traits_t::is_timedep, TimeDepStoredWeightsTag, StoredWeightsTag>::type;
+};
 
 } // end namespace internal 
 } // end namespace linops
@@ -87,12 +172,13 @@ struct traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
 
 template<class BinaryOp, class LhsType, class RhsType>
 struct evaluator<fornfdm::linops::NwiseBinaryOp<BinaryOp, LhsType, RhsType>> 
-  : public evaluator_base<fornfdm::linops::NwiseBinaryOp<BinaryOp, LhsType, RhsType>>, 
-  public fornfdm::linops::internal::KroneckerEvaluator<fornfdm::linops::NwiseBinaryOp<BinaryOp, LhsType, RhsType>>
+  : public fornfdm::linops::internal::EigenEvaluatorImpl<fornfdm::linops::NwiseBinaryOp<BinaryOp, LhsType, RhsType>>
 {
+  // Flags ---
   using XprType = fornfdm::linops::NwiseBinaryOp<BinaryOp, LhsType, RhsType>; 
-  using Impl = typename fornfdm::linops::internal::KroneckerEvaluator<fornfdm::linops::NwiseBinaryOp<BinaryOp, LhsType, RhsType>>; 
-  using InnerIterator = typename Impl::InnerIterator; 
+  using Impl = typename fornfdm::linops::internal::EigenEvaluatorImpl<XprType>; 
+  enum {CoeffReadCost = Impl::CoeffReadCost, Flags = Impl::Flags};
+  using InnerIterator = typename Impl::InnerIterator;
   evaluator(const XprType& xpr)
     : Impl(xpr)
   {}
@@ -115,12 +201,6 @@ class NwiseBinaryOp : public fornfdm::linops::PartialDerivBase<NwiseBinaryOp<Bin
     typedef typename std::remove_cv_t<std::remove_reference_t<RhsType>> Rhs; 
     typedef typename fornfdm::linops::internal::NestedStorage<LhsType>::type LhsNested;
     typedef typename fornfdm::linops::internal::NestedStorage<RhsType>::type RhsNested;
-
-    // Friends 
-    friend Eigen::internal::evaluator<NwiseBinaryOp>; 
-    friend fornfdm::linops::internal::KroneckerEvaluator<NwiseBinaryOp>; 
-    friend fornfdm::linops::internal::EvaluatorBase<NwiseBinaryOp>; 
-    friend fornfdm::linops::internal::Evaluator<NwiseBinaryOp>;
 
   protected:
     // Member data ----------------------------------- 
