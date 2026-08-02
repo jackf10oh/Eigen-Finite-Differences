@@ -24,10 +24,10 @@ struct traits_impl{
   static constexpr bool is_unarop = false; 
   static constexpr bool is_binop = false; 
   static constexpr bool is_ternop = false; 
-  static constexpr std::size_t max_num_args_called = 0;  
+  static constexpr std::size_t max_arity = 0;  
   static constexpr bool is_timedep = false;
   static constexpr int direction = -1;
-  static constexpr std::size_t maxOrder = 0;
+  static constexpr std::size_t max_order = 0;
 }; 
 
 // standard tratis of any SparseMatrix type ------------------------------- 
@@ -38,10 +38,10 @@ struct traits_impl< Eigen::SparseMatrix<_Scalar, _Options, _StorageIndex> >
   static constexpr bool is_unarop = false; 
   static constexpr bool is_binop = false; 
   static constexpr bool is_ternop = false; 
-  static constexpr std::size_t max_num_args_called = 0; 
+  static constexpr std::size_t max_arity = 0; 
   static constexpr bool is_timedep = false; 
   static constexpr int direction = -1; 
-  static constexpr std::size_t maxOrder = 0; 
+  static constexpr std::size_t max_order = 0; 
 }; 
 
 // standard traits for derived from Eigen::SparseMatrixBase or SparseCompressedBase ------------------------------------
@@ -59,10 +59,10 @@ struct traits_impl< Eigen::CwiseBinaryOp<Op,L,R> >
   static constexpr bool is_unarop = false; 
   static constexpr bool is_binop = true; 
   static constexpr bool is_ternop = false; 
-  static constexpr std::size_t max_num_args_called = std::max( traits_impl<std::decay_t<L>>::max_num_args_called, traits_impl<std::decay_t<R>>::max_num_args_called); // records maximum number of dims L/R needs to execute its callable 
+  static constexpr std::size_t max_arity = std::max( traits_impl<std::decay_t<L>>::max_arity, traits_impl<std::decay_t<R>>::max_arity); // records maximum number of dims L/R needs to execute its callable 
   static constexpr bool is_timedep = ( traits_impl<std::decay_t<L>>::is_timedep || traits_impl<std::decay_t<R>>::is_timedep); // if either L/R is timedep the xpr is time dep 
   static constexpr int direction = -1; // by default mixing operators direction falls back to eigen... 
-  static constexpr std::size_t maxOrder = std::max(traits_impl<L>::maxOrder,traits_impl<R>::maxOrder); // highest order of derivative in the expression 
+  static constexpr std::size_t max_order = std::max(traits_impl<L>::max_order,traits_impl<R>::max_order); // highest order of derivative in the expression 
 }; 
 
 // Products are similar ----- 
@@ -73,10 +73,10 @@ struct traits_impl< Eigen::Product<L,R,Options> >
   static constexpr bool is_unarop = false; 
   static constexpr bool is_binop = true; 
   static constexpr bool is_ternop = false; 
-  static constexpr std::size_t max_num_args_called = std::max( traits_impl<std::decay_t<L>>::max_num_args_called, traits_impl<std::decay_t<R>>::max_num_args_called); // records maximum number of dims L/R needs to execute its callable 
+  static constexpr std::size_t max_arity = std::max( traits_impl<std::decay_t<L>>::max_arity, traits_impl<std::decay_t<R>>::max_arity); // records maximum number of dims L/R needs to execute its callable 
   static constexpr bool is_timedep = ( traits_impl<std::decay_t<L>>::is_timedep || traits_impl<std::decay_t<R>>::is_timedep); // if either L/R is timedep the xpr is time dep 
   static constexpr int direction = -1; // by default mixing operators results in undefined direction... 
-  static constexpr std::size_t maxOrder = std::max(traits_impl<L>::maxOrder,traits_impl<R>::maxOrder); // highest order of derivative in the expression 
+  static constexpr std::size_t max_order = std::max(traits_impl<L>::max_order,traits_impl<R>::max_order); // highest order of derivative in the expression 
 }; 
 
 // traits of Unary Expressions --------------------------------- 
@@ -87,10 +87,10 @@ struct traits_impl< Eigen::CwiseUnaryOp<Op, T> >
   static constexpr bool is_unarop = true; 
   static constexpr bool is_binop = false; 
   static constexpr bool is_ternop = false; 
-  static constexpr std::size_t max_num_args_called = traits_impl<std::decay_t<T>>::max_num_args_called; 
+  static constexpr std::size_t max_arity = traits_impl<std::decay_t<T>>::max_arity; 
   static constexpr bool is_timedep = traits_impl<std::decay_t<T>>::is_timedep; // if either L/R is timedep the xpr is time dep 
   static constexpr int direction = traits_impl<std::decay_t<T>>::direction; // by default mixing operators results in undefined direction... 
-  static constexpr std::size_t maxOrder = traits_impl<std::decay_t<T>>::maxOrder; // highest order of derivative in the expression 
+  static constexpr std::size_t max_order = traits_impl<std::decay_t<T>>::max_order; // highest order of derivative in the expression 
 }; 
 
 template<class T>

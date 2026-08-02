@@ -62,10 +62,10 @@ struct traits_impl<fornfdm::linops::NthPartialDeriv<_nthOrder,_direction, select
   static constexpr bool is_unarop = false; 
   static constexpr bool is_binop = false; 
   static constexpr bool is_ternop = false; 
-  static constexpr std::size_t max_num_args_called = 0; 
+  static constexpr std::size_t max_arity = 0; 
   static constexpr bool is_timedep = false; 
   static constexpr int direction = _direction; 
-  static constexpr std::size_t maxOrder = _nthOrder;
+  static constexpr std::size_t max_order = _nthOrder;
   typedef std::index_sequence<_nthOrder> orders; 
   typedef selector_tag node_selector_tag; 
 }; 

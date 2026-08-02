@@ -73,10 +73,10 @@ struct traits_impl<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>> : public trai
   static constexpr bool is_unarop = true; 
   static constexpr bool is_binop = false; 
   static constexpr bool is_ternop = false; 
-  static constexpr std::size_t max_num_args_called = traits<XprType>::max_num_args_called; 
+  static constexpr std::size_t max_arity = traits<XprType>::max_arity; 
   static constexpr bool is_timedep = traits<XprType>::is_timedep; // if either L/R is timedep the xpr is time dep 
   static constexpr int direction = traits<XprType>::direction; // by default mixing operators results in undefined direction... 
-  static constexpr std::size_t maxOrder = traits<XprType>::maxOrder; // highest order of derivative in the expression 
+  static constexpr std::size_t max_order = traits<XprType>::max_order; // highest order of derivative in the expression 
   typedef typename traits<XprType>::orders orders;
   typedef typename traits<XprType>::node_selector_tag node_selector_tag; // give priority to lhs 
 }; 

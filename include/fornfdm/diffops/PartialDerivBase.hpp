@@ -125,7 +125,7 @@ class PartialDerivBase<Derived, internal::LeftKroneckerTag> : public Eigen::Spar
       using traits_t = typename linops::internal::traits<Derived>;
       // if number of args in callable c(x,y,z) is > meshes # of dims throw 
       // assert((0 <  m->numDims()) && "direction must be < # of dims.");
-      // TODO use max_num_args_called + direction in the assert() 
+      // TODO use max_arity + direction in the assert() 
       
       // store a weak_ptr to the mesh
       m_mesh_observed = m;
@@ -136,7 +136,7 @@ class PartialDerivBase<Derived, internal::LeftKroneckerTag> : public Eigen::Spar
       const auto& axis = m->getAxis(traits_t::direction); 
       const std::size_t axis_size = m->sizeOfDim(traits_t::direction);  
 
-      if constexpr((traits_t::direction == 0 && traits_t::max_num_args_called <= 1) || (traits_t::direction != 0 && traits_t::max_num_args_called == 0))
+      if constexpr((traits_t::direction == 0 && traits_t::max_arity <= 1) || (traits_t::direction != 0 && traits_t::max_arity == 0))
       {
         // produce m_product_after repeats of m_stencil on the diagonal
         m_prod_after = m->sizesMiddleProduct(traits_t::direction+1,m->numDims());
@@ -161,7 +161,7 @@ class PartialDerivBase<Derived, internal::LeftKroneckerTag> : public Eigen::Spar
         // very last outer index needs set. 
         m_stencil.outerIndexPtr()[axis_size] = nnz; 
       }
-      else if constexpr(traits_t::max_num_args_called <= traits_t::direction + 1)
+      else if constexpr(traits_t::max_arity <= traits_t::direction + 1)
       {
         // produce m_product_after repeats of m_stencil on the diagonal
         m_prod_after = m->sizesMiddleProduct(traits_t::direction+1,m->numDims());
@@ -190,15 +190,15 @@ class PartialDerivBase<Derived, internal::LeftKroneckerTag> : public Eigen::Spar
         // very last outer index needs set. 
         m_stencil.outerIndexPtr()[product_before*axis_size] = nnz; 
       }
-      else // max_num_args_called > direction + 1
+      else // max_arity > direction + 1
       {
         // produce m_product_after repeats of m_stencil on the diagonal
 
 
-        m_prod_after = m->sizesMiddleProduct(traits_t::max_num_args_called,m->numDims());
+        m_prod_after = m->sizesMiddleProduct(traits_t::max_arity,m->numDims());
         // we can store the inflated 1st kronecker product repeated n times 
         std::size_t product_before = m->sizesMiddleProduct(0,traits_t::direction); 
-        std::size_t num_repeats = m->sizesMiddleProduct(traits_t::direction+1, traits_t::max_num_args_called); 
+        std::size_t num_repeats = m->sizesMiddleProduct(traits_t::direction+1, traits_t::max_arity); 
 
         std::size_t nnz = product_before * Evaluator::totalNonZeros(axis); 
         m_stencil.reserve(num_repeats * nnz); 
@@ -260,28 +260,28 @@ class PartialDerivBase<Derived, internal::TimeDepLeftKroneckerTag> : public Eige
       using traits_t = typename linops::internal::traits<Derived>;
       // if number of args in callable c(x,y,z) is > meshes # of dims throw 
       // assert((0 <  m->numDims()) && "direction must be < # of dims.");
-      // TODO use max_num_args_called + direction in the assert() 
+      // TODO use max_arity + direction in the assert() 
       m_mesh_observed = m;
       m_mesh_raw = m.get();
       // produce m_product_after repeats of m_stencil on the diagonal
-      if constexpr((traits_t::direction == 0 && traits_t::max_num_args_called <= 1) || (traits_t::direction != 0 && traits_t::max_num_args_called == 0))
+      if constexpr((traits_t::direction == 0 && traits_t::max_arity <= 1) || (traits_t::direction != 0 && traits_t::max_arity == 0))
       {
         m_prod_after = m->sizesMiddleProduct(traits_t::direction+1,m->numDims());
         // resize + reserve the stencil
         const std::size_t axis_size = m->sizeOfDim(traits_t::direction);
         m_stencil.resize(axis_size, axis_size);
       }
-      else if constexpr(traits_t::max_num_args_called <= traits_t::direction + 1)
+      else if constexpr(traits_t::max_arity <= traits_t::direction + 1)
       {
         m_prod_after = m->sizesMiddleProduct(traits_t::direction+1,m->numDims());
         // resize + reserve the stencil
         const std::size_t s = m->sizesMiddleProduct(0, traits_t::direction+1);
         m_stencil.resize(s, s);
       }
-      else // max_num_args_called > direction + 1
+      else // max_arity > direction + 1
       {
-        m_prod_after = m->sizesMiddleProduct(traits_t::max_num_args_called,m->numDims());
-        const std::size_t s = m->sizesMiddleProduct(0, traits_t::max_num_args_called); // TODO is this right? really? 
+        m_prod_after = m->sizesMiddleProduct(traits_t::max_arity,m->numDims());
+        const std::size_t s = m->sizesMiddleProduct(0, traits_t::max_arity); // TODO is this right? really? 
         m_stencil.resize(s,s);
       }
       m_need_col_indices = true;
@@ -303,7 +303,7 @@ class PartialDerivBase<Derived, internal::TimeDepLeftKroneckerTag> : public Eige
       if(m_need_col_indices)
       {
         // assignment loop. with assignment to innerIndexPtr
-        if constexpr((traits_t::direction == 0 && traits_t::max_num_args_called <= 1) || (traits_t::direction != 0 && traits_t::max_num_args_called == 0))
+        if constexpr((traits_t::direction == 0 && traits_t::max_arity <= 1) || (traits_t::direction != 0 && traits_t::max_arity == 0))
         {
           std::size_t nnz = Evaluator::totalNonZeros(axis); 
           m_stencil.reserve(nnz);
@@ -322,7 +322,7 @@ class PartialDerivBase<Derived, internal::TimeDepLeftKroneckerTag> : public Eige
           // very last outer index needs set. 
           m_stencil.outerIndexPtr()[axis_size] = nnz; 
         }
-        else if constexpr(traits_t::max_num_args_called <= traits_t::direction + 1)
+        else if constexpr(traits_t::max_arity <= traits_t::direction + 1)
         {
           // we can store the inflated 1st kronecker product, accounting for callables requiring coordinates. 
           std::size_t product_before = m_mesh_raw->sizesMiddleProduct(0,traits_t::direction); 
@@ -348,11 +348,11 @@ class PartialDerivBase<Derived, internal::TimeDepLeftKroneckerTag> : public Eige
           // very last outer index needs set. 
           m_stencil.outerIndexPtr()[product_before*axis_size] = nnz; 
         }
-        else // max_num_args_called > direction + 1
+        else // max_arity > direction + 1
         {
           // we can store the inflated 1st kronecker product repeated n times 
           std::size_t product_before = m_mesh_raw->sizesMiddleProduct(0,traits_t::direction); 
-          std::size_t num_repeats = m_mesh_raw->sizesMiddleProduct(traits_t::direction+1, traits_t::max_num_args_called); 
+          std::size_t num_repeats = m_mesh_raw->sizesMiddleProduct(traits_t::direction+1, traits_t::max_arity); 
 
           std::size_t nnz = product_before * Evaluator::totalNonZeros(axis); 
           m_stencil.reserve(num_repeats * nnz); 
@@ -377,7 +377,7 @@ class PartialDerivBase<Derived, internal::TimeDepLeftKroneckerTag> : public Eige
       }
       else // only write into valuesPtr
       {
-        if constexpr((traits_t::direction == 0 && traits_t::max_num_args_called <= 1) || (traits_t::direction != 0 && traits_t::max_num_args_called == 0))
+        if constexpr((traits_t::direction == 0 && traits_t::max_arity <= 1) || (traits_t::direction != 0 && traits_t::max_arity == 0))
         {
           for(std::size_t row_idx=0; row_idx<axis_size; ++row_idx)
           {
@@ -388,7 +388,7 @@ class PartialDerivBase<Derived, internal::TimeDepLeftKroneckerTag> : public Eige
             }
           }
         }
-        else if constexpr(traits_t::max_num_args_called <= traits_t::direction + 1)
+        else if constexpr(traits_t::max_arity <= traits_t::direction + 1)
         {
           // we can store the inflated 1st kronecker product, accounting for callables requiring coordinates. 
           std::size_t product_before = m_mesh_raw->sizesMiddleProduct(0,traits_t::direction); 
@@ -402,11 +402,11 @@ class PartialDerivBase<Derived, internal::TimeDepLeftKroneckerTag> : public Eige
             }
           }
         }
-        else // max_num_args_called > direction + 1
+        else // max_arity > direction + 1
         {
           // we can store the inflated 1st kronecker product repeated n times 
           std::size_t product_before = m_mesh_raw->sizesMiddleProduct(0,traits_t::direction); 
-          std::size_t num_repeats = m_mesh_raw->sizesMiddleProduct(traits_t::direction+1, traits_t::max_num_args_called); 
+          std::size_t num_repeats = m_mesh_raw->sizesMiddleProduct(traits_t::direction+1, traits_t::max_arity); 
 
           std::size_t nnz = product_before * Evaluator::totalNonZeros(axis); 
           m_stencil.reserve(num_repeats * nnz); 
@@ -652,7 +652,7 @@ class PartialDerivBase<Derived, internal::StoredWeightsTag> : public Eigen::Spar
     void setMesh(const SharedConstMesh& m)
     {
       using traits_t = fornfdm::linops::internal::traits<Derived>;
-      using Selector = internal::NodeSelector< typename traits_t::node_selector_tag, traits_t::maxOrder+1>;
+      using Selector = internal::NodeSelector< typename traits_t::node_selector_tag, traits_t::max_order+1>;
       constexpr std::size_t count_of_orders = internal::count_orders< typename traits_t::orders >::value;
       m_mesh_observed = m;
       m_prod_before = m->sizesMiddleProduct(0,traits_t::direction); 
@@ -683,7 +683,7 @@ class PartialDerivBase<Derived, internal::StoredWeightsTag> : public Eigen::Spar
         std::copy(nodes.nodeIndices.cbegin(), nodes.nodeIndices.cend(), std::next(m_inner_ptr.get(),nodes.nonZerosOffset));
         
         // write the weights.
-        using Calc = fornfdm::utils::FornbergStackCalc<Selector::numNodesMax, traits_t::maxOrder>; 
+        using Calc = fornfdm::utils::FornbergStackCalc<Selector::numNodesMax, traits_t::max_order>; 
         Calc calc(nodes.x_bar, nodes.nodeValues.cbegin(), nodes.nodeValues.cend());
         assignment_helper(
           m_weights_ptr.get() + nodes.nonZerosOffset * count_of_orders, 
@@ -751,7 +751,7 @@ class PartialDerivBase<Derived, internal::TimeDepStoredWeightsTag> : public Eige
     void setMesh(const SharedConstMesh& m)
     {
       using traits_t = fornfdm::linops::internal::traits<Derived>;
-      using Selector = internal::NodeSelector< typename traits_t::node_selector_tag, traits_t::maxOrder+1>;
+      using Selector = internal::NodeSelector< typename traits_t::node_selector_tag, traits_t::max_order+1>;
       constexpr std::size_t count_of_orders = internal::count_orders< typename traits_t::orders >::value;
       m_mesh_observed = m;
       m_prod_before = m->sizesMiddleProduct(0,traits_t::direction); 
@@ -782,7 +782,7 @@ class PartialDerivBase<Derived, internal::TimeDepStoredWeightsTag> : public Eige
         std::copy(nodes.nodeIndices.cbegin(), nodes.nodeIndices.cend(), std::next(m_inner_ptr.get(),nodes.nonZerosOffset));
         
         // write the weights.
-        using Calc = fornfdm::utils::FornbergStackCalc<Selector::numNodesMax, traits_t::maxOrder>; 
+        using Calc = fornfdm::utils::FornbergStackCalc<Selector::numNodesMax, traits_t::max_order>; 
         Calc calc(nodes.x_bar, nodes.nodeValues.cbegin(), nodes.nodeValues.cend());
         assignment_helper(
           m_weights_ptr.get() + nodes.nonZerosOffset * count_of_orders, 

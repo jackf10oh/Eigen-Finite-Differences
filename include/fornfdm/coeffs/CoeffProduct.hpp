@@ -31,10 +31,10 @@ struct traits_impl<CoeffProduct<LeftCoeff, RightDeriv>>
   static constexpr bool is_unarop = false; 
   static constexpr bool is_binop = true; 
   static constexpr bool is_ternop = false; 
-  static constexpr std::size_t max_num_args_called = std::max(traits<LeftCoeff>::max_num_args_called,traits<RightDeriv>::max_num_args_called); 
+  static constexpr std::size_t max_arity = std::max(traits<LeftCoeff>::max_arity,traits<RightDeriv>::max_arity); 
   static constexpr bool is_timedep = traits<LeftCoeff>::is_timedep || traits<RightDeriv>::is_timedep; // if either L/R is timedep the xpr is time dep 
   static constexpr int direction = traits<RightDeriv>::direction; // give priority to RHS 
-  static constexpr std::size_t maxOrder = traits<RightDeriv>::maxOrder; // highest order of derivative in the expression 
+  static constexpr std::size_t max_order = traits<RightDeriv>::max_order; // highest order of derivative in the expression 
   typedef typename traits<RightDeriv>::node_selector_tag node_selector_tag; // give priority to RHS 
   typedef typename traits<RightDeriv>::orders orders; // LeftCoeff never has any orders 
 }; 
@@ -122,7 +122,7 @@ template<class LeftCoeff, class RightDeriv>
 struct map_to_base_tag<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>,
   std::enable_if_t<
     (traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::direction == 0 && 
-    traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::max_num_args_called <= 1)
+    traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::max_arity <= 1)
   >
 >
 {
@@ -135,7 +135,7 @@ template<class LeftCoeff, class RightDeriv>
 struct map_to_base_tag<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>,
   std::enable_if_t<
     (traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::direction != 0 && 
-    traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::max_num_args_called == 0)
+    traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::max_arity == 0)
   >
 >
 {
@@ -148,7 +148,7 @@ template<class LeftCoeff, class RightDeriv>
 struct map_to_base_tag<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>,
   std::enable_if_t<
     (traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::direction == 0 && 
-    traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::max_num_args_called > 1)
+    traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::max_arity > 1)
   >
 >
 {
@@ -166,7 +166,7 @@ template<class LeftCoeff, class RightDeriv>
 struct map_to_base_tag<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>,
   std::enable_if_t<
     (traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::direction != 0 && 
-    traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::max_num_args_called != 0)
+    traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::max_arity != 0)
   >
 >
 {

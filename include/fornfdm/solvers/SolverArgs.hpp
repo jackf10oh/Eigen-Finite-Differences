@@ -27,8 +27,8 @@ struct SolverArgs
   std::shared_ptr<const Container> times; 
   
   // first N solution values. 
-  // ! has to be atleast >= maxOrder + 1. 
-  // where maxOrder is the highest order in the LHS time derivatives expression (texprs)  
+  // ! has to be atleast >= max_order + 1. 
+  // where max_order is the highest order in the LHS time derivatives expression (texprs)  
   // defaulted to empty so it can be assigned later... 
   std::vector<fornfdm::Vector> initialConditions = {};
 };

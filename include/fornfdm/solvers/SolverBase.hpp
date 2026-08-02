@@ -27,7 +27,7 @@ class SolverBase
     higher order schemes. i.e. Runge-Kutta, Adams-Bashforth
     will have to accept this minimum and use a different scheme to fill 
     to their respective minimum */
-    static constexpr std::size_t numIcsMin = LhsType::maxOrder;  
+    static constexpr std::size_t numIcsMin = LhsType::max_order;  
   
   protected:
     LhsType& m_lhs; // expression of time derivatives 

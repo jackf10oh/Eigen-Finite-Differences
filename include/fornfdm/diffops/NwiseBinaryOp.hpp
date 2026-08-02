@@ -82,10 +82,10 @@ struct traits_impl<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>
   static constexpr bool is_unarop = false; 
   static constexpr bool is_binop = true; 
   static constexpr bool is_ternop = false; 
-  static constexpr std::size_t max_num_args_called = std::max(traits<LhsType>::max_num_args_called,traits<RhsType>::max_num_args_called); 
+  static constexpr std::size_t max_arity = std::max(traits<LhsType>::max_arity,traits<RhsType>::max_arity); 
   static constexpr bool is_timedep = traits<LhsType>::is_timedep || traits<RhsType>::is_timedep; // if either L/R is timedep the xpr is time dep 
   static constexpr int direction = traits<LhsType>::direction; // by default mixing operators results in undefined direction... 
-  static constexpr std::size_t maxOrder = std::max(traits<LhsType>::maxOrder,traits<RhsType>::maxOrder); // highest order of derivative in the expression 
+  static constexpr std::size_t max_order = std::max(traits<LhsType>::max_order,traits<RhsType>::max_order); // highest order of derivative in the expression 
   typedef typename promote_node_selector_tags<typename traits<LhsType>::node_selector_tag,typename traits<RhsType>::node_selector_tag>::type node_selector_tag; // gurantees both minimum are fulfilled
   typedef typename merge_orders< typename traits<LhsType>::orders, typename traits<RhsType>::orders>::type orders;
 };
@@ -99,7 +99,7 @@ template<class BinaryOp, class LhsType, class RhsType>
 struct map_to_base_tag<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>,
   std::enable_if_t<
     traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::direction == 0 && 
-    traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::max_num_args_called <= 1 
+    traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::max_arity <= 1 
   >
 >
 {
@@ -112,7 +112,7 @@ template<class BinaryOp, class LhsType, class RhsType>
 struct map_to_base_tag<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>,
   std::enable_if_t<
     (traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::direction == 0 && 
-    traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::max_num_args_called > 1)
+    traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::max_arity > 1)
   >
 >
 {
@@ -130,7 +130,7 @@ template<class BinaryOp, class LhsType, class RhsType>
 struct map_to_base_tag<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>,
   std::enable_if_t<
     (traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::direction != 0 && 
-    traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::max_num_args_called == 0)
+    traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::max_arity == 0)
   >
 >
 {
@@ -143,7 +143,7 @@ template<class BinaryOp, class LhsType, class RhsType>
 struct map_to_base_tag<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>,
   std::enable_if_t<
     (traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::direction != 0 && 
-    traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::max_num_args_called != 0)
+    traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>::max_arity != 0)
   >
 >
 {

@@ -30,7 +30,7 @@ template<class Xpr>
 struct EvaluatorBase
 {
   using traits_t = fornfdm::linops::internal::traits<Xpr>; 
-  static constexpr std::size_t numNodesMin = traits_t::maxOrder+1;
+  static constexpr std::size_t numNodesMin = traits_t::max_order+1;
 
   // estimate is for compressed matrix. need to handle block diagonals outside of Evaluator. 
   template<class Container>
@@ -42,12 +42,12 @@ struct EvaluatorBase
     private:
     // types
     using Selector = NodeSelector<typename traits_t::node_selector_tag, numNodesMin>;  
-    using FornCalc = typename fornfdm::utils::FornbergStackCalc<Selector::numNodesMax, traits_t::maxOrder>;
+    using FornCalc = typename fornfdm::utils::FornbergStackCalc<Selector::numNodesMax, traits_t::max_order>;
     // member data  
     const Evaluator<Xpr>& m_eval; 
     Selector m_nodes; 
     FornCalc m_calc; 
-    fornfdm::Coordinate<traits_t::max_num_args_called> m_coords; 
+    fornfdm::Coordinate<traits_t::max_arity> m_coords; 
     fornfdm::Real m_time; 
     decltype (m_eval.createReader(m_coords,m_time)) m_reader;
 

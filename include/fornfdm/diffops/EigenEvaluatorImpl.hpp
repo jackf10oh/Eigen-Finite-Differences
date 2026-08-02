@@ -200,7 +200,7 @@ struct EigenEvaluatorImpl<Derived, std::enable_if_t<std::is_base_of_v<StoredWeig
 
   struct InnerIterator
   {
-    static constexpr std::size_t N = traits<Derived>::max_num_args_called;
+    static constexpr std::size_t N = traits<Derived>::max_arity;
     using Reader = decltype(std::declval<Evaluator<Derived>>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>(), std::declval<fornfdm::Real>()));
     // Constructor =============
     InnerIterator(const EigenEvaluatorImpl& eval, Index row_idx)
