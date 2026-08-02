@@ -117,7 +117,12 @@ struct map_to_base_tag<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>,
 >
 {
   using traits_t = traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>;
+  #ifndef FORNFDM_STORE_FULL_KRONECKER
   using type = typename std::conditional<traits_t::is_timedep, TimeDepStoredWeightsTag, StoredWeightsTag>::type;
+  #else
+  // Goes to a LeftKronecker instead!
+  using type = typename std::conditional<traits_t::is_timedep, TimeDepLeftKroneckerTag, LeftKroneckerTag>::type;
+  #endif
 };
 
 // (direction != 0 && max_num_args == 0) --> DoubleKroneckerTag or TimeDepDoubleKroneckerTag
@@ -143,7 +148,12 @@ struct map_to_base_tag<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>,
 >
 {
   using traits_t = traits<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>;
+  #ifndef FORNFDM_STORE_FULL_KRONECKER
   using type = typename std::conditional<traits_t::is_timedep, TimeDepStoredWeightsTag, StoredWeightsTag>::type;
+  #else
+  // Goes to a LeftKronecker instead!
+  using type = typename std::conditional<traits_t::is_timedep, TimeDepLeftKroneckerTag, LeftKroneckerTag>::type;
+  #endif
 };
 
 } // end namespace internal 

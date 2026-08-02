@@ -154,7 +154,7 @@ fornfdm::Real getTime() const &
 decltype(auto) evalTime(fornfdm::Real t) const
 {
   if constexpr(fornfdm::linops::internal::traits<Derived>::is_binop){
-    return fornfdm::linops::internal::ConvertedFO(derived().functor())(derived().lhs().derived().evalTime(t), derived().rhs().derived().evalTime(t));
+    return fornfdm::linops::internal::ConvertedFO(derived().functor())(derived().lhs().derived().evalTime(t), derived().rhs().derived().evalTime(t));;
   }
   else if constexpr(fornfdm::linops::internal::traits<Derived>::is_unarop){
     return fornfdm::linops::internal::ConvertedFO(derived().functor())(derived().nestedExpression().derived().evalTime(t));

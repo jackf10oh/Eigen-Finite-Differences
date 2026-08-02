@@ -12,6 +12,7 @@
 
 #include<array>
 #include<cstdint>
+#include<cassert>
 #include<iostream>
 #include "types.hpp"
 #include "traits.hpp"

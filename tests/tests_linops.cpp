@@ -6,6 +6,7 @@
 // 
 // JAF 7/4/2026 
 
+// #define FORNFDM_STORE_FULL_KRONECKER
 // #define FORNFDM_CUSTOM_SCALAR float
 #include<fornfdm/plugin.hpp>
 #include<fornfdm/all.hpp>
@@ -311,6 +312,39 @@ TEST(LinopsSuite, EvalTimeMatchesSetTime1D){
   test_lam(100, 4.0);
 }
 
+TEST(LinopsSuite, EvalTimeMatchesSetTime2D_pt1){
+  linops::TimeDepCoeff c = [](fornfdm::Real t, fornfdm::Scalar x){ return t + x*x; };
+  auto xpr = c * linops::NthPartialDeriv<1,1>{} + linops::NthPartialDeriv<2,1>{}; 
+
+  auto test_lam = [&](int nrows, int mrows, fornfdm::Real t)
+  {
+    auto mesh = make_Mesh(fornfdm::linspaced(nrows, 0.0, nrows-1),fornfdm::linspaced(mrows, 0.0,mrows-1));
+    xpr.setMesh(mesh); 
+    fornfdm::CSRMatrix eval_stencil = xpr.evalTime(t); 
+    
+    xpr.setTime(t); 
+    fornfdm::CSRMatrix set_stencil = xpr; 
+
+    xpr.setTime(t); 
+    fornfdm::CSRMatrix set_stencil_warm = xpr; 
+
+    for(int i=0; i<eval_stencil.rows(); ++i)
+    {
+      for(int j=0; j<eval_stencil.cols(); ++j)
+      {
+        fornfdm::Scalar check = set_stencil_warm.coeff(i,j);
+        ASSERT_EQ(set_stencil.coeff(i,j), check);
+        ASSERT_EQ(eval_stencil.coeff(i,j), check);
+      }
+    }
+  };
+  test_lam(11, 11, 0.0); 
+  test_lam(11, 21, 1.0); 
+  test_lam(6, 6, 4.0);
+  test_lam(17, 10, 9.0); 
+  test_lam(31, 5, 1.0); 
+}
+
 TEST(LinopsSuite, EvalTimeMatchesSetTime2D){
 
   linops::AutonomousCoeff a = [](fornfdm::Scalar x, fornfdm::Scalar y){ return x * y + y;}; 
@@ -319,37 +353,41 @@ TEST(LinopsSuite, EvalTimeMatchesSetTime2D){
   linops::TimeDepCoeff c = [](fornfdm::Real t, fornfdm::Scalar x){ return t + x*x; };
   auto dir_01 = c * linops::NthPartialDeriv<1,1>{} + linops::NthPartialDeriv<2,1>{}; 
 
-  auto xpr = dir_01 - dir_00;
-
   auto test_lam = [&](int n, int m, fornfdm::Real t)
   {
     auto mesh = make_Mesh(fornfdm::linspaced(n, 0.0, n-1),fornfdm::linspaced(m, 0.0, m-1));
-    
+  
+    auto xpr = dir_01 - dir_00;    
     xpr.setMesh(mesh); 
     fornfdm::CSRMatrix eval_stencil = xpr.evalTime(t); 
-    
+
     xpr.setTime(t); 
     fornfdm::CSRMatrix set_stencil = xpr; 
 
-    for(int i=0; i < n*m; ++i)
+    xpr.setTime(t); 
+    fornfdm::CSRMatrix set_stencil_warm = xpr; 
+
+    for(int i=0; i<eval_stencil.rows(); ++i)
     {
-      for(int j=0; j < n*m; ++j)
+      for(int j=0; j<eval_stencil.cols(); ++j)
       {
-        ASSERT_EQ(eval_stencil.coeff(i,j), set_stencil.coeff(i,j));
+        fornfdm::Scalar check = set_stencil_warm.coeff(i,j);
+        ASSERT_EQ(set_stencil.coeff(i,j), check);
+        ASSERT_EQ(eval_stencil.coeff(i,j), check);
       }
     }
   };
-  test_lam(11, 11, 0.0);
-  test_lam(11, 11, 0.0);
-  test_lam(11, 11, 0.0); 
+  test_lam(5, 5, 0.0);
+  test_lam(11, 11, 1.0);
+  test_lam(11, 11, 4.0); 
 
-  test_lam(11, 21, 0.0);
-  test_lam(11, 21, 0.0);
-  test_lam(11, 21, 0.0); 
+  test_lam(5, 7, 0.0);
+  test_lam(11, 21, 3.0);
+  test_lam(11, 21, 7.0); 
 
-  test_lam(21, 21, 0.0);
-  test_lam(21, 21, 0.0);
-  test_lam(21, 21, 0.0); 
+  test_lam(7, 5, 9.0);
+  test_lam(21, 21, 14.0);
+  test_lam(21, 21, 4.0); 
   
 }
 

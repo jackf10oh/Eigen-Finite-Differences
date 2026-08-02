@@ -10,6 +10,7 @@
 #ifndef FORNFDM_DIFFOPS_PARTIALDERIVBASE_H
 #define FORNFDM_DIFFOPS_PARTIALDERIVBASE_H
 
+#include<cassert>
 #include<cstdint>
 #include<Eigen/Core>
 #include<Eigen/SparseCore>
@@ -121,40 +122,103 @@ class PartialDerivBase<Derived, internal::LeftKroneckerTag> : public Eigen::Spar
     // Member Functions 
     void setMesh(const SharedConstMesh& m)
     {
+      using traits_t = typename linops::internal::traits<Derived>;
       // if number of args in callable c(x,y,z) is > meshes # of dims throw 
-      assert((0 <  m->numDims()) && "direction must be < # of dims.");
+      // assert((0 <  m->numDims()) && "direction must be < # of dims.");
+      // TODO use max_num_args_called + direction in the assert() 
       
       // store a weak_ptr to the mesh
       m_mesh_observed = m;
 
-      // produce m_product_after repeats of m_stencil on the diagonal
-      m_prod_after = m->sizesMiddleProduct(1,m->numDims()); 
-
       // setup hot loop
       using Evaluator = fornfdm::linops::internal::Evaluator<Derived>; 
       Evaluator eval(derived()); 
-      const auto& axis = m->getAxis(0); 
-      const std::size_t axis_size = m->sizeOfDim(0);  
+      const auto& axis = m->getAxis(traits_t::direction); 
+      const std::size_t axis_size = m->sizeOfDim(traits_t::direction);  
 
-      // resize + reserve the stencil 
-      std::size_t nnz = Evaluator::totalNonZeros(axis); 
-      m_stencil.reserve(nnz); 
-      m_stencil.resize(axis_size, axis_size);
-        
-      // write node wise expressions into each row stencil 
-      for(std::size_t row_idx=0; row_idx<axis_size; ++row_idx)
+      if constexpr((traits_t::direction == 0 && traits_t::max_num_args_called <= 1) || (traits_t::direction != 0 && traits_t::max_num_args_called == 0))
       {
-        // use node selector 
-        typename Evaluator::Row row(eval, m.get(), row_idx, row_idx, -1.0); 
-        // copy the indices into m_stencil's inner indices ptr
-        m_stencil.outerIndexPtr()[row_idx] = row.offset(); 
-        for(auto i=0; i<row.size(); ++i){
-          m_stencil.innerIndexPtr()[row.offset() + i] = row.index(i);
-          m_stencil.valuePtr()[row.offset() + i] = row.value(i);
+        // produce m_product_after repeats of m_stencil on the diagonal
+        m_prod_after = m->sizesMiddleProduct(traits_t::direction+1,m->numDims());
+
+        // resize + reserve the stencil 
+        std::size_t nnz = Evaluator::totalNonZeros(axis); 
+        m_stencil.reserve(nnz); 
+        m_stencil.resize(axis_size, axis_size);
+
+        // write node wise expressions into each row stencil 
+        for(std::size_t row_idx=0; row_idx<axis_size; ++row_idx)
+        {
+          // use node selector 
+          typename Evaluator::Row row(eval, m.get(), row_idx, row_idx, -1.0); 
+          // copy the indices into m_stencil's inner indices ptr
+          m_stencil.outerIndexPtr()[row_idx] = row.offset(); 
+          for(auto i=0; i<row.size(); ++i){
+            m_stencil.innerIndexPtr()[row.offset() + i] = row.index(i);
+            m_stencil.valuePtr()[row.offset() + i] = row.value(i);
+          }
         }
+        // very last outer index needs set. 
+        m_stencil.outerIndexPtr()[axis_size] = nnz; 
       }
-      // very last outer index needs set. 
-      m_stencil.outerIndexPtr()[axis_size] = nnz; 
+      else if constexpr(traits_t::max_num_args_called <= traits_t::direction + 1)
+      {
+        // produce m_product_after repeats of m_stencil on the diagonal
+        m_prod_after = m->sizesMiddleProduct(traits_t::direction+1,m->numDims());
+        // we can store the inflated 1st kronecker product, accounting for callables requiring coordinates. 
+        std::size_t product_before = m->sizesMiddleProduct(0,traits_t::direction); 
+
+        // resize + reserve the stencil 
+        std::size_t nnz = product_before * Evaluator::totalNonZeros(axis); 
+        m_stencil.reserve(nnz); 
+        m_stencil.resize(product_before*axis_size, product_before*axis_size); 
+
+        // write node wise expressions into each row stencil 
+        for(std::size_t row_idx=0; row_idx < product_before*axis_size; ++row_idx)
+        {
+          // use node selector 
+          typename Evaluator::Row row(eval, m.get(), (row_idx/product_before)%(m->sizeOfDim(traits_t::direction)), row_idx, -1.0); // -1.0 is null time
+          // copy the indices into m_stencil's inner indices ptr
+          std::size_t inner_offset = (row.offset() * product_before)+(row.size()*(row_idx%product_before)); 
+          std::size_t inset = row_idx%product_before; 
+          m_stencil.outerIndexPtr()[row_idx] = inner_offset; 
+          for(auto i=0; i<row.size(); ++i){
+            m_stencil.innerIndexPtr()[inner_offset + i] = inset + product_before * row.index(i);
+            m_stencil.valuePtr()[inner_offset + i] = row.value(i);
+          }
+        }
+        // very last outer index needs set. 
+        m_stencil.outerIndexPtr()[product_before*axis_size] = nnz; 
+      }
+      else // max_num_args_called > direction + 1
+      {
+        // produce m_product_after repeats of m_stencil on the diagonal
+
+
+        m_prod_after = m->sizesMiddleProduct(traits_t::max_num_args_called,m->numDims());
+        // we can store the inflated 1st kronecker product repeated n times 
+        std::size_t product_before = m->sizesMiddleProduct(0,traits_t::direction); 
+        std::size_t num_repeats = m->sizesMiddleProduct(traits_t::direction+1, traits_t::max_num_args_called); 
+
+        std::size_t nnz = product_before * Evaluator::totalNonZeros(axis); 
+        m_stencil.reserve(num_repeats * nnz); 
+        m_stencil.resize(num_repeats*product_before*axis_size, num_repeats*product_before*axis_size); 
+
+        // write node wise expressions into each row of stencil 
+        for(std::size_t row_idx=0; row_idx < num_repeats*product_before*axis_size; ++row_idx)
+        {
+          typename Evaluator::Row row(eval, m.get(), (row_idx/product_before)%(m->sizeOfDim(traits_t::direction)), row_idx, -1.0); // -1.0 is null time. 
+          std::size_t inner_offset = (nnz)*(row_idx/(product_before*axis_size))+(row.offset() * product_before)+(row.size()*(row_idx%product_before)); 
+          std::size_t inset = (product_before*axis_size)*(row_idx/(product_before*axis_size)) + (row_idx%product_before); 
+          m_stencil.outerIndexPtr()[row_idx] = inner_offset; 
+          for(auto i=0; i<row.size(); ++i){
+            m_stencil.innerIndexPtr()[inner_offset + i] = inset + product_before * row.index(i);
+            m_stencil.valuePtr()[inner_offset + i] = row.value(i);
+          }
+        }
+        // very last outer index needs set. 
+        m_stencil.outerIndexPtr()[num_repeats*product_before*axis_size] = num_repeats * nnz; 
+      }
     }
     SharedConstMesh getMesh() const { return m_mesh_observed.lock(); }
     const auto& evalTime(fornfdm::Real) const & { return toEigen(); } // nothing to calculate!
@@ -193,59 +257,169 @@ class PartialDerivBase<Derived, internal::TimeDepLeftKroneckerTag> : public Eige
     // Member Functions 
     void setMesh(const SharedConstMesh& m)
     {
+      using traits_t = typename linops::internal::traits<Derived>;
+      // if number of args in callable c(x,y,z) is > meshes # of dims throw 
+      // assert((0 <  m->numDims()) && "direction must be < # of dims.");
+      // TODO use max_num_args_called + direction in the assert() 
       m_mesh_observed = m;
       m_mesh_raw = m.get();
       // produce m_product_after repeats of m_stencil on the diagonal
-      m_prod_after = m->sizesMiddleProduct(1,m->numDims());
-      // setup
-      const std::size_t axis_size = m->sizeOfDim(0);
-      // resize + reserve the stencil
-      m_stencil.resize(axis_size, axis_size);
+      if constexpr((traits_t::direction == 0 && traits_t::max_num_args_called <= 1) || (traits_t::direction != 0 && traits_t::max_num_args_called == 0))
+      {
+        m_prod_after = m->sizesMiddleProduct(traits_t::direction+1,m->numDims());
+        // resize + reserve the stencil
+        const std::size_t axis_size = m->sizeOfDim(traits_t::direction);
+        m_stencil.resize(axis_size, axis_size);
+      }
+      else if constexpr(traits_t::max_num_args_called <= traits_t::direction + 1)
+      {
+        m_prod_after = m->sizesMiddleProduct(traits_t::direction+1,m->numDims());
+        // resize + reserve the stencil
+        const std::size_t s = m->sizesMiddleProduct(0, traits_t::direction+1);
+        m_stencil.resize(s, s);
+      }
+      else // max_num_args_called > direction + 1
+      {
+        m_prod_after = m->sizesMiddleProduct(traits_t::max_num_args_called,m->numDims());
+        const std::size_t s = m->sizesMiddleProduct(0, traits_t::max_num_args_called); // TODO is this right? really? 
+        m_stencil.resize(s,s);
+      }
       m_need_col_indices = true;
     }
     SharedConstMesh getMesh() const { return m_mesh_observed.lock(); }
     auto evalTime(fornfdm::Real t) const & { return fornfdm::linops::TimeEvaluation<Derived>(derived(), t); }
     void setTime(fornfdm::Real t)
     {
+      using traits_t = typename linops::internal::traits<Derived>;
       // store the new time
       m_time = t;
 
       // setup hot loop
       using Evaluator = fornfdm::linops::internal::Evaluator<Derived>; 
       Evaluator eval(derived()); 
-      const fornfdm::Vector& axis = m_mesh_raw->getAxis(0);
-      std::size_t axis_size = m_stencil.rows(); 
+      const fornfdm::Vector& axis = m_mesh_raw->getAxis(traits_t::direction);
+      std::size_t axis_size = m_mesh_raw->sizeOfDim(traits_t::direction); 
 
       if(m_need_col_indices)
       {
         // assignment loop. with assignment to innerIndexPtr
-        std::size_t nnz = Evaluator::totalNonZeros(axis); 
-        m_stencil.reserve(nnz);
-
-        // write node wise expressions into each row stencil 
-        for(std::size_t row_idx=0; row_idx<axis_size; ++row_idx)
+        if constexpr((traits_t::direction == 0 && traits_t::max_num_args_called <= 1) || (traits_t::direction != 0 && traits_t::max_num_args_called == 0))
         {
-          // use node selector 
-          typename Evaluator::Row row(eval, m_mesh_raw, row_idx, row_idx, t);
-          // copy the indices into m_stencil's inner indices ptr
-          m_stencil.outerIndexPtr()[row_idx] = row.offset(); 
-          for(auto i=0; i<row.size(); ++i){
-            m_stencil.innerIndexPtr()[row.offset() + i] = row.index(i);
-            m_stencil.valuePtr()[row.offset() + i] = row.value(i);
+          std::size_t nnz = Evaluator::totalNonZeros(axis); 
+          m_stencil.reserve(nnz);
+          // write node wise expressions into each row stencil 
+          for(std::size_t row_idx=0; row_idx<axis_size; ++row_idx)
+          {
+            // use node selector 
+            typename Evaluator::Row row(eval, m_mesh_raw, row_idx, row_idx, t);
+            // copy the indices into m_stencil's inner indices ptr
+            m_stencil.outerIndexPtr()[row_idx] = row.offset(); 
+            for(auto i=0; i<row.size(); ++i){
+              m_stencil.innerIndexPtr()[row.offset() + i] = row.index(i);
+              m_stencil.valuePtr()[row.offset() + i] = row.value(i);
+            }
           }
+          // very last outer index needs set. 
+          m_stencil.outerIndexPtr()[axis_size] = nnz; 
         }
-        // very last outer index needs set. 
-        m_stencil.outerIndexPtr()[axis_size] = nnz; 
+        else if constexpr(traits_t::max_num_args_called <= traits_t::direction + 1)
+        {
+          // we can store the inflated 1st kronecker product, accounting for callables requiring coordinates. 
+          std::size_t product_before = m_mesh_raw->sizesMiddleProduct(0,traits_t::direction); 
+
+          // resize + reserve the stencil 
+          std::size_t nnz = product_before * Evaluator::totalNonZeros(axis); 
+          m_stencil.reserve(nnz); 
+
+          // write node wise expressions into each row stencil 
+          for(std::size_t row_idx=0; row_idx < product_before*axis_size; ++row_idx)
+          {
+            // use node selector 
+            typename Evaluator::Row row(eval, m_mesh_raw, (row_idx/product_before)%(m_mesh_raw->sizeOfDim(traits_t::direction)), row_idx, t);
+            // copy the indices into m_stencil's inner indices ptr
+            std::size_t inner_offset = (row.offset() * product_before)+(row.size()*(row_idx%product_before)); 
+            std::size_t inset = row_idx%product_before; 
+            m_stencil.outerIndexPtr()[row_idx] = inner_offset; 
+            for(auto i=0; i<row.size(); ++i){
+              m_stencil.innerIndexPtr()[inner_offset + i] = inset + product_before * row.index(i);
+              m_stencil.valuePtr()[inner_offset + i] = row.value(i);
+            }
+          }
+          // very last outer index needs set. 
+          m_stencil.outerIndexPtr()[product_before*axis_size] = nnz; 
+        }
+        else // max_num_args_called > direction + 1
+        {
+          // we can store the inflated 1st kronecker product repeated n times 
+          std::size_t product_before = m_mesh_raw->sizesMiddleProduct(0,traits_t::direction); 
+          std::size_t num_repeats = m_mesh_raw->sizesMiddleProduct(traits_t::direction+1, traits_t::max_num_args_called); 
+
+          std::size_t nnz = product_before * Evaluator::totalNonZeros(axis); 
+          m_stencil.reserve(num_repeats * nnz); 
+          m_stencil.resize(num_repeats*product_before*axis_size, num_repeats*product_before*axis_size); 
+
+          // write node wise expressions into each row of stencil 
+          for(std::size_t row_idx=0; row_idx < num_repeats*product_before*axis_size; ++row_idx)
+          {
+            typename Evaluator::Row row(eval, m_mesh_raw, (row_idx/product_before)%(m_mesh_raw->sizeOfDim(traits_t::direction)), row_idx, t);
+            std::size_t inner_offset = (nnz)*(row_idx/(product_before*axis_size))+(row.offset() * product_before)+(row.size()*(row_idx%product_before)); 
+            std::size_t inset = (product_before*axis_size)*(row_idx/(product_before*axis_size)) + (row_idx%product_before); 
+            m_stencil.outerIndexPtr()[row_idx] = inner_offset; 
+            for(auto i=0; i<row.size(); ++i){
+              m_stencil.innerIndexPtr()[inner_offset + i] = inset + product_before * row.index(i);
+              m_stencil.valuePtr()[inner_offset + i] = row.value(i);
+            }
+          }
+          // very last outer index needs set. 
+          m_stencil.outerIndexPtr()[num_repeats*product_before*axis_size] = num_repeats * nnz; 
+        }
         m_need_col_indices=false;
       }
-      else
+      else // only write into valuesPtr
       {
-        // write node wise expressions into each row stencil 
-        for(std::size_t row_idx=0; row_idx<axis_size; ++row_idx)
+        if constexpr((traits_t::direction == 0 && traits_t::max_num_args_called <= 1) || (traits_t::direction != 0 && traits_t::max_num_args_called == 0))
         {
-          typename Evaluator::Row row(eval, m_mesh_raw, row_idx, row_idx, t);
-          for(auto i=0; i<row.size(); ++i){
-            m_stencil.valuePtr()[row.offset() + i] = row.value(i);
+          for(std::size_t row_idx=0; row_idx<axis_size; ++row_idx)
+          {
+            typename Evaluator::Row row(eval, m_mesh_raw, row_idx, row_idx, t);
+            // only copy into valuePtr
+            for(auto i=0; i<row.size(); ++i){
+              m_stencil.valuePtr()[row.offset() + i] = row.value(i);
+            }
+          }
+        }
+        else if constexpr(traits_t::max_num_args_called <= traits_t::direction + 1)
+        {
+          // we can store the inflated 1st kronecker product, accounting for callables requiring coordinates. 
+          std::size_t product_before = m_mesh_raw->sizesMiddleProduct(0,traits_t::direction); 
+          for(std::size_t row_idx=0; row_idx < product_before*axis_size; ++row_idx)
+          {
+            typename Evaluator::Row row(eval, m_mesh_raw, (row_idx/product_before)%(m_mesh_raw->sizeOfDim(traits_t::direction)), row_idx, t);
+            // only copy into valuePtr
+            std::size_t inner_offset = (row.offset() * product_before)+(row.size()*(row_idx%product_before)); 
+            for(auto i=0; i<row.size(); ++i){
+              m_stencil.valuePtr()[inner_offset + i] = row.value(i);
+            }
+          }
+        }
+        else // max_num_args_called > direction + 1
+        {
+          // we can store the inflated 1st kronecker product repeated n times 
+          std::size_t product_before = m_mesh_raw->sizesMiddleProduct(0,traits_t::direction); 
+          std::size_t num_repeats = m_mesh_raw->sizesMiddleProduct(traits_t::direction+1, traits_t::max_num_args_called); 
+
+          std::size_t nnz = product_before * Evaluator::totalNonZeros(axis); 
+          m_stencil.reserve(num_repeats * nnz); 
+          m_stencil.resize(num_repeats*product_before*axis_size, num_repeats*product_before*axis_size); 
+
+          // write node wise expressions into each row of stencil 
+          for(std::size_t row_idx=0; row_idx < num_repeats*product_before*axis_size; ++row_idx)
+          {
+            typename Evaluator::Row row(eval, m_mesh_raw, (row_idx/product_before)%(m_mesh_raw->sizeOfDim(traits_t::direction)), row_idx, t); 
+            std::size_t inner_offset = (nnz)*(row_idx/(product_before*axis_size))+(row.offset() * product_before)+(row.size()*(row_idx%product_before)); 
+            for(auto i=0; i<row.size(); ++i){
+              m_stencil.valuePtr()[inner_offset + i] = row.value(i);
+            }
           }
         }
       }

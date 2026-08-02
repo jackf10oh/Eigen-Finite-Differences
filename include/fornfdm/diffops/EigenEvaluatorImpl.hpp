@@ -273,11 +273,15 @@ struct EigenEvaluatorImpl<Derived, std::enable_if_t<std::is_base_of_v<StoredWeig
 // Use single kronecker product to make block diagonal: I @ D
 // ==================================================================
 
+// PROBLEM TODO *every* direction gets mapped to TimeDepLeftKroneckerTag when the macro is in effect.
+// need to change sfinae to somehow select TimeDepDoubleKroneckerTag when macro is defined
+
 template<class ArgType>
 struct EigenEvaluatorImpl<
   fornfdm::linops::TimeEvaluation<ArgType>, 
   std::enable_if_t<
-    std::is_same_v<TimeDepLeftKroneckerTag, typename map_to_base_tag<ArgType>::type>
+    (std::is_same_v<TimeDepLeftKroneckerTag, typename map_to_base_tag<ArgType>::type> &&
+      traits<ArgType>::direction == 0)
   >
 > : public Eigen::internal::evaluator_base<fornfdm::linops::TimeEvaluation<ArgType>>
 {
@@ -347,7 +351,9 @@ template<class ArgType>
 struct EigenEvaluatorImpl<
   fornfdm::linops::TimeEvaluation<ArgType>, 
   std::enable_if_t<
-    std::is_same_v<TimeDepDoubleKroneckerTag, typename map_to_base_tag<ArgType>::type>
+    (std::is_same_v<TimeDepDoubleKroneckerTag, typename map_to_base_tag<ArgType>::type> ||
+    (std::is_same_v<TimeDepLeftKroneckerTag, typename map_to_base_tag<ArgType>::type> && 
+      traits<ArgType>::direction != 0))
   >
 > : public Eigen::internal::evaluator_base<fornfdm::linops::TimeEvaluation<ArgType>>
 {
@@ -365,6 +371,7 @@ struct EigenEvaluatorImpl<
   Nested m_xpr;
   SharedConstMesh m_mesh;
   StorageIndex m_stencil_size;
+  StorageIndex m_prod_before;
 
   struct InnerIterator
   {
@@ -381,23 +388,35 @@ struct EigenEvaluatorImpl<
       : m_eval(eval),
       m_idx(0), 
       m_row_idx(row_index),
-      m_offset( m_eval.m_xpr.m_arg.getProductBefore() * m_eval.m_xpr.m_arg.getStencil().cols() * (m_row_idx / (m_eval.m_xpr.m_arg.getProductBefore() * m_eval.m_xpr.m_arg.getStencil().rows())) + (m_row_idx % m_eval.m_xpr.m_arg.getProductBefore()) ),
-      m_row(eval.m_eval, eval.m_mesh.get(), (row_index / m_eval.m_xpr.m_arg.getProductBefore())%(m_eval.m_xpr.m_arg.getStencil().rows()), row_index, eval.m_xpr.m_time)
+      m_offset( m_eval.m_prod_before * m_eval.m_stencil_size * (m_row_idx / (m_eval.m_prod_before * m_eval.m_stencil_size)) + (m_row_idx % m_eval.m_prod_before) ),
+      m_row(eval.m_eval, eval.m_mesh.get(), (row_index / m_eval.m_prod_before)%(m_eval.m_stencil_size), row_index, eval.m_xpr.m_time)
     {}
     
     // Member Functions --------------
     operator bool() const { return (m_idx != m_row.size()); }
     void operator++(){ ++m_idx; }
     StorageIndex row() const { return m_row_idx; }
-    StorageIndex col() const { return m_offset + m_row.index(m_idx) * m_eval.m_xpr.m_arg.getProductBefore(); }
-    StorageIndex index() const { return m_offset + m_row.index(m_idx) * m_eval.m_xpr.m_arg.getProductBefore(); }
+    StorageIndex col() const { return m_offset + m_row.index(m_idx) * m_eval.m_prod_before; }
+    StorageIndex index() const { return m_offset + m_row.index(m_idx) * m_eval.m_prod_before; }
     Scalar value() const { return m_row.value(m_idx); }
   };
 
   // Constructor ---------------- 
   EigenEvaluatorImpl(const fornfdm::linops::TimeEvaluation<ArgType>& xpr)
     : m_eval(xpr.m_arg), m_xpr(xpr), m_mesh(xpr.m_arg.getMesh())
-  {}
+  {
+    // work around for TimeDepLeftKronecker not exposing a getProductBefore() or correct stencil size
+    if constexpr(std::is_same_v<TimeDepDoubleKroneckerTag, typename map_to_base_tag<ArgType>::type>)
+    {
+      m_stencil_size = xpr.m_arg.getStencil().rows();
+      m_prod_before = xpr.m_arg.getProductBefore();
+    }
+    else
+    {
+      m_stencil_size = m_mesh->sizeOfDim(traits<ArgType>::direction);
+      m_prod_before = m_mesh->sizesMiddleProduct(0, traits<ArgType>::direction);
+    }    
+  }
 
   // member Functions ------------------ 
   auto rows() const { return m_xpr.rows(); }

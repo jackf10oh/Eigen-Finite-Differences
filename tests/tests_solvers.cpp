@@ -6,6 +6,7 @@
 // 
 // JAF 5/18/2026 
 
+// #define FORNFDM_STORE_FULL_KRONECKER
 // #define FORNFDM_CUSTOM_SCALAR float
 #include<fornfdm/plugin.hpp>
 #include<fornfdm/all.hpp>
