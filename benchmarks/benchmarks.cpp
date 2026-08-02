@@ -91,6 +91,26 @@ static void setMesh_sum(benchmark::State &state)
   }
 }; 
 
+template<bool warmed=false>
+static void setTime_arity_0(benchmark::State &state)
+{
+  for (auto _ : state)
+  {
+    state.PauseTiming();
+    int r = state.range(0);  
+    auto mesh = make_Mesh(linspaced(r+1,0.0,double(r)), 1); 
+    linops::TimeDepCoeff c = [](fornfdm::Real t){ return std::sin(t); };
+    auto xpr = c * linops::NthPartialDeriv<1,0>{};  
+    xpr.setMesh(mesh); 
+    if constexpr(warmed) 
+    {
+      xpr.setTime(3.0);
+    }
+    state.ResumeTiming(); 
+    xpr.setTime(11.0);
+  }
+}; 
+
 static void setMesh_2d(benchmark::State &state)
 {
   for (auto _ : state)
@@ -342,6 +362,8 @@ BENCHMARK(setMesh_order_2_direction_0)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(setMesh_order_3_direction_0)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(setMesh_saxby)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(setMesh_sum)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(setTime_arity_0)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(setTime_arity_0</*warmup*/true>)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(setMesh_2d)->Arg(10)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(setMesh_2d_assignment)->Arg(10)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(setTime_assignment)->Arg(100)->Arg(200)->Arg(400)->Arg(800);

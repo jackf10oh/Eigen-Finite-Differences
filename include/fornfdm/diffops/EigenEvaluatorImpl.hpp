@@ -201,7 +201,7 @@ struct EigenEvaluatorImpl<Derived, std::enable_if_t<std::is_base_of_v<StoredWeig
   struct InnerIterator
   {
     static constexpr std::size_t N = traits<Derived>::max_arity;
-    using Reader = decltype(std::declval<Evaluator<Derived>>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>(), std::declval<fornfdm::Real>()));
+    using Reader = decltype(std::declval<Evaluator<Derived>>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>()));
     // Constructor =============
     InnerIterator(const EigenEvaluatorImpl& eval, Index row_idx)
       : m_eval(eval), 
@@ -213,7 +213,7 @@ struct EigenEvaluatorImpl<Derived, std::enable_if_t<std::is_base_of_v<StoredWeig
       m_size(eval.m_xpr.getOutersPtr()[m_axis_idx+1] - m_offset),
       m_inner_indices(eval.m_xpr.getInnersPtr() + m_offset),
       m_weights(eval.m_xpr.getWeightsPtr() + m_offset * count_orders<typename traits<Derived>::orders>::value),
-      m_reader(eval.m_eval.template createExactReader<N>(fornfdm::Coordinate<N>(eval.m_mesh.get(), row_idx), eval.m_time))
+      m_reader(eval.m_eval.template createExactReader<N>(fornfdm::Coordinate<N>(eval.m_mesh.get(), row_idx)))
     {}
     // Member Functions ----------------------------------
     operator bool() const { return (m_counter != m_size); }
@@ -238,15 +238,15 @@ struct EigenEvaluatorImpl<Derived, std::enable_if_t<std::is_base_of_v<StoredWeig
   // Constructors ====================================== 
   EigenEvaluatorImpl(const XprType& xpr)
     : m_xpr(xpr),
-    m_eval(xpr),
+    m_eval(xpr, xpr.getTime()),
     m_mesh(xpr.getMesh()),
-    m_time(m_xpr.getTime()),
+    m_time(xpr.getTime()),
     m_size(xpr.rows())
   {}
 
   EigenEvaluatorImpl(const XprType& xpr, fornfdm::Real t)
     : m_xpr(xpr),
-    m_eval(xpr),
+    m_eval(xpr, t),
     m_mesh(xpr.getMesh()),
     m_time(t),
     m_size(xpr.rows())
@@ -316,7 +316,7 @@ struct EigenEvaluatorImpl<
       m_idx(0), 
       m_row_idx(row_index),
       m_offset(m_eval.m_xpr.m_arg.getStencil().cols() * (m_row_idx / (m_eval.m_xpr.m_arg.getStencil().rows()))),
-      m_row(eval.m_eval, eval.m_mesh.get(), row_index % (m_eval.m_xpr.m_arg.getStencil().rows()), row_index, eval.m_xpr.m_time)
+      m_row(eval.m_eval, eval.m_mesh.get(), row_index % (m_eval.m_xpr.m_arg.getStencil().rows()), row_index)
     {}
     
     // Member Functions --------------
@@ -330,7 +330,7 @@ struct EigenEvaluatorImpl<
 
   // Constructor ---------------- 
   EigenEvaluatorImpl(const fornfdm::linops::TimeEvaluation<ArgType>& xpr)
-    : m_eval(xpr.m_arg), m_xpr(xpr), m_mesh(xpr.m_arg.getMesh())
+    : m_eval(xpr.m_arg, xpr.m_time), m_xpr(xpr), m_mesh(xpr.m_arg.getMesh())
   {}
 
   // member Functions ------------------ 
@@ -389,7 +389,7 @@ struct EigenEvaluatorImpl<
       m_idx(0), 
       m_row_idx(row_index),
       m_offset( m_eval.m_prod_before * m_eval.m_stencil_size * (m_row_idx / (m_eval.m_prod_before * m_eval.m_stencil_size)) + (m_row_idx % m_eval.m_prod_before) ),
-      m_row(eval.m_eval, eval.m_mesh.get(), (row_index / m_eval.m_prod_before)%(m_eval.m_stencil_size), row_index, eval.m_xpr.m_time)
+      m_row(eval.m_eval, eval.m_mesh.get(), (row_index / m_eval.m_prod_before)%(m_eval.m_stencil_size), row_index)
     {}
     
     // Member Functions --------------
@@ -403,7 +403,7 @@ struct EigenEvaluatorImpl<
 
   // Constructor ---------------- 
   EigenEvaluatorImpl(const fornfdm::linops::TimeEvaluation<ArgType>& xpr)
-    : m_eval(xpr.m_arg), m_xpr(xpr), m_mesh(xpr.m_arg.getMesh())
+    : m_eval(xpr.m_arg, xpr.m_time), m_xpr(xpr), m_mesh(xpr.m_arg.getMesh())
   {
     // work around for TimeDepLeftKronecker not exposing a getProductBefore() or correct stencil size
     if constexpr(std::is_same_v<TimeDepDoubleKroneckerTag, typename map_to_base_tag<ArgType>::type>)

@@ -29,10 +29,13 @@ template<std::size_t _nthOrder, int _direction, class selector_tag>
 struct Evaluator<fornfdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_tag>> : public EvaluatorBase< fornfdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_tag> >
 {
   const fornfdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_tag>& m_xpr; 
-  Evaluator(const fornfdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_tag>& xpr): m_xpr(xpr){}
+  Evaluator(const fornfdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_tag>& xpr, fornfdm::Real t)
+    : EvaluatorBase< fornfdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_tag> >(t), 
+    m_xpr(xpr)
+  {}
 
   template<std::size_t N>
-  auto createReader(const fornfdm::Coordinate<N>& coord, fornfdm::Real t) const
+  auto createReader(const fornfdm::Coordinate<N>& coord) const
   { 
     return [](const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride){ return weights[_nthOrder*stride + idx]; };
   }
@@ -48,7 +51,7 @@ struct Evaluator<fornfdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_
   };
 
   template<std::size_t N>
-  ExactReader createExactReader(const fornfdm::Coordinate<N>& coord, fornfdm::Real t) const
+  ExactReader createExactReader(const fornfdm::Coordinate<N>& coord) const
   {
     return ExactReader{};
   }
