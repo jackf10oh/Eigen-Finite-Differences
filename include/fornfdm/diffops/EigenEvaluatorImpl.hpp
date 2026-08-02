@@ -213,7 +213,7 @@ struct EigenEvaluatorImpl<Derived, std::enable_if_t<std::is_base_of_v<StoredWeig
       m_size(eval.m_xpr.getOutersPtr()[m_axis_idx+1] - m_offset),
       m_inner_indices(eval.m_xpr.getInnersPtr() + m_offset),
       m_weights(eval.m_xpr.getWeightsPtr() + m_offset * count_orders<typename traits<Derived>::orders>::value),
-      m_reader(eval.m_eval.createExactReader(fornfdm::Coordinate<N>(eval.m_mesh.get(), row_idx), eval.m_time))
+      m_reader(eval.m_eval.template createExactReader<N>(fornfdm::Coordinate<N>(eval.m_mesh.get(), row_idx), eval.m_time))
     {}
     // Member Functions ----------------------------------
     operator bool() const { return (m_counter != m_size); }

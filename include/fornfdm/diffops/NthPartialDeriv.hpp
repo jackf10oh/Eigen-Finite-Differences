@@ -40,7 +40,7 @@ struct Evaluator<fornfdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_
   struct ExactReader
   {    
     template<std::size_t... orders>
-    operator()(const fornfdm::Scalar* data, std::size_t idx, std::size_t stride, std::index_sequence<orders...>) const
+    fornfdm::Scalar operator()(const fornfdm::Scalar* data, std::size_t idx, std::size_t stride, std::index_sequence<orders...>) const
     {
       constexpr std::size_t offset = locate_order<_nthOrder, std::index_sequence<orders...>>::value; 
       return data[offset*stride + idx];

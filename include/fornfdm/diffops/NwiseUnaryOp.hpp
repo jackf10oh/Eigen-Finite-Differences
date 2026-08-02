@@ -52,7 +52,7 @@ struct Evaluator<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>> : public Evalua
     : m_xpr(xpr), m_nested(nested)
     {};
     template<std::size_t... orders>
-    operator()(const fornfdm::Scalar* data, std::size_t idx, std::size_t stride, std::index_sequence<orders...>) const
+    fornfdm::Scalar operator()(const fornfdm::Scalar* data, std::size_t idx, std::size_t stride, std::index_sequence<orders...>) const
     {
       return m_xpr.functor()(m_nested(data, idx, stride, std::index_sequence<orders...>{}));
     }

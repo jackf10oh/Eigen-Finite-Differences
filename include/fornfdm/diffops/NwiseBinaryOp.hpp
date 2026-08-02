@@ -61,7 +61,7 @@ struct Evaluator<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> : pub
     {}
 
     template<std::size_t... orders>
-    operator()(const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride, std::index_sequence<orders...>) const
+    fornfdm::Scalar operator()(const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride, std::index_sequence<orders...>) const
     {
       return m_xpr.functor()(m_nested_left(weights, idx, stride, std::index_sequence<orders...>{}), m_nested_right(weights, idx, stride, std::index_sequence<orders...>{}));
     }
