@@ -59,30 +59,27 @@ struct EvaluatorBase
     Selector m_nodes; 
     FornCalc m_calc; 
     fornfdm::Coordinate<traits_t::max_arity> m_coords; 
-    fornfdm::Real m_time; 
-    decltype (m_eval.createReader(m_coords,m_time)) m_reader;
+    decltype (m_eval.createReader(m_coords)) m_reader;
 
     public:
     // Constructors -------------------- 
     // TODO get time t from evaluator.time() instead 
     [[deprecated("use 2nd constructor. no longer performing  (idx / prod_before) % axis_size from idx. new constructor takes (eval, mesh*, node_idx, row_idx, time) where node_idx is idx into 1D axis and row_idx is index into matrix.")]]
-    Row(const Evaluator<Xpr>& eval, const fornfdm::Mesh* m, std::size_t row_idx, fornfdm::Real t)
+    Row(const Evaluator<Xpr>& eval, const fornfdm::Mesh* m, std::size_t row_idx)
       : m_eval(eval), 
       m_nodes(m->getAxis(traits_t::direction), (row_idx / eval.m_xpr.m_prod_before) % m->sizeOfDim(traits_t::direction)),
       m_calc(m_nodes.x_bar, m_nodes.nodeValues.cbegin(), std::next(m_nodes.nodeValues.cbegin(), m_nodes.numNodesUsed)), 
       m_coords(m, row_idx), 
-      m_time(t),
-      m_reader(m_eval.createReader(m_coords,m_time))
+      m_reader(m_eval.createReader(m_coords))
     {}
 
     // TODO get time t from evaluator.time() instead 
-    Row(const Evaluator<Xpr>& eval, const fornfdm::Mesh* m, std::size_t node_idx, std::size_t row_idx, fornfdm::Real t)
+    Row(const Evaluator<Xpr>& eval, const fornfdm::Mesh* m, std::size_t node_idx, std::size_t row_idx)
       : m_eval(eval), 
       m_nodes(m->getAxis(traits_t::direction), node_idx),
       m_calc(m_nodes.x_bar, m_nodes.nodeValues.cbegin(), std::next(m_nodes.nodeValues.cbegin(), m_nodes.numNodesUsed)), 
       m_coords(m, row_idx), 
-      m_time(t),
-      m_reader(m_eval.createReader(m_coords,m_time))
+      m_reader(m_eval.createReader(m_coords))
     {}
 
     // Member Functions ======================================

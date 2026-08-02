@@ -45,22 +45,35 @@ struct Evaluator<CoeffProduct<LeftCoeff, RightDeriv>> : public EvaluatorBase<Coe
 {
   using XprType = fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>; 
   const XprType& m_xpr; 
+  fornfdm::Scalar m_coeff;
   Evaluator<typename XprType::Rhs> m_rhs_eval; 
   Evaluator(const fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>& xpr, fornfdm::Real t)
     : EvaluatorBase<CoeffProduct<LeftCoeff, RightDeriv>>(t), m_xpr(xpr), m_rhs_eval(xpr.rhs(), t)
-  {}
+  {
+    if constexpr(traits<LeftCoeff>::max_arity == 0)
+    {
+      if constexpr(traits<LeftCoeff>::is_timedep)
+      {
+        m_coeff = xpr.lhs().callable()(t);
+      }
+      else // autonomous case
+      {
+        m_coeff = xpr.lhs().callable()();
+      }
+    }
+  }
 
   template<std::size_t N>
-  auto createReader(const fornfdm::Coordinate<N>& coord, fornfdm::Real t) const
+  auto createReader(const fornfdm::Coordinate<N>& coord) const
   {
     if constexpr(fornfdm::linops::internal::traits<LeftCoeff>::is_timedep){
-      return [c = coord.applyBindFirst(m_xpr.lhs().callable(), t), nested = m_rhs_eval.createReader(coord,t)](const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride)
+      return [c = coord.applyBindFirst(m_xpr.lhs().callable(), this->m_time), nested = m_rhs_eval.createReader(coord)](const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride)
       {
         return c * nested(weights, idx, stride);
       };
     }
     else{
-      return [c = coord.apply(m_xpr.lhs().callable()), nested = m_rhs_eval.createReader(coord,t)](const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride)
+      return [c = coord.apply(m_xpr.lhs().callable()), nested = m_rhs_eval.createReader(coord)](const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride)
       {
         return c * nested(weights, idx, stride);
       };
@@ -68,13 +81,21 @@ struct Evaluator<CoeffProduct<LeftCoeff, RightDeriv>> : public EvaluatorBase<Coe
   }
 
   template<std::size_t N>
-  struct AutonomousExactReader
+  struct ExactReader
   {
-    using RhsReader = decltype(std::declval<const Evaluator<typename XprType::Rhs>&>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>(), std::declval<fornfdm::Real>()));    
-    AutonomousExactReader(const Evaluator& eval, const fornfdm::Coordinate<N>& coord, fornfdm::Real t)
-      : m_rhs_reader(eval.m_rhs_eval.template createExactReader<N>(coord, t)),
-      m_coeff(coord.apply(eval.m_xpr.lhs().callable()))
-    {}
+    using RhsReader = decltype(std::declval<const Evaluator<typename XprType::Rhs>&>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>()));    
+    ExactReader(const Evaluator& eval, const fornfdm::Coordinate<N>& coord)
+      : m_rhs_reader(eval.m_rhs_eval.template createExactReader<N>(coord))
+    {
+      if constexpr(traits<LeftCoeff>::is_timedep)
+      {
+        m_coeff = coord.applyBindFirst(eval.m_xpr.lhs().callable(), eval.m_time);
+      }
+      else // autonomous case
+      {
+        m_coeff = coord.apply(eval.m_xpr.lhs().callable());
+      }
+    }
     RhsReader m_rhs_reader;
     fornfdm::Scalar m_coeff; 
     template<std::size_t... orders>
@@ -84,31 +105,34 @@ struct Evaluator<CoeffProduct<LeftCoeff, RightDeriv>> : public EvaluatorBase<Coe
     }
   };
 
+  // if arity == 0 for the LeftCoeff. don't need to recalculate it every row!
   template<std::size_t N>
-  struct TimeDepExactReader
+  struct ZeroExactReader
   {
-    using RhsReader = decltype(std::declval<const Evaluator<typename XprType::Rhs>&>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>(), std::declval<fornfdm::Real>()));    
-    TimeDepExactReader(const Evaluator& eval, const fornfdm::Coordinate<N>& coord, fornfdm::Real t)
-      : m_rhs_reader(eval.m_rhs_eval.template createExactReader<N>(coord, t)),
-      m_coeff(coord.applyBindFirst(eval.m_xpr.lhs().callable(), t))
+    using RhsReader = decltype(std::declval<const Evaluator<typename XprType::Rhs>&>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>()));    
+    ZeroExactReader(const Evaluator& eval, const fornfdm::Coordinate<N>& coord)
+      : m_rhs_reader(eval.m_rhs_eval.template createExactReader<N>(coord)),
+      m_eval(eval)
     {}
     RhsReader m_rhs_reader;
-    fornfdm::Scalar m_coeff; 
+    const Evaluator& m_eval;
     template<std::size_t... orders>
     fornfdm::Scalar operator()(const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride, std::index_sequence<orders...>) const
     {
-      return m_coeff * m_rhs_reader(weights, idx, stride, std::index_sequence<orders...>{});
+      return m_eval.m_coeff * m_rhs_reader(weights, idx, stride, std::index_sequence<orders...>{});
     }
   };
 
   template<std::size_t N>
-  auto createExactReader(const fornfdm::Coordinate<N>& coord, fornfdm::Real t) const
+  auto createExactReader(const fornfdm::Coordinate<N>& coord) const
   {
-    if constexpr(traits<LeftCoeff>::is_timedep){
-      return TimeDepExactReader<N>(*this, coord, t);
+    if constexpr(traits<LeftCoeff>::max_arity == 0)
+    {
+      return ZeroExactReader<N>(*this, coord);
     }
-    else{
-      return AutonomousExactReader<N>(*this, coord, t);
+    else
+    {
+      return ExactReader<N>(*this, coord);
     }
   }
 }; 

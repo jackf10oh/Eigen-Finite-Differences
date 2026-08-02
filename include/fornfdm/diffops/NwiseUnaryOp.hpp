@@ -38,9 +38,9 @@ struct Evaluator<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>> : public Evalua
   {} 
 
   template<std::size_t N>
-  auto createReader(const fornfdm::Coordinate<N>& coord, fornfdm::Real t) const
+  auto createReader(const fornfdm::Coordinate<N>& coord) const
   {
-    return [f = m_xpr.functor(), nested = m_nested_eval.createReader(coord,t)](const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride)
+    return [f = m_xpr.functor(), nested = m_nested_eval.createReader(coord)](const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride)
     {
       return f(nested(weights,idx,stride));
     };
@@ -49,7 +49,7 @@ struct Evaluator<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>> : public Evalua
   template<std::size_t N>
   class ExactReader
   {
-    using NestedReader = decltype(std::declval<const Evaluator<typename UnarXprType::NestedExpression>&>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>(), std::declval<fornfdm::Real>()));
+    using NestedReader = decltype(std::declval<const Evaluator<typename UnarXprType::NestedExpression>&>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>()));
     const UnarXprType& m_xpr;
     NestedReader m_nested; 
     ExactReader(const UnarXprType& xpr, NestedReader nested) 
@@ -63,9 +63,9 @@ struct Evaluator<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>> : public Evalua
   };
 
   template<std::size_t N>
-  auto createExactReader(const fornfdm::Coordinate<N> coord, fornfdm::Real t) const
+  auto createExactReader(const fornfdm::Coordinate<N> coord) const
   {
-    return ExactReader<N>(m_xpr, m_nested_eval.template createExactReader<N>(coord, t));
+    return ExactReader<N>(m_xpr, m_nested_eval.template createExactReader<N>(coord));
   }
 };
 

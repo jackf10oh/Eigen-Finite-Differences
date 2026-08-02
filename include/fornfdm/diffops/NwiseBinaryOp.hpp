@@ -40,9 +40,9 @@ struct Evaluator<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> : pub
   {}
 
   template<std::size_t N>
-  auto createReader(const fornfdm::Coordinate<N>& coord, fornfdm::Real t) const
+  auto createReader(const fornfdm::Coordinate<N>& coord) const
   {
-    return [f = m_xpr.functor(), n1 = m_lhs_eval.createReader(coord,t), n2 = m_rhs_eval.createReader(coord,t)](const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride)
+    return [f = m_xpr.functor(), n1 = m_lhs_eval.createReader(coord), n2 = m_rhs_eval.createReader(coord)](const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride)
     {
       return f(n1(weights,idx,stride), n2(weights,idx,stride));
     };
@@ -51,16 +51,16 @@ struct Evaluator<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> : pub
   template<std::size_t N>
   struct ExactReader
   {
-    using LeftNestedReader = decltype(std::declval<const Evaluator<typename XprType::Lhs>&>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>(), std::declval<fornfdm::Real>()));
-    using RightNestedReader = decltype(std::declval<const Evaluator<typename XprType::Rhs>&>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>(), std::declval<fornfdm::Real>()));
+    using LeftNestedReader = decltype(std::declval<const Evaluator<typename XprType::Lhs>&>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>()));
+    using RightNestedReader = decltype(std::declval<const Evaluator<typename XprType::Rhs>&>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>()));
     const XprType& m_xpr;
     LeftNestedReader m_nested_left;
     RightNestedReader m_nested_right;
 
-    ExactReader(const Evaluator& eval, const fornfdm::Coordinate<N>& coord, fornfdm::Real t)
+    ExactReader(const Evaluator& eval, const fornfdm::Coordinate<N>& coord)
       : m_xpr(eval.m_xpr), 
-      m_nested_left(eval.m_lhs_eval.template createExactReader<N>(coord,t)),
-      m_nested_right(eval.m_rhs_eval.template createExactReader<N>(coord,t))
+      m_nested_left(eval.m_lhs_eval.template createExactReader<N>(coord)),
+      m_nested_right(eval.m_rhs_eval.template createExactReader<N>(coord))
     {}
 
     template<std::size_t... orders>
@@ -71,9 +71,9 @@ struct Evaluator<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> : pub
   };
 
   template<std::size_t N>
-  auto createExactReader(const fornfdm::Coordinate<N>& coord, fornfdm::Real t) const
+  auto createExactReader(const fornfdm::Coordinate<N>& coord) const
   {
-    return ExactReader<N>(*this, coord, t);
+    return ExactReader<N>(*this, coord);
   }
 };
 
