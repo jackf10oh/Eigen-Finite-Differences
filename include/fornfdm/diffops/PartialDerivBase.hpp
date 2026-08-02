@@ -284,7 +284,7 @@ class PartialDerivBase<Derived, internal::TimeDepLeftKroneckerTag> : public Eige
       else // max_arity > direction + 1
       {
         m_prod_after = m->sizesMiddleProduct(traits_t::max_arity,m->numDims());
-        const std::size_t s = m->sizesMiddleProduct(0, traits_t::max_arity); // TODO is this right? really? 
+        const std::size_t s = m->sizesMiddleProduct(0, traits_t::max_arity); 
         m_stencil.resize(s,s);
       }
       m_need_col_indices = true;
