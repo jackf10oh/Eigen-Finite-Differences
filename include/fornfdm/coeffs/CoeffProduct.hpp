@@ -66,17 +66,29 @@ struct Evaluator<CoeffProduct<LeftCoeff, RightDeriv>> : public EvaluatorBase<Coe
   template<std::size_t N>
   auto createReader(const fornfdm::Coordinate<N>& coord) const
   {
-    if constexpr(fornfdm::linops::internal::traits<LeftCoeff>::is_timedep){
+    if constexpr(traits<LeftCoeff>::max_arity == 0)
+    {
+      return [this, nested = m_rhs_eval.createReader(coord)](const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride)
+      {
+        return this->m_coeff * nested(weights, idx, stride);
+      };
+    }
+    else // arity of LeftCoeff > 0
+    {
+    if constexpr(traits<LeftCoeff>::is_timedep)
+    {
       return [c = coord.applyBindFirst(m_xpr.lhs().callable(), this->m_time), nested = m_rhs_eval.createReader(coord)](const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride)
       {
         return c * nested(weights, idx, stride);
       };
     }
-    else{
+    else // autonomous case
+    {
       return [c = coord.apply(m_xpr.lhs().callable()), nested = m_rhs_eval.createReader(coord)](const fornfdm::Scalar* weights, std::size_t idx, std::size_t stride)
       {
         return c * nested(weights, idx, stride);
       };
+    }
     }
   }
 
@@ -114,6 +126,7 @@ struct Evaluator<CoeffProduct<LeftCoeff, RightDeriv>> : public EvaluatorBase<Coe
       : m_rhs_reader(eval.m_rhs_eval.template createExactReader<N>(coord)),
       m_eval(eval)
     {}
+    
     RhsReader m_rhs_reader;
     const Evaluator& m_eval;
     template<std::size_t... orders>
