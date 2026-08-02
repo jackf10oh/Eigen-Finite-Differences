@@ -31,7 +31,11 @@ struct Evaluator<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>> : public Evalua
   using UnarXprType = fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>;  
   const UnarXprType& m_xpr; 
   Evaluator<typename UnarXprType::NestedExpression> m_nested_eval; 
-  Evaluator(const fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>& xpr) : m_xpr(xpr), m_nested_eval(xpr.nestedExpression()){} 
+  Evaluator(const fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>& xpr, fornfdm::Real t) 
+  : EvaluatorBase<fornfdm::linops::NwiseUnaryOp<UnaryOp,XprType>>(t), 
+    m_nested_eval(xpr.nestedExpression(),t),
+    m_xpr(xpr)
+  {} 
 
   template<std::size_t N>
   auto createReader(const fornfdm::Coordinate<N>& coord, fornfdm::Real t) const

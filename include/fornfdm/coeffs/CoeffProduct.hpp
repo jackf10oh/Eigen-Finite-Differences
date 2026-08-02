@@ -46,8 +46,8 @@ struct Evaluator<CoeffProduct<LeftCoeff, RightDeriv>> : public EvaluatorBase<Coe
   using XprType = fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>; 
   const XprType& m_xpr; 
   Evaluator<typename XprType::Rhs> m_rhs_eval; 
-  Evaluator(const fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>& xpr)
-    : m_xpr(xpr), m_rhs_eval(xpr.rhs())
+  Evaluator(const fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>& xpr, fornfdm::Real t)
+    : EvaluatorBase<CoeffProduct<LeftCoeff, RightDeriv>>(t), m_xpr(xpr), m_rhs_eval(xpr.rhs(), t)
   {}
 
   template<std::size_t N>

@@ -23,12 +23,23 @@ namespace linops{
 namespace internal{
 
 // declare as empty struct. specialized by individual types. should always inherit from EvaluatorBase<Xpr>  
+// TODO always have a constructor that takes a fornfdm::Real t for time. 
 template<class Xpr>
 struct Evaluator{}; 
 
 template<class Xpr>
 struct EvaluatorBase
 {
+  // TODO enforce that Evaluator must always pass a fornfdm::Real t to EvaluatorBase.
+  const fornfdm::Real m_time;
+  // Constructors + Destructor ------- 
+  EvaluatorBase()=delete;
+  EvaluatorBase(fornfdm::Real t)
+    : m_time(t)
+  {}
+  EvaluatorBase(const EvaluatorBase& other)=default;
+  ~EvaluatorBase()=default;
+
   using traits_t = fornfdm::linops::internal::traits<Xpr>; 
   static constexpr std::size_t numNodesMin = traits_t::max_order+1;
 
@@ -53,6 +64,7 @@ struct EvaluatorBase
 
     public:
     // Constructors -------------------- 
+    // TODO get time t from evaluator.time() instead 
     [[deprecated("use 2nd constructor. no longer performing  (idx / prod_before) % axis_size from idx. new constructor takes (eval, mesh*, node_idx, row_idx, time) where node_idx is idx into 1D axis and row_idx is index into matrix.")]]
     Row(const Evaluator<Xpr>& eval, const fornfdm::Mesh* m, std::size_t row_idx, fornfdm::Real t)
       : m_eval(eval), 
@@ -63,6 +75,7 @@ struct EvaluatorBase
       m_reader(m_eval.createReader(m_coords,m_time))
     {}
 
+    // TODO get time t from evaluator.time() instead 
     Row(const Evaluator<Xpr>& eval, const fornfdm::Mesh* m, std::size_t node_idx, std::size_t row_idx, fornfdm::Real t)
       : m_eval(eval), 
       m_nodes(m->getAxis(traits_t::direction), node_idx),

@@ -29,7 +29,10 @@ template<std::size_t _nthOrder, int _direction, class selector_tag>
 struct Evaluator<fornfdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_tag>> : public EvaluatorBase< fornfdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_tag> >
 {
   const fornfdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_tag>& m_xpr; 
-  Evaluator(const fornfdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_tag>& xpr): m_xpr(xpr){}
+  Evaluator(const fornfdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_tag>& xpr, fornfdm::Real t)
+    : EvaluatorBase< fornfdm::linops::NthPartialDeriv<_nthOrder,_direction,selector_tag> >(t), 
+    m_xpr(xpr)
+  {}
 
   template<std::size_t N>
   auto createReader(const fornfdm::Coordinate<N>& coord, fornfdm::Real t) const

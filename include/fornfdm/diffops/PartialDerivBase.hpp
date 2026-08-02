@@ -28,7 +28,10 @@ struct Evaluator<PartialDerivBase<Derived>> : public EvaluatorBase<PartialDerivB
 {
   Evaluator<Derived> m_derived_eval; 
 
-  Evaluator(const PartialDerivBase<Derived>& xpr) : m_derived_eval(xpr.derived()){}
+  Evaluator(const PartialDerivBase<Derived>& xpr, fornfdm::Real t) 
+  : EvaluatorBase<PartialDerivBase<Derived>>(t),
+    m_derived_eval(xpr.derived(), t)
+  {}
 
   template<std::size_t N>
   auto createReader(const fornfdm::Coordinate<N>& coord, fornfdm::Real t) const
@@ -132,7 +135,7 @@ class PartialDerivBase<Derived, internal::LeftKroneckerTag> : public Eigen::Spar
 
       // setup hot loop
       using Evaluator = fornfdm::linops::internal::Evaluator<Derived>; 
-      Evaluator eval(derived()); 
+      Evaluator eval(derived(),-1.0); 
       const auto& axis = m->getAxis(traits_t::direction); 
       const std::size_t axis_size = m->sizeOfDim(traits_t::direction);  
 
@@ -296,7 +299,7 @@ class PartialDerivBase<Derived, internal::TimeDepLeftKroneckerTag> : public Eige
 
       // setup hot loop
       using Evaluator = fornfdm::linops::internal::Evaluator<Derived>; 
-      Evaluator eval(derived()); 
+      Evaluator eval(derived(), t); 
       const fornfdm::Vector& axis = m_mesh_raw->getAxis(traits_t::direction);
       std::size_t axis_size = m_mesh_raw->sizeOfDim(traits_t::direction); 
 
@@ -469,7 +472,7 @@ class PartialDerivBase<Derived, internal::DoubleKroneckerTag> : public Eigen::Sp
 
       // setup hot loop
       using Evaluator = fornfdm::linops::internal::Evaluator<Derived>; 
-      Evaluator eval(derived()); 
+      Evaluator eval(derived(), -1.0); 
       const auto& axis = m->getAxis(traits_t::direction); 
       const std::size_t axis_size = m->sizeOfDim(traits_t::direction);  
 
@@ -557,7 +560,7 @@ class PartialDerivBase<Derived, internal::TimeDepDoubleKroneckerTag> : public Ei
       // setup hot loop
       using traits_t = fornfdm::linops::internal::traits<Derived>; 
       using Evaluator = fornfdm::linops::internal::Evaluator<Derived>; 
-      Evaluator eval(derived()); 
+      Evaluator eval(derived(), t); 
       const fornfdm::Vector& axis = m_mesh_raw->getAxis(traits_t::direction);
       std::size_t axis_size = m_stencil.rows(); 
 

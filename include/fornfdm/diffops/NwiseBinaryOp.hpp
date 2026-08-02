@@ -32,8 +32,11 @@ struct Evaluator<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>> : pub
   const XprType& m_xpr; 
   Evaluator<typename XprType::Lhs> m_lhs_eval; 
   Evaluator<typename XprType::Rhs> m_rhs_eval; 
-  Evaluator(const fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>& xpr)
-    : m_xpr(xpr), m_lhs_eval(xpr.lhs()), m_rhs_eval(xpr.rhs())
+  Evaluator(const fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>& xpr, fornfdm::Real t)
+    : EvaluatorBase<fornfdm::linops::NwiseBinaryOp<BinaryOp,LhsType,RhsType>>(t), 
+    m_xpr(xpr), 
+    m_lhs_eval(xpr.lhs(),t), 
+    m_rhs_eval(xpr.rhs(),t)
   {}
 
   template<std::size_t N>

@@ -238,15 +238,15 @@ struct EigenEvaluatorImpl<Derived, std::enable_if_t<std::is_base_of_v<StoredWeig
   // Constructors ====================================== 
   EigenEvaluatorImpl(const XprType& xpr)
     : m_xpr(xpr),
-    m_eval(xpr),
+    m_eval(xpr, xpr.getTime()),
     m_mesh(xpr.getMesh()),
-    m_time(m_xpr.getTime()),
+    m_time(xpr.getTime()),
     m_size(xpr.rows())
   {}
 
   EigenEvaluatorImpl(const XprType& xpr, fornfdm::Real t)
     : m_xpr(xpr),
-    m_eval(xpr),
+    m_eval(xpr, t),
     m_mesh(xpr.getMesh()),
     m_time(t),
     m_size(xpr.rows())
@@ -330,7 +330,7 @@ struct EigenEvaluatorImpl<
 
   // Constructor ---------------- 
   EigenEvaluatorImpl(const fornfdm::linops::TimeEvaluation<ArgType>& xpr)
-    : m_eval(xpr.m_arg), m_xpr(xpr), m_mesh(xpr.m_arg.getMesh())
+    : m_eval(xpr.m_arg, xpr.m_time), m_xpr(xpr), m_mesh(xpr.m_arg.getMesh())
   {}
 
   // member Functions ------------------ 
@@ -403,7 +403,7 @@ struct EigenEvaluatorImpl<
 
   // Constructor ---------------- 
   EigenEvaluatorImpl(const fornfdm::linops::TimeEvaluation<ArgType>& xpr)
-    : m_eval(xpr.m_arg), m_xpr(xpr), m_mesh(xpr.m_arg.getMesh())
+    : m_eval(xpr.m_arg, xpr.m_time), m_xpr(xpr), m_mesh(xpr.m_arg.getMesh())
   {
     // work around for TimeDepLeftKronecker not exposing a getProductBefore() or correct stencil size
     if constexpr(std::is_same_v<TimeDepDoubleKroneckerTag, typename map_to_base_tag<ArgType>::type>)
