@@ -9,6 +9,7 @@
 #define FORNFDM_OSTEPS_NEUMANN_H
 
 #include<array>
+#include<cassert>
 #include<cstdint>
 #include<type_traits>
 #include<Eigen/Core>

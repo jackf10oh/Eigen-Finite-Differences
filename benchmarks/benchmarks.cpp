@@ -91,6 +91,37 @@ static void setMesh_sum(benchmark::State &state)
   }
 }; 
 
+static void setMesh_2d(benchmark::State &state)
+{
+  for (auto _ : state)
+  {
+    state.PauseTiming();
+    int r = state.range(0);  
+    auto mesh = make_Mesh(linspaced(r+1,0.0,double(r)), 2);
+    linops::AutonomousCoeff func = [](fornfdm::Scalar x, fornfdm::Scalar y){ return y + x*x; };  
+    auto D = func * linops::NthPartialDeriv<1,1>{} + linops::NthPartialDeriv<2,1>{}; 
+    state.ResumeTiming(); 
+    D.setMesh(mesh); 
+  }
+}; 
+
+static void setMesh_2d_assignment(benchmark::State &state)
+{
+  for (auto _ : state)
+  {
+    state.PauseTiming();
+    int r = state.range(0);  
+    auto mesh = make_Mesh(linspaced(r+1,0.0,double(r)), 2);
+    linops::AutonomousCoeff func = [](fornfdm::Scalar x, fornfdm::Scalar y){ return y + x*x; };  
+    auto D = func * linops::NthPartialDeriv<1,1>{} + linops::NthPartialDeriv<2,1>{}; 
+    D.setMesh(mesh); 
+    state.ResumeTiming(); 
+    fornfdm::CSRMatrix stencil = D;
+    benchmark::DoNotOptimize(stencil);
+  }
+}; 
+
+template<bool warmup = false>
 static void setTime_assignment(benchmark::State &state)
 {
   for (auto _ : state)
@@ -101,9 +132,44 @@ static void setTime_assignment(benchmark::State &state)
     linops::TimeDepCoeff func = [](fornfdm::Real t, fornfdm::Scalar x){ return t + x*x; };  
     auto D = func * linops::NthPartialDeriv<1,0>{} + linops::NthPartialDeriv<2,0>{}; 
     D.setMesh(mesh); 
+    // new changes only write the indices to stencil's innerPtr if it's a newly set Mesh 
+    if constexpr(warmup){ D.setTime(5.0); }
     state.ResumeTiming(); 
     D.setTime(10.0); 
     fornfdm::CSRMatrix stencil = D;
+    benchmark::DoNotOptimize(stencil);
+  }
+}; 
+
+static void setTime_2d_assignment(benchmark::State &state)
+{
+  for (auto _ : state)
+  {
+    state.PauseTiming();
+    int r = state.range(0);  
+    auto mesh = make_Mesh(linspaced(r+1,0.0,double(r)), 2);
+    linops::TimeDepCoeff func = [](fornfdm::Real t, fornfdm::Scalar x){ return t + x*x; };  
+    auto D = func * linops::NthPartialDeriv<1,1>{} + linops::NthPartialDeriv<2,1>{}; 
+    D.setMesh(mesh); 
+    state.ResumeTiming(); 
+    D.setTime(10.0); 
+    fornfdm::CSRMatrix stencil = D;
+    benchmark::DoNotOptimize(stencil);
+  }
+}; 
+
+static void evalTime_2d_assignment(benchmark::State &state)
+{
+  for (auto _ : state)
+  {
+    state.PauseTiming();
+    int r = state.range(0);  
+    auto mesh = make_Mesh(linspaced(r+1,0.0,double(r)), 2);
+    linops::TimeDepCoeff func = [](fornfdm::Real t, fornfdm::Scalar x){ return t + x*x; };  
+    auto D = func * linops::NthPartialDeriv<1,1>{} + linops::NthPartialDeriv<2,1>{}; 
+    D.setMesh(mesh); 
+    state.ResumeTiming(); 
+    fornfdm::CSRMatrix stencil = D.evalTime(10.0);
     benchmark::DoNotOptimize(stencil);
   }
 }; 
@@ -276,8 +342,13 @@ BENCHMARK(setMesh_order_2_direction_0)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(setMesh_order_3_direction_0)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(setMesh_saxby)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(setMesh_sum)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(setMesh_2d)->Arg(10)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(setMesh_2d_assignment)->Arg(10)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(setTime_assignment)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(setTime_assignment</*warmup*/true>)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(evalTime_assignment)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(evalTime_2d_assignment)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+BENCHMARK(setTime_2d_assignment)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(Executor_getRhsExpression_assignment<1>)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(Executor_getRhsExpression_assignment<2>)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(Executor_getRhsExpression_assignment<4>)->Arg(100)->Arg(200)->Arg(400)->Arg(800);

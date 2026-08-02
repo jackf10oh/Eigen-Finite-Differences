@@ -8,6 +8,7 @@
 #define FORNFDM_UTILS_BUMPFUNC_H 
 
 #include<cmath>
+#include<cassert>
 #include<exception>
 #include "../types.hpp"
 
@@ -25,7 +26,7 @@ struct BumpFunc
     // Member Funcs 
     fornfdm::Scalar operator()(fornfdm::Scalar x) const 
     {
-      if( c<L || c>R) throw std::runtime_error("Error: Bad args to BumpFunc operator(). center outside [L,R]");
+      assert(( L<=c && c<=R) && "Error: Bad args to BumpFunc operator(). center outside [L,R]");
       // if(focus < 1.0) throw std::runtime_error("Error: Bar args to BumpFunc operator(). focus must be >= 1"); 
       if(x <= L)
       {

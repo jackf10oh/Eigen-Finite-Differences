@@ -35,8 +35,9 @@ struct traits_impl<fornfdm::linops::AutonomousCoeff<Callable>>
   static constexpr bool is_unarop = false; 
   static constexpr bool is_binop = false; 
   static constexpr bool is_ternop = false; 
-  static constexpr std::size_t max_num_args_called = fornfdm::internal::callable_traits<Callable>::arity; 
+  static constexpr std::size_t max_arity = fornfdm::internal::callable_traits<Callable>::arity; 
   static constexpr bool is_timedep = false; 
+  using orders = std::index_sequence<>;
 }; 
 
 } // end namespace internal 
@@ -49,9 +50,9 @@ namespace internal{
 // traits 
 template<class Callable>
 struct traits<fornfdm::linops::AutonomousCoeff<Callable>> 
-  : public traits<Eigen::CwiseNullaryOp<fornfdm::linops::CyclicWrapper, Eigen::Matrix<fornfdm::Scalar, 1, Eigen::Dynamic>>>
+  : public traits<Eigen::CwiseNullaryOp<fornfdm::linops::CyclicWrapper, fornfdm::Vector>>
 {
-  typedef typename Eigen::CwiseNullaryOp<fornfdm::linops::CyclicWrapper, Eigen::Matrix<fornfdm::Scalar, 1, Eigen::Dynamic>> DiagonalVectorType;
+  typedef typename Eigen::CwiseNullaryOp<fornfdm::linops::CyclicWrapper, fornfdm::Vector> DiagonalVectorType;
   typedef DiagonalShape StorageKind;
   enum {
     Flags = LvalueBit | NoPreferredStorageOrderBit
@@ -93,17 +94,17 @@ class AutonomousCoeff : public CoeffBase<AutonomousCoeff<Callable>>
     {
       m_mesh_observed = m; 
       using traits_t = fornfdm::linops::internal::traits<AutonomousCoeff<Callable>>; 
-      this->m_prod_after = m->sizesMiddleProduct(traits_t::max_num_args_called, m->numDims());
+      this->m_prod_after = m->sizesMiddleProduct(traits_t::max_arity, m->numDims());
       
-      std::size_t end = m->sizesMiddleProduct(0, traits_t::max_num_args_called);
+      std::size_t end = m->sizesMiddleProduct(0, traits_t::max_arity);
       this->m_diagonal.resize(end); 
       for(std::size_t idx=0; idx<end; ++idx)
       {
-        fornfdm::Coordinate<traits_t::max_num_args_called> coord(m.get(),idx);
+        fornfdm::Coordinate<traits_t::max_arity> coord(m.get(),idx);
         this->m_diagonal[idx] = coord.apply(m_callable);  
       }
       // placement new shenanigans
-      new (&(this->m_cyclic_wrapper)) typename CoeffBase<AutonomousCoeff<Callable>>::DiagonalVectorType(1,end*(this->m_prod_after),CyclicWrapper(this->m_diagonal, end)); 
+      new (&(this->m_cyclic_wrapper)) typename CoeffBase<AutonomousCoeff<Callable>>::DiagonalVectorType(end*(this->m_prod_after),1,CyclicWrapper(this->m_diagonal, end)); 
     }
     auto getMesh() const { return m_mesh_observed.lock(); }
     void setTime(fornfdm::Real t){/* do nothing */}

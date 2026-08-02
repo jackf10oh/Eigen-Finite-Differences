@@ -8,6 +8,7 @@
 #ifndef FORNFDM_UTILS_LINEARINTERPOLATION_H
 #define FORNFDM_UTILS_LINEARINTERPOLATION_H 
 
+#include<cassert>
 #include<utility> // std::pair
 #include<algorithm> // std::lower_bound
 #include<iterator>
@@ -21,21 +22,15 @@ auto make_subinterval(
   Iterator start, Iterator stop)
 {
   // runtime checks 
-  if(std::distance(start,stop) < 2) throw std::runtime_error("size of v < 2"); 
-  if(x < (*start)) throw std::runtime_error("c < v[0]"); 
+  assert((std::distance(start,stop) >= 2) && "error: size of v < 2"); 
+  assert((x >= (*start)) && "error: c < v[0]"); 
 
   // right side b in [a,b].
   auto after = std::lower_bound(start, stop, x);
   if(after == stop)
   {
-    if(x == *after)
-    {
-      return std::pair(std::prev(after), after); 
-    }
-    else
-    {
-      throw std::runtime_error("right bound == v.cend()"); 
-    }
+    assert((x == *after) && "right bound != v.cend()");
+    return std::pair(std::prev(after), after); 
   }
 
   if(after == start)

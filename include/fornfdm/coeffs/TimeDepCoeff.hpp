@@ -35,8 +35,9 @@ struct traits_impl<fornfdm::linops::TimeDepCoeff<Callable>>
   static constexpr bool is_unarop = false; 
   static constexpr bool is_binop = false; 
   static constexpr bool is_ternop = false; 
-  static constexpr std::size_t max_num_args_called = fornfdm::internal::callable_traits<Callable>::arity - 1; // first argument is time
+  static constexpr std::size_t max_arity = fornfdm::internal::callable_traits<Callable>::arity - 1; // first argument is time
   static constexpr bool is_timedep = true; 
+  using orders = std::index_sequence<>;
 }; 
 
 } // end namespace internal 
@@ -49,9 +50,9 @@ namespace internal{
 // traits 
 template<class Callable>
 struct traits<fornfdm::linops::TimeDepCoeff<Callable>> 
-  : public traits<Eigen::CwiseNullaryOp<fornfdm::linops::CyclicWrapper, Eigen::Matrix<fornfdm::Scalar, 1, Eigen::Dynamic>>>
+  : public traits<Eigen::CwiseNullaryOp<fornfdm::linops::CyclicWrapper, fornfdm::Vector>>
 {
-  typedef typename Eigen::CwiseNullaryOp<fornfdm::linops::CyclicWrapper, Eigen::Matrix<fornfdm::Scalar, 1, Eigen::Dynamic>> DiagonalVectorType;
+  typedef typename Eigen::CwiseNullaryOp<fornfdm::linops::CyclicWrapper, fornfdm::Vector> DiagonalVectorType;
   typedef DiagonalShape StorageKind;
   enum {
     Flags = LvalueBit | NoPreferredStorageOrderBit
@@ -100,17 +101,17 @@ class TimeDepCoeff : public CoeffBase<TimeDepCoeff<Callable>>
     void setTime(fornfdm::Real t)
     { 
       using traits_t = fornfdm::linops::internal::traits<TimeDepCoeff<Callable>>; 
-      this->m_prod_after = m_mesh_raw->sizesMiddleProduct(traits_t::max_num_args_called, m_mesh_raw->numDims());
+      this->m_prod_after = m_mesh_raw->sizesMiddleProduct(traits_t::max_arity, m_mesh_raw->numDims());
       
-      std::size_t end = m_mesh_raw->sizesMiddleProduct(0, traits_t::max_num_args_called);
+      std::size_t end = m_mesh_raw->sizesMiddleProduct(0, traits_t::max_arity);
       this->m_diagonal.resize(end); 
       for(std::size_t idx=0; idx<end; ++idx)
       {
-        fornfdm::Coordinate<traits_t::max_num_args_called> coord(m_mesh_raw,idx);
+        fornfdm::Coordinate<traits_t::max_arity> coord(m_mesh_raw,idx);
         this->m_diagonal[idx] = coord.applyBindFirst(m_callable, t);  
       }
       // placement new shenanigans
-      new (&(this->m_cyclic_wrapper)) typename CoeffBase<TimeDepCoeff<Callable>>::DiagonalVectorType(1,end*(this->m_prod_after),CyclicWrapper(this->m_diagonal, end)); 
+      new (&(this->m_cyclic_wrapper)) typename CoeffBase<TimeDepCoeff<Callable>>::DiagonalVectorType(end*(this->m_prod_after),1,CyclicWrapper(this->m_diagonal, end)); 
     }
     fornfdm::Real getTime() const { return m_current_time; }
 };

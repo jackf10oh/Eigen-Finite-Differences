@@ -2,6 +2,10 @@
 //
 // JAF 12/8/2025
 
+// #define FORNFDM_STORE_FULL_KRONECKER
+// #define FORNFDM_CUSTOM_SCALAR float
+// #define FORNFDM_CUSTOM_REAL float
+
 #include<iostream>
 #include<iomanip>
 #include<fornfdm/plugin.hpp> // defines EIGEN_SPARSEMATRIXBASE_PLUGIN macro

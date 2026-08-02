@@ -6,6 +6,7 @@
 // 
 // JAF 7/4/2026 
 
+// #define FORNFDM_STORE_FULL_KRONECKER
 // #define FORNFDM_CUSTOM_SCALAR float
 #include<fornfdm/plugin.hpp>
 #include<fornfdm/all.hpp>
@@ -116,7 +117,7 @@ TEST(LinopsSuite, BinaryAddition){
   {
     for(auto j=0; j<n; ++j)
     {
-      auto val = Ux.stencil().coeff(i,j) + Uxx.stencil().coeff(i,j);
+      auto val = Ux.getStencil().coeff(i,j) + Uxx.getStencil().coeff(i,j);
       ASSERT_EQ(result.coeff(i,j), val);
     }
   }
@@ -139,7 +140,7 @@ TEST(LinopsSuite, BinarySubtraction){
   {
     for(auto j=0; j<n; ++j)
     {
-      auto val = Ux.stencil().coeff(i,j) - Uxx.stencil().coeff(i,j);
+      auto val = Ux.getStencil().coeff(i,j) - Uxx.getStencil().coeff(i,j);
       ASSERT_EQ(result.coeff(i,j), val);
     }
   }
@@ -162,7 +163,7 @@ TEST(LinopsSuite, UnaryNegation){
   {
     for(auto j=0; j<n; ++j)
     {
-      auto val = -Ux.stencil().coeff(i,j);
+      auto val = -Ux.getStencil().coeff(i,j);
       ASSERT_EQ(result.coeff(i,j), val);
     }
   }
@@ -190,8 +191,8 @@ TEST(LinopsSuite, ScalarLeftMultiply){
     {
       for(auto j=0; j<n; ++j)
       {
-        auto val01 = c * Ux.stencil().coeff(i,j);
-        auto val02 = c * Uxx.stencil().coeff(i,j);
+        auto val01 = c * Ux.getStencil().coeff(i,j);
+        auto val02 = c * Uxx.getStencil().coeff(i,j);
         ASSERT_EQ(result01.coeff(i,j), val01);
         ASSERT_EQ(result02.coeff(i,j), val02);
       }
@@ -227,8 +228,8 @@ TEST(LinopsSuite, AutonCoeffProduct1D){
       fornfdm::Scalar eval = callable(mesh->getAxis(0)[i]);
       for(auto j=0; j<n; ++j)
       {
-        auto val01 = eval * Ux.stencil().coeff(i,j);
-        auto val02 = eval * Uxx.stencil().coeff(i,j);
+        auto val01 = eval * Ux.getStencil().coeff(i,j);
+        auto val02 = eval * Uxx.getStencil().coeff(i,j);
         ASSERT_EQ(result01.coeff(i,j), val01);
         ASSERT_EQ(result02.coeff(i,j), val02);
       }
@@ -268,8 +269,8 @@ TEST(LinopsSuite, TimeDepProduct1D){
         fornfdm::Scalar eval = callable(t, mesh->getAxis(0)[i]);
         for(auto j=0; j<n; ++j)
         {
-          auto val01 = eval * Ux.stencil().coeff(i,j);
-          auto val02 = eval * Uxx.stencil().coeff(i,j);
+          auto val01 = eval * Ux.getStencil().coeff(i,j);
+          auto val02 = eval * Uxx.getStencil().coeff(i,j);
           ASSERT_EQ(result01.coeff(i,j), val01);
           ASSERT_EQ(result02.coeff(i,j), val02);
         }
@@ -311,6 +312,39 @@ TEST(LinopsSuite, EvalTimeMatchesSetTime1D){
   test_lam(100, 4.0);
 }
 
+TEST(LinopsSuite, EvalTimeMatchesSetTime2D_pt1){
+  linops::TimeDepCoeff c = [](fornfdm::Real t, fornfdm::Scalar x){ return t + x*x; };
+  auto xpr = c * linops::NthPartialDeriv<1,1>{} + linops::NthPartialDeriv<2,1>{}; 
+
+  auto test_lam = [&](int nrows, int mrows, fornfdm::Real t)
+  {
+    auto mesh = make_Mesh(fornfdm::linspaced(nrows, 0.0, nrows-1),fornfdm::linspaced(mrows, 0.0,mrows-1));
+    xpr.setMesh(mesh); 
+    fornfdm::CSRMatrix eval_stencil = xpr.evalTime(t); 
+    
+    xpr.setTime(t); 
+    fornfdm::CSRMatrix set_stencil = xpr; 
+
+    xpr.setTime(t); 
+    fornfdm::CSRMatrix set_stencil_warm = xpr; 
+
+    for(int i=0; i<eval_stencil.rows(); ++i)
+    {
+      for(int j=0; j<eval_stencil.cols(); ++j)
+      {
+        fornfdm::Scalar check = set_stencil_warm.coeff(i,j);
+        ASSERT_EQ(set_stencil.coeff(i,j), check);
+        ASSERT_EQ(eval_stencil.coeff(i,j), check);
+      }
+    }
+  };
+  test_lam(11, 11, 0.0); 
+  test_lam(11, 21, 1.0); 
+  test_lam(6, 6, 4.0);
+  test_lam(17, 10, 9.0); 
+  test_lam(31, 5, 1.0); 
+}
+
 TEST(LinopsSuite, EvalTimeMatchesSetTime2D){
 
   linops::AutonomousCoeff a = [](fornfdm::Scalar x, fornfdm::Scalar y){ return x * y + y;}; 
@@ -319,40 +353,42 @@ TEST(LinopsSuite, EvalTimeMatchesSetTime2D){
   linops::TimeDepCoeff c = [](fornfdm::Real t, fornfdm::Scalar x){ return t + x*x; };
   auto dir_01 = c * linops::NthPartialDeriv<1,1>{} + linops::NthPartialDeriv<2,1>{}; 
 
-  auto xpr = dir_01 - dir_00;
-
   auto test_lam = [&](int n, int m, fornfdm::Real t)
   {
     auto mesh = make_Mesh(fornfdm::linspaced(n, 0.0, n-1),fornfdm::linspaced(m, 0.0, m-1));
-    
+  
+    auto xpr = dir_01 - dir_00;    
     xpr.setMesh(mesh); 
     fornfdm::CSRMatrix eval_stencil = xpr.evalTime(t); 
-    
+
     xpr.setTime(t); 
     fornfdm::CSRMatrix set_stencil = xpr; 
 
-    for(int i=0; i < n*m; ++i)
+    xpr.setTime(t); 
+    fornfdm::CSRMatrix set_stencil_warm = xpr; 
+
+    for(int i=0; i<eval_stencil.rows(); ++i)
     {
-      for(int j=0; j < n*m; ++j)
+      for(int j=0; j<eval_stencil.cols(); ++j)
       {
-        ASSERT_EQ(eval_stencil.coeff(i,j), set_stencil.coeff(i,j));
+        fornfdm::Scalar check = set_stencil_warm.coeff(i,j);
+        ASSERT_EQ(set_stencil.coeff(i,j), check);
+        ASSERT_EQ(eval_stencil.coeff(i,j), check);
       }
     }
   };
-  test_lam(11, 11, 0.0);
-  test_lam(11, 11, 0.0);
-  test_lam(11, 11, 0.0); 
+  test_lam(5, 5, 0.0);
+  test_lam(11, 11, 1.0);
+  test_lam(11, 11, 4.0); 
 
-  test_lam(11, 21, 0.0);
-  test_lam(11, 21, 0.0);
-  test_lam(11, 21, 0.0); 
+  test_lam(5, 7, 0.0);
+  test_lam(11, 21, 3.0);
+  test_lam(11, 21, 7.0); 
 
-  test_lam(21, 21, 0.0);
-  test_lam(21, 21, 0.0);
-  test_lam(21, 21, 0.0); 
+  test_lam(7, 5, 9.0);
+  test_lam(21, 21, 14.0);
+  test_lam(21, 21, 4.0); 
   
 }
 
-// todo Kronecker evaluator
-
-// todo higher dimension tests
+// TODO higher dimension tests

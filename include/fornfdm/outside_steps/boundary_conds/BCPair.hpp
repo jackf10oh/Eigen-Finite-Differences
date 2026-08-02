@@ -10,6 +10,7 @@
 #define FORNFDM_OSTEPS_BCPAIR_H
 
 #include<array>
+#include<cassert>
 #include<cstdint>
 #include<type_traits>
 #include<Eigen/Core>

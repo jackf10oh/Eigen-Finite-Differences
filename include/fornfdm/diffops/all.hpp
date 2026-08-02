@@ -18,7 +18,7 @@
 #include "EvaluatorBase.hpp"
 #include "TimeEvaluation.hpp"
 #include "PartialDerivBase.hpp"
-#include "KroneckerEvaluator.hpp"
+#include "EigenEvaluatorImpl.hpp"
 #include "NthPartialDeriv.hpp"
 #include "NwiseUnaryOp.hpp"
 #include "NwiseBinaryOp.hpp"

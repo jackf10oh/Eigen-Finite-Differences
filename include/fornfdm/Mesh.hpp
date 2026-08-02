@@ -9,6 +9,7 @@
 #define FORNFDM_MESH_H 
 
 #include<array> // std::array
+#include<cassert>
 #include<vector> // std::vector
 #include<memory> // std::shared_ptr
 #include<Eigen/Core> 
@@ -36,7 +37,7 @@ class Mesh : public std::enable_shared_from_this<Mesh>
     Mesh(const Eigen::MatrixBase<ArgType>& xpr, std::size_t dims=1)
       : m_size(dims)
     {
-      if(dims > numDimsMax) throw std::runtime_error("Can't construct mesh with given dims"); 
+      assert((dims <= numDimsMax) && "Can't construct mesh with given dims"); 
       for(std::size_t idx=0; idx<m_size; ++idx){
         m_mesh_arr[idx] = xpr; 
       }
@@ -113,8 +114,8 @@ class Mesh : public std::enable_shared_from_this<Mesh>
     // product of axes up to dim exclusively [first, dim)
     std::size_t sizesMiddleProduct(std::size_t start, std::size_t end) const 
     {
-      if(start > end) throw std::invalid_argument("start index must be <= end index for middle product"); 
-      if(end > m_size) throw std::invalid_argument("end index must be <= # of numDims in MeshXD"); 
+      assert((start <= end) && "start index must be <= end index for middle product"); 
+      assert((end <= m_size) && "end index must be <= # of numDims in MeshXD"); 
       std::size_t prod = 1; 
       for(auto idx=start; idx<end; ++idx){
         prod *= m_mesh_arr[idx].size(); 
@@ -126,9 +127,9 @@ class Mesh : public std::enable_shared_from_this<Mesh>
     std::vector<fornfdm::StrideView> makeOneDimViews(fornfdm::StrideRef vec, std::size_t ith_dim=0) const 
     {
       // # of entries in vec must be == to product of mesh1D sizes
-      if(vec.size() != sizesProduct()) throw std::runtime_error("DiscretizationXD # of entries must be == to product of sizes in MeshXD"); 
+      assert((vec.size() == sizesProduct()) && "DiscretizationXD # of entries must be == to product of sizes in MeshXD"); 
       // i has to be one of the dimensions of DiscretizationXD 
-      if(ith_dim >= numDims()) throw std::runtime_error("MeshXD::OneDim_views(i) i must be < MeshXD.numDims().");
+      assert((ith_dim < numDims()) && "MeshXD::OneDim_views(i) i must be < MeshXD.numDims().");
 
       std::size_t ith_dim_size = sizeOfDim(ith_dim); 
       std::size_t num_copies = sizesProduct() / ith_dim_size; 
