@@ -18,6 +18,34 @@
 using namespace fornfdm; 
 
 // Solver Suite ------------------------------------------------- 
+TEST(SolverSuite, TimeArgsBuilder){
+  auto test_lam_01 = [](fornfdm::Real t0, fornfdm::Real t1, fornfdm::Real dt)
+  {
+    auto arg = solvers::TimeArg::builder().setStart(t0).setStop(t1).setStepSize(dt).build();
+    ASSERT_EQ(arg->getStart(), t0);
+    ASSERT_EQ(arg->getStop(), t1);
+    ASSERT_EQ(arg->getStepSize(), dt);
+  };
+  test_lam_01(0.0, 10.0, 2.0);
+  test_lam_01(0.0, 7.0, 2.0);
+  test_lam_01(2.0, 10.0, 2.0);
+  test_lam_01(0.0, 10.0, 0.2);
+  test_lam_01(20.0, 21.0, 0.01);
+
+  auto test_lam_02 = [](fornfdm::Real t0, fornfdm::Real t1, std::size_t n)
+  {
+    auto arg = solvers::TimeArg::builder().setStart(t0).setStop(t1).setNumSteps(n).build();
+    ASSERT_EQ(arg->getStart(), t0);
+    ASSERT_EQ(arg->getStop(), t1);
+    ASSERT_EQ(arg->getStepSize(), (t1-t0)/n);
+  };
+  test_lam_01(0.0, 10.0, 2);
+  test_lam_01(0.0, 7.0, 3);
+  test_lam_01(2.0, 10.0, 5);
+  test_lam_01(0.0, 10.0, 8);
+  test_lam_01(20.0, 21.0, 13);
+}
+
 TEST(SolverSuite, OneDimExplicitSolver){
   constexpr double pi = 3.14159265385; 
   // Domain + Time  
