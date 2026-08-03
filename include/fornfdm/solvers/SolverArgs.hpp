@@ -88,6 +88,7 @@ class TimeArg
     TimeArg(fornfdm::Real t0, fornfdm::Real t1, fornfdm::Real dt, HiddenType)
       : m_start(t0), m_stepsize(dt), m_stop(t1)
     {}
+    TimeArg(const TimeArg& other)=delete;
     ~TimeArg()=default;
 
     // Member Funcs --------

@@ -47,7 +47,7 @@ TEST(SolverSuite, TimeArgsBuilder){
 }
 
 TEST(SolverSuite, OneDimExplicitSolver){
-  constexpr double pi = 3.14159265385; 
+  constexpr fornfdm::Scalar pi = 3.14159265385; 
   // Domain + Time  
   fornfdm::solvers::SolverArgs args{
     /*.mesh=*/make_Mesh(fornfdm::linspaced(30,0.0,pi), 1), 
@@ -55,7 +55,7 @@ TEST(SolverSuite, OneDimExplicitSolver){
   }; 
 
   // Initial Conditions  
-  auto v = discretize(args.mesh, [](double x){ return std::sin(x); }); 
+  auto v = discretize(args.mesh, [](fornfdm::Scalar x){ return std::sin(x); }); 
   args.initialConditions = { std::move(v) }; 
 
   // LHS in time 
@@ -74,13 +74,13 @@ TEST(SolverSuite, OneDimExplicitSolver){
   auto sol = exp_solver.calculate(args, solvers::LastSaver{}); 
   for(auto idx = 0; idx<args.mesh->sizeOfDim(0); ++idx)
   {
-    double exact_val = std::sin(args.mesh->getAxis(0)[idx]) * std::exp(- (*args.times)[args.times->size()-1]); 
+    fornfdm::Scalar exact_val = std::sin(args.mesh->getAxis(0)[idx]) * std::exp(- (*args.times)[args.times->size()-1]); 
     ASSERT_NEAR(sol[idx], exact_val, 0.025);
   }
 };
 
 TEST(SolverSuite, OneDimImplicitSolver){
-  constexpr double pi = 3.14159265385; 
+  constexpr fornfdm::Scalar pi = 3.14159265385; 
   // Domain + Time  
   fornfdm::solvers::SolverArgs args{
     /*.mesh=*/make_Mesh(fornfdm::linspaced(30,0.0,pi), 1), 
@@ -88,7 +88,7 @@ TEST(SolverSuite, OneDimImplicitSolver){
   }; 
 
   // Initial Conditions  
-  auto v = discretize(args.mesh, [](double x){ return std::sin(x); }); 
+  auto v = discretize(args.mesh, [](fornfdm::Scalar x){ return std::sin(x); }); 
   args.initialConditions = { std::move(v) }; 
 
   // LHS in time 
@@ -107,13 +107,13 @@ TEST(SolverSuite, OneDimImplicitSolver){
   auto sol = imp_solver.calculate(args, solvers::LastSaver{}); 
   for(auto idx = 0; idx<args.mesh->sizeOfDim(0); ++idx)
   {
-    double exact_val = std::sin(args.mesh->getAxis(0)[idx]) * std::exp(- (*args.times)[args.times->size()-1]); 
+    fornfdm::Scalar exact_val = std::sin(args.mesh->getAxis(0)[idx]) * std::exp(- (*args.times)[args.times->size()-1]); 
     ASSERT_NEAR(sol[idx], exact_val, 0.025);
   }
 };
 
 TEST(SolverSuite, OneDimCrankNicolsonSolver){
-  constexpr double pi = 3.14159265385; 
+  constexpr fornfdm::Scalar pi = 3.14159265385; 
   // Domain + Time  
   fornfdm::solvers::SolverArgs args{
     /*.mesh=*/make_Mesh(fornfdm::linspaced(30,0.0,pi), 1), 
@@ -121,7 +121,7 @@ TEST(SolverSuite, OneDimCrankNicolsonSolver){
   }; 
 
   // Initial Conditions  
-  auto v = discretize(args.mesh, [](double x){ return std::sin(x); }); 
+  auto v = discretize(args.mesh, [](fornfdm::Scalar x){ return std::sin(x); }); 
   args.initialConditions = { std::move(v) }; 
 
   // LHS in time 
@@ -140,7 +140,40 @@ TEST(SolverSuite, OneDimCrankNicolsonSolver){
   auto sol = cn_solver.calculate(args, solvers::LastSaver{}); 
   for(auto idx = 0; idx<args.mesh->sizeOfDim(0); ++idx)
   {
-    double exact_val = std::sin(args.mesh->getAxis(0)[idx]) * std::exp(- (*args.times)[args.times->size()-1]); 
+    fornfdm::Scalar exact_val = std::sin(args.mesh->getAxis(0)[idx]) * std::exp(- (*args.times)[args.times->size()-1]); 
+    ASSERT_NEAR(sol[idx], exact_val, 0.025);
+  }
+};
+
+TEST(SolverSuite, OneDimFastExpSolver){
+  constexpr fornfdm::Scalar pi = 3.14159265385; 
+  // Domain + Time  
+  fornfdm::solvers::SolverArgs args{
+    /*.mesh=*/make_Mesh(fornfdm::linspaced(30,0.0,pi), 1), 
+    /*times=*/solvers::TimeArg::builder().setStart(0.0).setStop(0.5).setNumSteps(300).build()
+  }; 
+
+  // Initial Conditions  
+  auto v = discretize(args.mesh, [](fornfdm::Scalar x){ return std::sin(x); }); 
+  args.initialConditions = { std::move(v) }; 
+
+  // LHS in time 
+  auto Ut = texprs::NthTimeDeriv<1>{}; 
+
+  // RHS in space 
+  auto Uxx = linops::NthPartialDeriv<2,0,fornfdm::linops::Centered<5>>{}; 
+
+  // Boundary Conditions 
+  auto left = osteps::Dirichlet(0.0); 
+  auto right = left;
+  osteps::BCPair bcs(left,right); 
+
+  solvers::FastExpSolver fast_solver(Ut,Uxx,std::tie(bcs)); 
+  
+  auto sol = fast_solver.calculate(args, solvers::LastSaver{}); 
+  for(auto idx = 0; idx<args.mesh->sizeOfDim(0); ++idx)
+  {
+    fornfdm::Scalar exact_val = std::sin(args.mesh->getAxis(0)[idx]) * std::exp(- args.times->getStop()); 
     ASSERT_NEAR(sol[idx], exact_val, 0.025);
   }
 };
@@ -155,7 +188,7 @@ TEST(InterpolationSuite, HighDimLinearInterpolation){
   // 1D test 
   auto mesh_1d = fornfdm::make_Mesh(fornfdm::linspaced(21,-10.0,10.0),1); 
   auto mesh_1d_fine = fornfdm::make_Mesh(fornfdm::linspaced(200,-10.0,10.0),1); 
-  auto lam_1d = [](double x){ return 10.54 + 32.7 * x; }; 
+  auto lam_1d = [](fornfdm::Scalar x){ return 10.54 + 32.7 * x; }; 
   auto vec_1d = discretize(mesh_1d, lam_1d); 
   for(auto i = 0; i < mesh_1d_fine->sizeOfDim(0); ++i)
   {
@@ -168,7 +201,7 @@ TEST(InterpolationSuite, HighDimLinearInterpolation){
   // 2D test 
   auto mesh_2d = fornfdm::make_Mesh(fornfdm::linspaced(21,-10.0,10.0),2); 
   auto mesh_2d_fine = fornfdm::make_Mesh(fornfdm::linspaced(200,-10.0,10.0),2); 
-  auto lam_2d = [](double x, double y){ return 10.54 + 32.7 * x + 17.2 * y; }; 
+  auto lam_2d = [](fornfdm::Scalar x, fornfdm::Scalar y){ return 10.54 + 32.7 * x + 17.2 * y; }; 
   auto vec_2d = discretize(mesh_2d, lam_2d); 
   for(auto i = 0; i < mesh_2d_fine->sizeOfDim(0); ++i)
   {
@@ -185,7 +218,7 @@ TEST(InterpolationSuite, HighDimLinearInterpolation){
   // 3D test
   auto mesh_3d = fornfdm::make_Mesh(fornfdm::linspaced(10,-10.0,10.0),3); 
   auto mesh_3d_fine = fornfdm::make_Mesh(fornfdm::linspaced(50,-10.0,10.0),3); 
-  auto lam_3d = [](double x, double y, double z){ return 10.54 + 32.7 * x + 17.2 * y - 26.49 * z; }; 
+  auto lam_3d = [](fornfdm::Scalar x, fornfdm::Scalar y, fornfdm::Scalar z){ return 10.54 + 32.7 * x + 17.2 * y - 26.49 * z; }; 
   auto vec_3d = discretize(mesh_3d, lam_3d); 
   for(auto i = 0; i < mesh_3d_fine->sizeOfDim(0); ++i)
   {
@@ -205,7 +238,7 @@ TEST(InterpolationSuite, HighDimLinearInterpolation){
 
 TEST(InterpolationSuite, OneDimInterpolator){
 
-  constexpr double pi = 3.14159265385; 
+  constexpr fornfdm::Scalar pi = 3.14159265385; 
   // Domain + Time  
   fornfdm::solvers::SolverArgs args{
     /*.mesh=*/std::make_shared<const fornfdm::Mesh>(fornfdm::linspaced(30,0.0,pi), 1), 
@@ -213,7 +246,7 @@ TEST(InterpolationSuite, OneDimInterpolator){
   }; 
 
   // Initial Conditions  
-  auto v = discretize(args.mesh, [](double x){ return std::sin(x); }); 
+  auto v = discretize(args.mesh, [](fornfdm::Scalar x){ return std::sin(x); }); 
   args.initialConditions = { std::move(v) }; 
 
   // LHS in time 
@@ -239,10 +272,10 @@ TEST(InterpolationSuite, OneDimInterpolator){
   {
     for(auto j = 0; j < times_redone->size(); ++j)
     {
-      double x = mesh_redone->getAxis(0)[i]; 
-      double t = (*times_redone)[j]; 
-      double exact_val = std::sin(x) * std::exp(-t); 
-      double interpolated_val = interp.solAt<1>(t, {x}); 
+      fornfdm::Scalar x = mesh_redone->getAxis(0)[i]; 
+      fornfdm::Real t = (*times_redone)[j]; 
+      fornfdm::Scalar exact_val = std::sin(x) * std::exp(-t); 
+      fornfdm::Scalar interpolated_val = interp.solAt<1>(t, {x}); 
       ASSERT_NEAR(interpolated_val, exact_val, 0.025);
     }
   }
