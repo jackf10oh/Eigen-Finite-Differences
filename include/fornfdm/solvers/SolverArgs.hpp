@@ -64,7 +64,7 @@ class TimeArg
           assert(((m_dt > 0.0) || (m_n_steps>0)) && "error dt must be > 0.0 or num_steps must be > 0");
           if(m_n_steps != 0)
           {
-            return std::make_shared<const TimeArg>(m_t0,m_t1,(m_t1-m_t0)/m_n_steps, HiddenType{}); 
+            return std::make_shared<const TimeArg>(m_t0,m_t1,(m_t1-m_t0)/(m_n_steps-1), HiddenType{}); 
           }
           else
           {
@@ -80,13 +80,14 @@ class TimeArg
     // Member Data ----------- 
     fornfdm::Real m_start;
     fornfdm::Real m_stepsize;
+    std::size_t m_num_steps;
     fornfdm::Real m_stop;
   
   public:
     // Constructors ------
     TimeArg()=delete;
     TimeArg(fornfdm::Real t0, fornfdm::Real t1, fornfdm::Real dt, HiddenType)
-      : m_start(t0), m_stepsize(dt), m_stop(t1)
+      : m_start(t0), m_stepsize(dt), m_stop(t1), m_num_steps(((t1-t0)/dt)+1)
     {}
     TimeArg(const TimeArg& other)=delete;
     ~TimeArg()=default;
@@ -95,8 +96,9 @@ class TimeArg
     static Builder builder(){ return Builder{}; }
 
     fornfdm::Real getStart() const { return m_start; }
-    fornfdm::Real getStepSize() const { return m_stepsize; }
     fornfdm::Real getStop() const { return m_stop; }
+    fornfdm::Real getStepSize() const { return m_stepsize; }
+    fornfdm::Real getNumSteps() const { return m_num_steps; }
 };
 
   } // end namespace solvers

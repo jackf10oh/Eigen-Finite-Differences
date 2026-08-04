@@ -63,6 +63,8 @@ class FastExpSolver : public SolverBase<FastExpSolver<LhsType, RhsType, OStepTup
       fornfdm::Real t_start = args.times->getStart();
       fornfdm::Real t_stop = args.times->getStop();
       fornfdm::Real t_stepsize = args.times->getStepSize();
+      std::size_t end = args.times->getNumSteps();
+
 
       // setup time context 
       std::size_t step_n = args.initialConditions.size()-1;
@@ -73,7 +75,8 @@ class FastExpSolver : public SolverBase<FastExpSolver<LhsType, RhsType, OStepTup
       auto executor = fornfdm::texprs::make_Executor(this->m_lhs); 
 
       auto n = step_n - executor.numStoredTimes+1;
-      for(auto i=0; i<executor.numStoredTimes; ++i){
+
+      for(auto i=1; i<executor.numStoredTimes; ++i){
         executor.getStoredTimes()[i] = t_start + t_stepsize * n;
         ++n;
       };
@@ -92,26 +95,21 @@ class FastExpSolver : public SolverBase<FastExpSolver<LhsType, RhsType, OStepTup
       // set up context 
       auto ctx = fornfdm::osteps::make_context(std::move(args.mesh), &executor, &(this->m_rhs), this); 
 
-      // a fixed stencil is used at every step.   
-      fornfdm::CSRMatrix stencil = executor.getInvCoeff() * this->m_rhs.toEigen();
-      // outside steps matrix before step. only fired 1 time.
-      this->template tupleApplyBeforeMat<fornfdm::osteps::StepType::Explicit>(stencil, time_ctx, ctx); 
-
-      // fornfdm::Vector solution_prev;  
       fornfdm::Vector solution_u;  
-
       // hot loop through times
-      std::size_t end = (t_stop - t_start) / t_stepsize;
       for(; step_n != end; ++step_n)
       { 
         time_ctx.next = t_start + step_n * t_stepsize; 
+        executor.pushTime(time_ctx.next);
+        executor.calculate(time_ctx.next);
+        this->m_rhs.setTime(time_ctx.now);
 
         // no beforeLinAlgebra!
         // no applyBeforeMat!
         // no applyBeforeVec! 
 
         // Explicit Step 
-        solution_u = stencil * executor.getCurrentSolution() + executor.getRhsExpression(); 
+        solution_u = (executor.getInvCoeff() * this->m_rhs.toEigen()) * executor.getCurrentSolution() + executor.getRhsExpression(); 
         
         // outside steps solution after step(next_sol) 
         this->template tupleApplyAfterVec<fornfdm::osteps::StepType::Explicit>(solution_u, time_ctx, ctx); 
