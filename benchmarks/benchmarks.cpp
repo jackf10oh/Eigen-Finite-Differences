@@ -254,7 +254,8 @@ static void Executor_rotateStoredSolutions(benchmark::State &state)
   }
 }
 
-static void explicit_euler_1d(benchmark::State &state)
+template< template<class, class, class> class SolverType>
+static void explicit_solver_1d(benchmark::State& state)
 {
   for(auto _ : state)
   {
@@ -281,14 +282,15 @@ static void explicit_euler_1d(benchmark::State &state)
     auto right = left; 
     osteps::BCPair bcs{left, right};
 
-    solvers::ExplicitSolver solver(Ut, Uxx, std::tie(bcs));
+    SolverType solver(Ut, Uxx, std::tie(bcs));
 
     state.ResumeTiming();
     benchmark::DoNotOptimize(solver.calculate(std::move(args),solvers::LastSaver{}));
   }
 }
 
-static void implicit_euler_1d(benchmark::State &state)
+template< template<class, class, class, class> class SolverType, template<class> class IterativeSolverType>
+static void implicit_solver_1d(benchmark::State& state)
 {
   for(auto _ : state)
   {
@@ -315,14 +317,14 @@ static void implicit_euler_1d(benchmark::State &state)
     auto right = left; 
     osteps::BCPair bcs{left, right};
 
-    solvers::ImplicitSolver solver(Ut, Uxx, std::tie(bcs));
+    SolverType solver(Ut, Uxx, std::tie(bcs), std::make_unique<IterativeSolverType<fornfdm::CSRMatrix>>());
 
     state.ResumeTiming();
     benchmark::DoNotOptimize(solver.calculate(std::move(args),solvers::LastSaver{}));
   }
 }
 
-static void crank_nicolson_1d(benchmark::State &state)
+static void fast_explicit_solver_1d(benchmark::State &state)
 {
   for(auto _ : state)
   {
@@ -332,9 +334,9 @@ static void crank_nicolson_1d(benchmark::State &state)
     int m_timesteps = state.range(1);
 
     // uniform mesh from 0.0 to r with n_gridpoints
-    solvers::SolverArgs args{
+    solvers::SolverArgs<const Mesh, const solvers::TimeArg> args{
       .mesh = make_Mesh(linspaced(n_gridpoints,0.0,pi),1),
-      .times = std::make_shared<const fornfdm::RealVector>(linspaced(m_timesteps,0.0,pi))
+      .times = solvers::TimeArg::builder().setStart(0.0).setStop(pi).setNumSteps(m_timesteps).build()
     };
     args.initialConditions = { discretize(args.mesh, [](fornfdm::Scalar x){ return std::sin(x); }) };
 
@@ -349,14 +351,52 @@ static void crank_nicolson_1d(benchmark::State &state)
     auto right = left; 
     osteps::BCPair bcs{left, right};
 
-    solvers::CrankNicolsonSolver solver(Ut, Uxx, std::tie(bcs));
+    solvers::FastExpSolver solver(Ut, Uxx, std::tie(bcs));
 
     state.ResumeTiming();
     benchmark::DoNotOptimize(solver.calculate(std::move(args),solvers::LastSaver{}));
   }
 }
 
+template< template< class >class IterativeSolverType >
+static void fast_implicit_solver_1d(benchmark::State &state)
+{
+  for(auto _ : state)
+  {
+    state.PauseTiming(); 
+    double pi = 3.14159265385;
+    int n_gridpoints = state.range(0);
+    int m_timesteps = state.range(1);
+
+    // uniform mesh from 0.0 to r with n_gridpoints
+    solvers::SolverArgs<const Mesh, const solvers::TimeArg> args{
+      .mesh = make_Mesh(linspaced(n_gridpoints,0.0,pi),1),
+      .times = solvers::TimeArg::builder().setStart(0.0).setStop(pi).setNumSteps(m_timesteps).build()
+    };
+    args.initialConditions = { discretize(args.mesh, [](fornfdm::Scalar x){ return std::sin(x); }) };
+
+    // Left hand side in time
+    auto Ut = texprs::NthTimeDeriv<1>{};
+
+    // Right hand side in space 
+    auto Uxx = linops::NthPartialDeriv<2,0>{};
+
+    // set the boundary conditions to Dirichlet 0
+    auto left = osteps::Dirichlet(0.0);
+    auto right = left; 
+    osteps::BCPair bcs{left, right};
+
+    solvers::FastImpSolver solver(Ut, Uxx, std::tie(bcs), std::make_unique<IterativeSolverType<fornfdm::CSRMatrix>>());
+
+    state.ResumeTiming();
+    benchmark::DoNotOptimize(solver.calculate(std::move(args),solvers::LastSaver{}));
+  }
+}
+
+// Fornberg 
 BENCHMARK(fornberg_algo)->Args({1,2})->Args({1,3})->Args({2,3})->Args({1,4})->Args({2,4})->Args({3,4});
+
+// linops
 BENCHMARK(setMesh_order_1_direction_0)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(setMesh_order_2_direction_0)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(setMesh_order_3_direction_0)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
@@ -371,14 +411,22 @@ BENCHMARK(setTime_assignment</*warmup*/true>)->Arg(100)->Arg(200)->Arg(400)->Arg
 BENCHMARK(evalTime_assignment)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(evalTime_2d_assignment)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(setTime_2d_assignment)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
+
+// texprs
 BENCHMARK(Executor_getRhsExpression_assignment<1>)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(Executor_getRhsExpression_assignment<2>)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(Executor_getRhsExpression_assignment<4>)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(Executor_rotateStoredSolutions<1>)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(Executor_rotateStoredSolutions<2>)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
 BENCHMARK(Executor_rotateStoredSolutions<4>)->Arg(100)->Arg(200)->Arg(400)->Arg(800);
-BENCHMARK(explicit_euler_1d)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});
-BENCHMARK(implicit_euler_1d)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});
-BENCHMARK(crank_nicolson_1d)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});
+
+// solvers(explicit)
+BENCHMARK(fast_explicit_solver_1d)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});
+BENCHMARK(explicit_solver_1d<solvers::ExplicitSolver>)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});
+
+// solvers(implicit)
+BENCHMARK(fast_implicit_solver_1d<Eigen::BiCGSTAB>)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});
+BENCHMARK(implicit_solver_1d<solvers::ImplicitSolver,Eigen::BiCGSTAB>)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});
+BENCHMARK(implicit_solver_1d<solvers::CrankNicolsonSolver,Eigen::BiCGSTAB>)->Args({100,100})->Args({100,200})->Args({100,400})->Args({100,800});
 
 BENCHMARK_MAIN();

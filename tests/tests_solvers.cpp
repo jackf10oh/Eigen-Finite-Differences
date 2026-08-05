@@ -148,7 +148,7 @@ TEST(SolverSuite, OneDimCrankNicolsonSolver){
 TEST(SolverSuite, OneDimFastExpSolver){
   constexpr fornfdm::Scalar pi = 3.14159265385; 
   // Domain + Time  
-  fornfdm::solvers::SolverArgs args{
+  fornfdm::solvers::SolverArgs<const Mesh, const solvers::TimeArg> args{
     /*.mesh=*/make_Mesh(fornfdm::linspaced(30,0.0,pi), 1), 
     /*times=*/solvers::TimeArg::builder().setStart(0.0).setStop(0.5).setNumSteps(300).build()
   }; 
@@ -169,6 +169,39 @@ TEST(SolverSuite, OneDimFastExpSolver){
   osteps::BCPair bcs(left,right); 
 
   solvers::FastExpSolver fast_solver(Ut,Uxx,std::tie(bcs)); 
+  
+  auto sol = fast_solver.calculate(args, solvers::LastSaver{}); 
+  for(auto idx = 0; idx<args.mesh->sizeOfDim(0); ++idx)
+  {
+    fornfdm::Scalar exact_val = std::sin(args.mesh->getAxis(0)[idx]) * std::exp(- args.times->getStop()); 
+    ASSERT_NEAR(sol[idx], exact_val, 0.025);
+  }
+};
+
+TEST(SolverSuite, OneDimFastImpSolver){
+  constexpr fornfdm::Scalar pi = 3.14159265385; 
+  // Domain + Time  
+  fornfdm::solvers::SolverArgs<const Mesh, const solvers::TimeArg> args{
+    /*.mesh=*/make_Mesh(fornfdm::linspaced(30,0.0,pi), 1), 
+    /*times=*/solvers::TimeArg::builder().setStart(0.0).setStop(0.5).setNumSteps(300).build()
+  }; 
+
+  // Initial Conditions  
+  auto v = discretize(args.mesh, [](fornfdm::Scalar x){ return std::sin(x); }); 
+  args.initialConditions = { std::move(v) }; 
+
+  // LHS in time 
+  auto Ut = texprs::NthTimeDeriv<1>{}; 
+
+  // RHS in space 
+  auto Uxx = linops::NthPartialDeriv<2,0,fornfdm::linops::Centered<5>>{}; 
+
+  // Boundary Conditions 
+  auto left = osteps::Dirichlet(0.0); 
+  auto right = left;
+  osteps::BCPair bcs(left,right); 
+
+  solvers::FastImpSolver fast_solver(Ut,Uxx,std::tie(bcs)); 
   
   auto sol = fast_solver.calculate(args, solvers::LastSaver{}); 
   for(auto idx = 0; idx<args.mesh->sizeOfDim(0); ++idx)

@@ -14,6 +14,7 @@
 #include "ImplicitSolver.hpp" 
 #include "CrankNicolsonSolver.hpp"
 #include "FastExpSolver.hpp"
+#include "FastImpSolver.hpp"
 #include "Interpolator.hpp"
 
 #endif // all.hpp (Solvers)

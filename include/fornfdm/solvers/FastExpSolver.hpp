@@ -1,13 +1,10 @@
 // FastExpSolver.hpp
 //
-// Mediator class that manages 3 classes:
-// 1. An expression of time derivatives (TExpr) 
-// 2. An expression of spatial derivatives (LinOps)
-// 3. A tuple of Outside steps (OSteps) 
-// in order to solver PDEs with finite difference methods 
-// namely explicit steps from t(n-1) to t(n) 
+// class that ducks some of the main contracts in Solvers interface. 
+// notably there is no beforeLinAlgebra, applyBeforeMat, or applyBeforeVec
+// the full CSRMatrix is never calculated, so RHS operator is possibly time dependent.
 //
-// JAF 3/4/2026 
+// JAF 8/4/2026
 
 #ifndef FORNFDM_SOLVERS_FastExpSolver_H
 #define FORNFDM_SOLVERS_FastExpSolver_H
@@ -57,8 +54,8 @@ class FastExpSolver : public SolverBase<FastExpSolver<LhsType, RhsType, OStepTup
     auto calculate(SolverArgs<M, C> args, Pred save_policy = {}) 
     {
       // Fast Solvers only accept a SharedConstMesh and const TimeArgs for arguments!
-      static_assert(std::is_same<std::decay_t<M>, fornfdm::Mesh>::value, "FastExpSOlver only takes const Mesh for domain.");
-      static_assert(std::is_same<std::decay_t<C>, solvers::TimeArg>::value, "FastExpSOlver only takes const TimeArg for times.");
+      static_assert(std::is_same<M, const fornfdm::Mesh>::value, "FastImpSolver only takes const Mesh for domain.");
+      static_assert(std::is_same<C, const solvers::TimeArg>::value, "FastImpSolver only takes TimeArg for times.");
 
       fornfdm::Real t_start = args.times->getStart();
       fornfdm::Real t_stop = args.times->getStop();
@@ -74,7 +71,7 @@ class FastExpSolver : public SolverBase<FastExpSolver<LhsType, RhsType, OStepTup
       // setup executor 
       auto executor = fornfdm::texprs::make_Executor(this->m_lhs); 
 
-      auto n = step_n - executor.numStoredTimes+1;
+      auto n = step_n - executor.numStoredTimes + 1;
 
       for(auto i=1; i<executor.numStoredTimes; ++i){
         executor.getStoredTimes()[i] = t_start + t_stepsize * n;
