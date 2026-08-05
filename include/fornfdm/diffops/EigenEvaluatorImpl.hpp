@@ -1,12 +1,12 @@
-// KroneckerEvaluator.hpp 
+// EigenEvaluatorImpl.hpp 
 //
 // Handles reading the CSRMatrix inside of a PartialDerivBase<> 
-// into a kronecker product eigen expression  
+// into a kronecker product eigen expression
 //
 // JAF 4/17/2026 
 
-#ifndef FORNFDM_DIFFOPS_KRONECKEREVALUATOR_H
-#define FORNFDM_DIFFOPS_KRONECKEREVALUATOR_H
+#ifndef FORNFDM_DIFFOPS_EIGENEVALUATORIMPL_H
+#define FORNFDM_DIFFOPS_EIGENEVALUATORIMPL_H
 
 #include<cstdint>
 #include<Eigen/Core>
@@ -185,8 +185,104 @@ struct EigenEvaluatorImpl<Derived, std::enable_if_t<std::is_base_of_v<DoubleKron
 // StoredWeightsTag + TimeDepStoredWeightsTag
 // ==================================================================
 
+// with direction == 0
 template<class Derived>
-struct EigenEvaluatorImpl<Derived, std::enable_if_t<std::is_base_of_v<StoredWeightsTag, typename map_to_base_tag<Derived>::type>>>
+struct EigenEvaluatorImpl<
+  Derived, 
+  std::enable_if_t<
+    (std::is_base_of_v<StoredWeightsTag, typename map_to_base_tag<Derived>::type> && 
+      traits<Derived>::direction == 0)
+  >
+>
+  : public Eigen::internal::evaluator_base<Derived>
+{
+  // Type Defs --------------
+  typedef Derived XprType;
+  typedef typename Eigen::internal::nested_eval< fornfdm::CSRMatrix, XprType::ColsAtCompileTime >::type ArgTypeNested; // TODO no longer nesting a CSRMatrix...
+  typedef typename Eigen::internal::remove_all< ArgTypeNested >::type ArgTypeNestedCleaned;
+  typedef typename XprType::CoeffReturnType CoeffReturnType; 
+  typedef typename XprType::Index Index; 
+  typedef typename XprType::Scalar Scalar; 
+  enum { CoeffReadCost = Eigen::internal::evaluator<fornfdm::CSRMatrix>::CoeffReadCost, Flags = Eigen::RowMajorBit }; // TODO how important is CoeffReadCost? can I just hard code it? 
+
+  struct InnerIterator
+  {
+    static constexpr std::size_t N = traits<Derived>::max_arity;
+    using Reader = decltype(std::declval<Evaluator<Derived>>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>()));
+    // Constructor =============
+    InnerIterator(const EigenEvaluatorImpl& eval, Index row_idx)
+      : m_eval(eval), 
+      m_row_idx(row_idx), 
+      m_axis_idx(row_idx % eval.m_xpr.getAxisSize()),
+      m_col_offset(eval.m_xpr.getAxisSize() * (row_idx / eval.m_xpr.getAxisSize())), 
+      m_counter(0),
+      m_offset(eval.m_xpr.getOutersPtr()[m_axis_idx]),
+      m_size(eval.m_xpr.getOutersPtr()[m_axis_idx+1] - m_offset),
+      m_inner_indices(eval.m_xpr.getInnersPtr() + m_offset),
+      m_weights(eval.m_xpr.getWeightsPtr() + m_offset * count_orders<typename traits<Derived>::orders>::value),
+      m_reader(eval.m_eval.template createExactReader<N>(fornfdm::Coordinate<N>(eval.m_mesh.get(), row_idx)))
+    {}
+    // Member Functions ----------------------------------
+    operator bool() const { return (m_counter != m_size); }
+    void operator++(){ ++m_counter; }
+    Index row() const { return m_row_idx; }
+    Index col() const { return m_col_offset + m_inner_indices[m_counter]; }
+    Index index() const { return m_col_offset + m_inner_indices[m_counter]; }
+    Scalar value() const { return m_reader(m_weights, m_counter, m_size, typename traits<Derived>::orders{}); }
+    // Member Data ----------------------------------------
+    const EigenEvaluatorImpl& m_eval;
+    std::size_t m_row_idx;
+    std::size_t m_axis_idx;
+    std::size_t m_counter;
+    std::size_t m_col_offset;
+    std::size_t m_offset;
+    std::size_t m_size;
+    const std::size_t* m_inner_indices;
+    const fornfdm::Scalar* m_weights;
+    Reader m_reader; // depends on coordinate + time
+  };
+
+  // Constructors ====================================== 
+  EigenEvaluatorImpl(const XprType& xpr)
+    : m_xpr(xpr),
+    m_eval(xpr, xpr.getTime()),
+    m_mesh(xpr.getMesh()),
+    m_time(xpr.getTime()),
+    m_size(xpr.rows())
+  {}
+
+  EigenEvaluatorImpl(const XprType& xpr, fornfdm::Real t)
+    : m_xpr(xpr),
+    m_eval(xpr, t),
+    m_mesh(xpr.getMesh()),
+    m_time(t),
+    m_size(xpr.rows())
+  {}
+
+  // Member Functions -----------------------------------
+  Index rows() const {return m_size; }
+  Index cols() const {return m_size; }
+  Index outerSize() const { return m_size; }
+  Index innerSize() const { return m_size; }
+  Index nonZerosEstimate() const { return m_xpr.nonZerosEstimate(); }
+
+  // Member Data ----------------------------------------
+  const Derived& m_xpr;
+  fornfdm::Real m_time;
+  std::size_t m_size;
+  Evaluator<Derived> m_eval;
+  SharedConstMesh m_mesh;
+};
+
+// With direction != 0 
+template<class Derived>
+struct EigenEvaluatorImpl<
+  Derived, 
+  std::enable_if_t<
+    (std::is_base_of_v<StoredWeightsTag, typename map_to_base_tag<Derived>::type> && 
+      traits<Derived>::direction != 0)
+  >
+>
   : public Eigen::internal::evaluator_base<Derived>
 {
   // Type Defs --------------
@@ -272,9 +368,6 @@ struct EigenEvaluatorImpl<Derived, std::enable_if_t<std::is_base_of_v<StoredWeig
 // ArgType --> TimeDepLeftKroneckerTag 
 // Use single kronecker product to make block diagonal: I @ D
 // ==================================================================
-
-// PROBLEM TODO *every* direction gets mapped to TimeDepLeftKroneckerTag when the macro is in effect.
-// need to change sfinae to somehow select TimeDepDoubleKroneckerTag when macro is defined
 
 template<class ArgType>
 struct EigenEvaluatorImpl<
