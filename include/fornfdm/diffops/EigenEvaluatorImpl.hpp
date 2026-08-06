@@ -182,22 +182,20 @@ struct EigenEvaluatorImpl<Derived, std::enable_if_t<std::is_base_of_v<DoubleKron
 };
 
 // ==================================================================
-// StoredWeightsTag + TimeDepStoredWeightsTag
+// MatrixFree (direction == 0)
 // ==================================================================
 
-// with direction == 0
-template<class Derived>
+template<class XprType_>
 struct EigenEvaluatorImpl<
-  Derived, 
+  MatrixFree<XprType_>, 
   std::enable_if_t<
-    (std::is_base_of_v<StoredWeightsTag, typename map_to_base_tag<Derived>::type> && 
-      traits<Derived>::direction == 0)
+      (traits<XprType_>::direction == 0)
   >
 >
-  : public Eigen::internal::evaluator_base<Derived>
+  : public Eigen::internal::evaluator_base<MatrixFree<XprType_>>
 {
   // Type Defs --------------
-  typedef Derived XprType;
+  typedef MatrixFree<XprType_> XprType;
   typedef typename Eigen::internal::nested_eval< fornfdm::CSRMatrix, XprType::ColsAtCompileTime >::type ArgTypeNested; // TODO no longer nesting a CSRMatrix...
   typedef typename Eigen::internal::remove_all< ArgTypeNested >::type ArgTypeNestedCleaned;
   typedef typename XprType::CoeffReturnType CoeffReturnType; 
@@ -207,8 +205,8 @@ struct EigenEvaluatorImpl<
 
   struct InnerIterator
   {
-    static constexpr std::size_t N = traits<Derived>::max_arity;
-    using Reader = decltype(std::declval<Evaluator<Derived>>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>()));
+    static constexpr std::size_t N = traits<XprType>::max_arity;
+    using Reader = decltype(std::declval<Evaluator<XprType>>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>()));
     // Constructor =============
     InnerIterator(const EigenEvaluatorImpl& eval, Index row_idx)
       : m_eval(eval), 
@@ -219,7 +217,7 @@ struct EigenEvaluatorImpl<
       m_offset(eval.m_xpr.getOutersPtr()[m_axis_idx]),
       m_size(eval.m_xpr.getOutersPtr()[m_axis_idx+1] - m_offset),
       m_inner_indices(eval.m_xpr.getInnersPtr() + m_offset),
-      m_weights(eval.m_xpr.getWeightsPtr() + m_offset * count_orders<typename traits<Derived>::orders>::value),
+      m_weights(eval.m_xpr.getWeightsPtr() + m_offset * count_orders<typename traits<XprType>::orders>::value),
       m_reader(eval.m_eval.template createExactReader<N>(fornfdm::Coordinate<N>(eval.m_mesh.get(), row_idx)))
     {}
     // Member Functions ----------------------------------
@@ -228,7 +226,7 @@ struct EigenEvaluatorImpl<
     Index row() const { return m_row_idx; }
     Index col() const { return m_col_offset + m_inner_indices[m_counter]; }
     Index index() const { return m_col_offset + m_inner_indices[m_counter]; }
-    Scalar value() const { return m_reader(m_weights, m_counter, m_size, typename traits<Derived>::orders{}); }
+    Scalar value() const { return m_reader(m_weights, m_counter, m_size, typename traits<XprType>::orders{}); }
     // Member Data ----------------------------------------
     const EigenEvaluatorImpl& m_eval;
     std::size_t m_row_idx;
@@ -267,26 +265,28 @@ struct EigenEvaluatorImpl<
   Index nonZerosEstimate() const { return m_xpr.nonZerosEstimate(); }
 
   // Member Data ----------------------------------------
-  const Derived& m_xpr;
+  const XprType& m_xpr;
   fornfdm::Real m_time;
   std::size_t m_size;
-  Evaluator<Derived> m_eval;
+  Evaluator<XprType> m_eval;
   SharedConstMesh m_mesh;
 };
 
-// With direction != 0 
-template<class Derived>
+// ==================================================================
+// MatrixFree (direction > 0)
+// ==================================================================
+
+template<class XprType_>
 struct EigenEvaluatorImpl<
-  Derived, 
+  MatrixFree<XprType_>, 
   std::enable_if_t<
-    (std::is_base_of_v<StoredWeightsTag, typename map_to_base_tag<Derived>::type> && 
-      traits<Derived>::direction != 0)
+      (traits<XprType_>::direction != 0)
   >
 >
-  : public Eigen::internal::evaluator_base<Derived>
+  : public Eigen::internal::evaluator_base<MatrixFree<XprType_>>
 {
   // Type Defs --------------
-  typedef Derived XprType;
+  typedef MatrixFree<XprType_> XprType;
   typedef typename Eigen::internal::nested_eval< fornfdm::CSRMatrix, XprType::ColsAtCompileTime >::type ArgTypeNested; // TODO no longer nesting a CSRMatrix...
   typedef typename Eigen::internal::remove_all< ArgTypeNested >::type ArgTypeNestedCleaned;
   typedef typename XprType::CoeffReturnType CoeffReturnType; 
@@ -296,8 +296,8 @@ struct EigenEvaluatorImpl<
 
   struct InnerIterator
   {
-    static constexpr std::size_t N = traits<Derived>::max_arity;
-    using Reader = decltype(std::declval<Evaluator<Derived>>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>()));
+    static constexpr std::size_t N = traits<XprType>::max_arity;
+    using Reader = decltype(std::declval<Evaluator<XprType>>().template createExactReader<N>(std::declval<const fornfdm::Coordinate<N>&>()));
     // Constructor =============
     InnerIterator(const EigenEvaluatorImpl& eval, Index row_idx)
       : m_eval(eval), 
@@ -308,7 +308,7 @@ struct EigenEvaluatorImpl<
       m_offset(eval.m_xpr.getOutersPtr()[m_axis_idx]),
       m_size(eval.m_xpr.getOutersPtr()[m_axis_idx+1] - m_offset),
       m_inner_indices(eval.m_xpr.getInnersPtr() + m_offset),
-      m_weights(eval.m_xpr.getWeightsPtr() + m_offset * count_orders<typename traits<Derived>::orders>::value),
+      m_weights(eval.m_xpr.getWeightsPtr() + m_offset * count_orders<typename traits<XprType>::orders>::value),
       m_reader(eval.m_eval.template createExactReader<N>(fornfdm::Coordinate<N>(eval.m_mesh.get(), row_idx)))
     {}
     // Member Functions ----------------------------------
@@ -317,7 +317,7 @@ struct EigenEvaluatorImpl<
     Index row() const { return m_row_idx; }
     Index col() const { return m_col_offset + m_inner_indices[m_counter] * m_eval.m_xpr.getProductBefore(); }
     Index index() const { return m_col_offset + m_inner_indices[m_counter] * m_eval.m_xpr.getProductBefore(); }
-    Scalar value() const { return m_reader(m_weights, m_counter, m_size, typename traits<Derived>::orders{}); }
+    Scalar value() const { return m_reader(m_weights, m_counter, m_size, typename traits<XprType>::orders{}); }
     // Member Data ----------------------------------------
     const EigenEvaluatorImpl& m_eval;
     std::size_t m_row_idx;
@@ -356,10 +356,10 @@ struct EigenEvaluatorImpl<
   Index nonZerosEstimate() const { return m_xpr.nonZerosEstimate(); }
 
   // Member Data ----------------------------------------
-  const Derived& m_xpr;
+  const XprType& m_xpr;
   fornfdm::Real m_time;
   std::size_t m_size;
-  Evaluator<Derived> m_eval;
+  Evaluator<XprType> m_eval;
   SharedConstMesh m_mesh;
 };
 
@@ -520,23 +520,18 @@ struct EigenEvaluatorImpl<
 };
 
 // ==================================================================
-// TimeEvaluation<ArgType>
-// ArgType --> TimeDepStoredWeightsTag
+// TimeEvaluation<MatrixFree<XprType>>
 // ==================================================================
 
-template<class ArgType>
-struct EigenEvaluatorImpl<
-  fornfdm::linops::TimeEvaluation<ArgType>,
-  std::enable_if_t<
-    std::is_same_v< TimeDepStoredWeightsTag, typename map_to_base_tag<ArgType>::type >
-  >
-> : public EigenEvaluatorImpl<ArgType>
+template<class XprType_>
+struct EigenEvaluatorImpl< fornfdm::linops::TimeEvaluation<MatrixFree<XprType_>> > 
+: public EigenEvaluatorImpl<MatrixFree<XprType_>>
 {
   // Flags ----- 
-  enum { CoeffReadCost = EigenEvaluatorImpl<ArgType>::CoeffReadCost, Flags = Eigen::RowMajor };
-  using InnerIterator = typename EigenEvaluatorImpl<ArgType>::InnerIterator;
-  EigenEvaluatorImpl(const fornfdm::linops::TimeEvaluation<ArgType>& time_eval)
-    : EigenEvaluatorImpl<ArgType>(time_eval.m_arg, time_eval.m_time)
+  enum { CoeffReadCost = EigenEvaluatorImpl<MatrixFree<XprType_>>::CoeffReadCost, Flags = Eigen::RowMajor };
+  using InnerIterator = typename EigenEvaluatorImpl<MatrixFree<XprType_>>::InnerIterator;
+  EigenEvaluatorImpl(const fornfdm::linops::TimeEvaluation<XprType_>& time_eval)
+    : EigenEvaluatorImpl<MatrixFree<XprType_>>(time_eval.m_arg, time_eval.m_time)
   {}
 };
 

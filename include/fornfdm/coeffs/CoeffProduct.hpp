@@ -154,7 +154,7 @@ struct Evaluator<CoeffProduct<LeftCoeff, RightDeriv>> : public EvaluatorBase<Coe
 // map_to_base specializations 
 // ==============================
 
-// (direction 0 && max_num_args <= 1) --> LeftKroneckerTag or TimeDepLeftKroneckerTag
+// direction == 0 --> LeftKroneckerTag or TimeDepLeftKroneckerTag
 template<class LeftCoeff, class RightDeriv>
 struct map_to_base_tag<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>,
   std::enable_if_t<
@@ -180,25 +180,7 @@ struct map_to_base_tag<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>,
   using type = typename std::conditional<traits_t::is_timedep, TimeDepDoubleKroneckerTag, DoubleKroneckerTag>::type;
 };
 
-// (direction 0 && max_num_args > 1) --> StoredWeightsTag or TimeDepStoredWeightsTag
-template<class LeftCoeff, class RightDeriv>
-struct map_to_base_tag<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>,
-  std::enable_if_t<
-    (traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::direction == 0 && 
-    traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::max_arity > 1)
-  >
->
-{
-  using traits_t = traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>;
-  #ifndef FORNFDM_STORE_FULL_KRONECKER
-  using type = typename std::conditional<traits_t::is_timedep, TimeDepStoredWeightsTag, StoredWeightsTag>::type;
-  #else
-  // Goes to a LeftKronecker instead!
-  using type = typename std::conditional<traits_t::is_timedep, TimeDepLeftKroneckerTag, LeftKroneckerTag>::type;
-  #endif
-};
-
-// (direction != 0 && max_num_args != 0) --> StoredWeightsTag or TimeDepStoredWeightsTag
+// (direction != 0 && max_num_args > 0) --> LeftKroneckerTag or TimeDepLeftKroneckerTag
 template<class LeftCoeff, class RightDeriv>
 struct map_to_base_tag<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>,
   std::enable_if_t<
@@ -208,12 +190,7 @@ struct map_to_base_tag<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>,
 >
 {
   using traits_t = traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>;
-  #ifndef FORNFDM_STORE_FULL_KRONECKER
-  using type = typename std::conditional<traits_t::is_timedep, TimeDepStoredWeightsTag, StoredWeightsTag>::type;
-  #else
-  // Goes to a LeftKronecker instead!
   using type = typename std::conditional<traits_t::is_timedep, TimeDepLeftKroneckerTag, LeftKroneckerTag>::type;
-  #endif
 };
 
 } // end namespace internal 

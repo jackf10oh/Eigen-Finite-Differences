@@ -16,7 +16,7 @@
 #include "Eigen/SparseCore"
 
 namespace fornfdm{
-  namespace linops{
+namespace linops{
 
 // Forward Declaration ----------
 template<class ArgType, class>
@@ -30,29 +30,8 @@ struct traits_impl<TimeEvaluation<ArgType>> : traits<ArgType>{};
 
 } // end namespace internal 
 
-  } // end namespace linops
-} // end namespace fornfdm
-
-namespace fornfdm{
-  namespace linops{
-
-// empty base class. 
-template<class ArgType, class>
-class TimeEvaluation{}; 
-
-// ==================================================================
-// TimeDepLeftKroneckerTag
-// + TimeDepDoubleKroneckerTag
-// ==================================================================
-
 template<class ArgType>
-struct TimeEvaluation<
-  ArgType, 
-  std::enable_if_t<
-    (std::is_same_v<typename internal::map_to_base_tag<ArgType>::type,internal::TimeDepLeftKroneckerTag> || 
-      std::is_same_v<typename internal::map_to_base_tag<ArgType>::type,internal::TimeDepDoubleKroneckerTag>)
-  >
-> : public Eigen::SparseMatrixBase<TimeEvaluation<ArgType>>
+struct TimeEvaluation<ArgType> : public Eigen::SparseMatrixBase<TimeEvaluation<ArgType>>
 {
   // Type Defs ----------------
   typedef typename fornfdm::linops::TimeEvaluation<ArgType> Nested;
@@ -66,55 +45,17 @@ struct TimeEvaluation<
     : m_arg(arg), m_time(t)
   {}
 
-  TimeEvaluation(const linops::PartialDerivBase<ArgType>& pde_base, fornfdm::Real t)
-    : m_arg(pde_base.derived()), m_time(t)
-  {}
-
   // Member Functions --------------- 
   auto rows() const { return m_arg.rows(); } 
   auto cols() const { return m_arg.cols(); } 
   auto nonZerosEstimate() const { return m_arg.nonZerosEstimate(); }
 };
 
-// ==================================================================
-// TimeDepStoredWeightsTag
-// ==================================================================
-
-template<class ArgType>
-struct TimeEvaluation<
-  ArgType, 
-  std::enable_if_t<
-    std::is_same_v<typename internal::map_to_base_tag<ArgType>::type,internal::TimeDepStoredWeightsTag>
-  >
-> : public Eigen::SparseMatrixBase<TimeEvaluation<ArgType>>
-{
-  // Type Defs ----------------
-  typedef typename fornfdm::linops::TimeEvaluation<ArgType> Nested;
-
-  // Member Data ------------------ 
-  const ArgType& m_arg;
-  const fornfdm::Real m_time; 
-
-  // Constructors ----------------- 
-  TimeEvaluation(const ArgType& arg, fornfdm::Real t)
-    : m_arg(arg), m_time(t)
-  {}
-
-  TimeEvaluation(const linops::PartialDerivBase<ArgType>& pde_base, fornfdm::Real t)
-    : m_arg(pde_base.derived()), m_time(t)
-  {}
-
-  // Member Functions --------------- 
-  auto rows() const { return m_arg.rows(); } 
-  auto cols() const { return m_arg.cols(); } 
-  auto nonZerosEstimate() const { return m_arg.nonZerosEstimate(); }
-};
-
-  } // end namespace linops
+} // end namespace linops
 } // end namespace fornfdm
 
 namespace Eigen{
-  namespace internal{
+namespace internal{
 
 // Eigen's internal traits ----------
 template<class ArgType>

@@ -22,5 +22,6 @@
 #include "NthPartialDeriv.hpp"
 #include "NwiseUnaryOp.hpp"
 #include "NwiseBinaryOp.hpp"
+#include "MatrixFree.hpp"
 
 #endif // all.hpp (diffops)
