@@ -116,10 +116,9 @@ namespace fornfdm{
 namespace linops{
 
 // ==================================================================
-// MatrixFree
+// MatrixFree (direction == 0)
 // ==================================================================
 
-// direction != 0
 template<class XprType>
 class MatrixFree<
   XprType, 
@@ -129,12 +128,144 @@ class MatrixFree<
 > : public Eigen::SparseMatrixBase<MatrixFree<XprType>>, 
 private internal::TimeDepData<internal::traits<XprType>::is_timedep>
 {
-  private:
-    // don't use on these cases
-    // static constexpr bool check_one = (internal::traits<XprType>::direction == 0) && (internal::traits<XprType>::max_arity <= 1) && (!internal::traits<XprType>::is_timedep);
-    // static constexpr bool check_two = (internal::traits<XprType>::direction != 0) && (internal::traits<XprType>::max_arity == 0) && (!internal::traits<XprType>::is_timedep);
-    // static_assert(!(check_one || check_two), "do not use MatrixFree on linop of these traits. it will always be slower.");
+  public:
+    // Type Defs -----------------
+    typedef Eigen::SparseMatrixBase<MatrixFree<XprType>> Base;
+    EIGEN_SPARSE_PUBLIC_INTERFACE(MatrixFree) 
+    using XprTypeNested = typename fornfdm::linops::internal::NestedStorage<XprType>::type;
+    using NestedExpression = typename std::remove_reference<std::remove_cv_t<XprType>>::type;
 
+  protected:
+    // Member Data ---------------
+    XprTypeNested m_nested;
+    WeakConstMesh m_mesh_observed;
+    std::size_t m_axis_size=0;
+    std::size_t m_nnz=0;
+    std::size_t m_prod_after;
+    std::unique_ptr<std::size_t[]> m_outer_ptr=nullptr;
+    std::unique_ptr<std::size_t[]> m_inner_ptr=nullptr;
+    std::unique_ptr<fornfdm::Scalar[]> m_weights_ptr=nullptr;
+
+  public:
+    // Constructors + Destructor 
+    MatrixFree()=delete;
+    template<class Xpr>
+    MatrixFree(Xpr&& linop)
+      : m_nested(std::forward<Xpr>(linop))
+    {}
+    MatrixFree(const MatrixFree& other)=default; // TODO unique_ptrs deep copy. 
+    ~MatrixFree()=default;
+
+    // Member Funcs ---------
+    const auto& nestedExpression() const { return m_nested; }
+    auto rows() const { return m_axis_size * m_prod_after; }
+    auto cols() const { return m_axis_size * m_prod_after; }
+    auto nonZerosEstimate() const { return m_prod_after * m_nnz; }
+    const auto& toEigen() const { return *static_cast<const Eigen::SparseMatrixBase<MatrixFree<XprType>>*>(this); }
+
+    auto getProductAfter() const { return m_prod_after; }
+    auto getAxisSize() const { return m_axis_size; }
+
+    inline const auto* getOutersPtr() const { return m_outer_ptr.get(); } // TODO best to not store in memory ??? NodeSelector maps size + index to inner offset
+    inline const auto* getInnersPtr() const { return m_inner_ptr.get(); }
+    inline const auto* getWeightsPtr() const { return m_weights_ptr.get(); }
+
+    fornfdm::Real getTime() const 
+    {
+      if constexpr(internal::traits<XprType>::is_timedep){
+        return this->m_time;
+      } 
+      else{
+        return -1.0;
+      }
+    }
+
+    const auto& evalTime(fornfdm::Real t) const & 
+    {
+      if constexpr(internal::traits<XprType>::is_timedep){
+        return fornfdm::linops::TimeEvaluation(*this, t);
+      } 
+      else{
+        // nothing to calculate!
+        return toEigen(); 
+      }
+    } 
+
+    void setTime(fornfdm::Real t)
+    {
+      if constexpr(internal::traits<XprType>::is_timedep){
+        this->m_time = t;
+      } 
+    }
+
+    SharedConstMesh getMesh() const { return m_mesh_observed.lock(); }
+
+    void setMesh(const SharedConstMesh& m)
+    {
+      using traits_t = fornfdm::linops::internal::traits<XprType>;
+      using Selector = internal::NodeSelector< typename traits_t::node_selector_tag, traits_t::max_order+1>;
+      constexpr std::size_t count_of_orders = internal::count_orders< typename traits_t::orders >::value;
+      m_mesh_observed = m;
+      m_prod_after = m->sizesMiddleProduct(traits_t::direction + 1, m->numDims());
+      const fornfdm::Vector& axis = m->getAxis(traits_t::direction);
+      std::size_t axis_size = m->sizeOfDim(traits_t::direction);
+      std::size_t nnz = Selector::sumNodesPerRow(axis);
+
+      if(axis_size > m_axis_size){
+        m_outer_ptr.reset(new std::size_t[ axis_size + 1 ]);
+      }
+      m_axis_size = axis_size;
+
+      if(nnz > m_nnz){
+        m_inner_ptr.reset(new std::size_t[ nnz ]);
+        m_weights_ptr.reset(new fornfdm::Scalar[ nnz * count_of_orders]);
+      }
+      m_nnz = nnz; 
+
+      for(auto row_idx = 0; row_idx < axis_size; ++row_idx)
+      {
+        Selector nodes(axis, row_idx);
+        
+        // write the outer  ptr 
+        m_outer_ptr[row_idx] = nodes.nonZerosOffset;
+        
+        // write the inners 
+        std::copy(nodes.nodeIndices.cbegin(), nodes.nodeIndices.cend(), std::next(m_inner_ptr.get(),nodes.nonZerosOffset));
+        
+        // write the weights.
+        using Calc = fornfdm::utils::FornbergStackCalc<Selector::numNodesMax, traits_t::max_order>; 
+        Calc calc(nodes.x_bar, nodes.nodeValues.cbegin(), nodes.nodeValues.cend());
+        assignment_helper(
+          m_weights_ptr.get() + nodes.nonZerosOffset * count_of_orders, 
+          calc.getArray().data(),
+          calc.getNumNodesUsed(), 
+          typename traits_t::orders{}
+        );
+      }
+      m_outer_ptr[axis_size] = nnz;
+    }
+
+  private:
+    template<std::size_t... Idxs>
+    void assignment_helper(fornfdm::Scalar* dest, const fornfdm::Scalar* src, std::size_t n, std::index_sequence<Idxs...>)
+    {
+      (std::copy(src + (n*Idxs), src + (n*(Idxs+1)), dest), ...);
+    }
+};
+
+// ==================================================================
+// MatrixFree (direction != 0)
+// ==================================================================
+
+template<class XprType>
+class MatrixFree<
+  XprType, 
+  std::enable_if_t<
+    (internal::traits<XprType>::direction != 0)
+  >
+> : public Eigen::SparseMatrixBase<MatrixFree<XprType>>, 
+private internal::TimeDepData<internal::traits<XprType>::is_timedep>
+{
   public:
     // Type Defs -----------------
     typedef Eigen::SparseMatrixBase<MatrixFree<XprType>> Base;
