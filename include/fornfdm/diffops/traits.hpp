@@ -94,7 +94,7 @@ struct traits_impl< Eigen::CwiseUnaryOp<Op, T> >
 }; 
 
 template<class T>
-using traits = traits_impl<std::remove_reference_t<std::remove_cv_t<T>>>; 
+using traits = traits_impl<std::remove_cv_t<std::remove_reference_t<T>>>; 
 
 // Determine what type to use to nest any partial deriv 
 template<class T, typename = void>

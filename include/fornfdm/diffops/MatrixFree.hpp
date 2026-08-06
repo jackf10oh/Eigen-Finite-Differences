@@ -249,7 +249,7 @@ private internal::TimeDepData<internal::traits<XprType>::is_timedep>
     template<std::size_t... Idxs>
     void assignment_helper(fornfdm::Scalar* dest, const fornfdm::Scalar* src, std::size_t n, std::index_sequence<Idxs...>)
     {
-      (std::copy(src + (n*Idxs), src + (n*(Idxs+1)), dest), ...);
+      ((dest = std::copy(src + (n*Idxs), src + (n*(Idxs+1)), dest)), ...);
     }
 };
 
@@ -390,7 +390,7 @@ private internal::TimeDepData<internal::traits<XprType>::is_timedep>
     template<std::size_t... Idxs>
     void assignment_helper(fornfdm::Scalar* dest, const fornfdm::Scalar* src, std::size_t n, std::index_sequence<Idxs...>)
     {
-      (std::copy(src + (n*Idxs), src + (n*(Idxs+1)), dest), ...);
+      ((dest = std::copy(src + (n*Idxs), src + (n*(Idxs+1)), dest)), ...);
     }
 };
 

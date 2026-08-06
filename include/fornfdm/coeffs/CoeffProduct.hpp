@@ -158,8 +158,7 @@ struct Evaluator<CoeffProduct<LeftCoeff, RightDeriv>> : public EvaluatorBase<Coe
 template<class LeftCoeff, class RightDeriv>
 struct map_to_base_tag<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>,
   std::enable_if_t<
-    (traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::direction == 0 && 
-    traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::max_arity <= 1)
+    (traits<fornfdm::linops::CoeffProduct<LeftCoeff, RightDeriv>>::direction == 0)
   >
 >
 {
