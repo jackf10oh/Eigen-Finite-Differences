@@ -475,7 +475,9 @@ TEST(LinopsSuite, MatrixFreeMatches2D_prt2){
     xpr.setTime(t); 
     fornfdm::CSRMatrix set_stencil_warm = xpr; 
 
-    auto storing = linops::MatrixFree(xpr.lhs()) - linops::MatrixFree(xpr.rhs());   
+    auto storing_lhs = linops::MatrixFree(xpr.lhs());
+    auto storing_rhs = linops::MatrixFree(xpr.rhs());
+    auto storing = storing_lhs - storing_rhs;   
     storing.setMesh(mesh);
     storing.setTime(t);
     fornfdm::CSRMatrix eval_stencil = storing; 

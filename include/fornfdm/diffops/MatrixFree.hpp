@@ -153,7 +153,44 @@ private internal::TimeDepData<internal::traits<XprType>::is_timedep>
     MatrixFree(Xpr&& linop)
       : m_nested(std::forward<Xpr>(linop))
     {}
-    MatrixFree(const MatrixFree& other)=default; // TODO unique_ptrs deep copy. 
+    MatrixFree(const MatrixFree& other)
+      : m_nested(other.m_nested),
+    m_mesh_observed(other.m_mesh_observed),
+    m_axis_size(other.m_axis_size),
+    m_nnz(other.m_nnz),
+    m_prod_after(other.m_prod_after)
+    {
+      // unique_ptrs must deep copy.
+      if(other.m_outer_ptr){
+        m_outer_ptr.reset(new std::size_t[ m_axis_size + 1 ]);
+        for(auto i=0; i<(m_axis_size+1); ++i){
+          m_outer_ptr.get()[i] = other.m_outer_ptr.get()[i];
+        }
+      }
+      if(other.m_inner_ptr){
+        m_inner_ptr.reset(new std::size_t[ m_nnz ]);
+        for(auto i=0; i<(m_nnz); ++i){
+          m_inner_ptr.get()[i] = other.m_inner_ptr.get()[i];
+        }
+      }
+      if(other.m_weights_ptr){
+        constexpr std::size_t count_of_orders = internal::count_orders< typename internal::traits<XprType>::orders>::value;
+        m_weights_ptr.reset(new fornfdm::Scalar[ m_nnz * count_of_orders]);
+        for(auto i=0; i<(m_nnz * count_of_orders); ++i){
+          m_weights_ptr.get()[i] = other.m_weights_ptr.get()[i];
+        }
+      }
+    } 
+    MatrixFree(MatrixFree&& other)
+      : m_nested(other.m_nested),
+      m_mesh_observed(other.m_mesh_observed),
+      m_axis_size(other.m_axis_size),
+      m_nnz(other.m_nnz),
+      m_prod_after(other.m_prod_after),
+      m_outer_ptr(std::move(other.m_outer_ptr)),  
+      m_inner_ptr(std::move(other.m_inner_ptr)),  
+      m_weights_ptr(std::move(other.m_weights_ptr))  
+    {}
     ~MatrixFree()=default;
 
     // Member Funcs ---------
@@ -292,7 +329,46 @@ private internal::TimeDepData<internal::traits<XprType>::is_timedep>
     MatrixFree(Xpr&& linop)
       : m_nested(std::forward<Xpr>(linop))
     {}
-    MatrixFree(const MatrixFree& other)=default; // TODO unique_ptrs deep copy. 
+    MatrixFree(const MatrixFree& other)
+      : m_nested(other.m_nested),
+    m_mesh_observed(other.m_mesh_observed),
+    m_axis_size(other.m_axis_size),
+    m_nnz(other.m_nnz),
+    m_prod_before(other.m_prod_before),
+    m_prod_after(other.m_prod_after)
+    {
+      // unique_ptrs must deep copy.
+      if(other.m_outer_ptr){
+        m_outer_ptr.reset(new std::size_t[ m_axis_size + 1 ]);
+        for(auto i=0; i<(m_axis_size+1); ++i){
+          m_outer_ptr.get()[i] = other.m_outer_ptr.get()[i];
+        }
+      }
+      if(other.m_inner_ptr){
+        m_inner_ptr.reset(new std::size_t[ m_nnz ]);
+        for(auto i=0; i<(m_nnz); ++i){
+          m_inner_ptr.get()[i] = other.m_inner_ptr.get()[i];
+        }
+      }
+      if(other.m_weights_ptr){
+        constexpr std::size_t count_of_orders = internal::count_orders< typename internal::traits<XprType>::orders>::value;
+        m_weights_ptr.reset(new fornfdm::Scalar[ m_nnz * count_of_orders]);
+        for(auto i=0; i<(m_nnz * count_of_orders); ++i){
+          m_weights_ptr.get()[i] = other.m_weights_ptr.get()[i];
+        }
+      }
+    } 
+    MatrixFree(MatrixFree&& other)
+      : m_nested(other.m_nested),
+      m_mesh_observed(other.m_mesh_observed),
+      m_axis_size(other.m_axis_size),
+      m_nnz(other.m_nnz),
+      m_prod_before(other.m_prod_before),
+      m_prod_after(other.m_prod_after),
+      m_outer_ptr(std::move(other.m_outer_ptr)),  
+      m_inner_ptr(std::move(other.m_inner_ptr)),  
+      m_weights_ptr(std::move(other.m_weights_ptr))
+    {}
     ~MatrixFree()=default;
 
     // Member Funcs ---------
