@@ -506,4 +506,47 @@ TEST(LinopsSuite, MatrixFreeMatches2D_prt2){
   
 }
 
+TEST(LinopsSuite, MatrixFreeCopyAndMove){
+
+  linops::AutonomousCoeff a = [](fornfdm::Scalar x, fornfdm::Scalar y){ return x * y + y;}; 
+  auto xpr = a * linops::NthPartialDeriv<2,0>{};
+
+  auto test_lam = [&](int n, int m, fornfdm::Real t)
+  {
+    auto mesh = make_Mesh(fornfdm::linspaced(n, 0.0, n-1),fornfdm::linspaced(m, 0.0, m-1));
+  
+    linops::MatrixFree storing(xpr);   
+    storing.setMesh(mesh);
+    storing.setTime(t);
+    fornfdm::CSRMatrix check_stencil = storing;
+    
+    linops::MatrixFree cloned(storing);
+    fornfdm::CSRMatrix cloned_stencil = cloned;
+
+    linops::MatrixFree stolen = std::move(storing);
+    fornfdm::CSRMatrix stolen_stencil = stolen;
+
+    for(int i=0; i < check_stencil.rows(); ++i)
+    {
+      for(int j=0; j < check_stencil.cols(); ++j)
+      {
+        fornfdm::Scalar check = check_stencil.coeff(i,j);
+        ASSERT_EQ(cloned_stencil.coeff(i,j), check);
+        ASSERT_EQ(stolen_stencil.coeff(i,j), check);
+      }
+    }
+  };
+  test_lam(5, 5, 0.0);
+  test_lam(11, 11, 1.0);
+  test_lam(11, 11, 4.0); 
+
+  test_lam(5, 7, 0.0);
+  test_lam(11, 21, 3.0);
+  test_lam(11, 21, 7.0); 
+
+  test_lam(7, 5, 9.0);
+  test_lam(21, 21, 14.0);
+  test_lam(21, 21, 4.0); 
+}
+
 // TODO higher dimension tests

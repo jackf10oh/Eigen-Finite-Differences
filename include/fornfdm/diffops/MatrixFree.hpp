@@ -149,7 +149,7 @@ private internal::TimeDepData<internal::traits<XprType>::is_timedep>
   public:
     // Constructors + Destructor 
     MatrixFree()=delete;
-    template<class Xpr>
+    template<class Xpr, typename = std::enable_if_t<internal::is_partialderiv_crtp<Xpr>::value>>
     MatrixFree(Xpr&& linop)
       : m_nested(std::forward<Xpr>(linop))
     {}
@@ -325,7 +325,7 @@ private internal::TimeDepData<internal::traits<XprType>::is_timedep>
   public:
     // Constructors + Destructor 
     MatrixFree()=delete;
-    template<class Xpr>
+    template<class Xpr, typename = std::enable_if_t<internal::is_partialderiv_crtp<Xpr>::value>>
     MatrixFree(Xpr&& linop)
       : m_nested(std::forward<Xpr>(linop))
     {}
