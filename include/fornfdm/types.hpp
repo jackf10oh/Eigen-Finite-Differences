@@ -10,6 +10,7 @@
 #include<cstdint>
 #include<memory> // smart ptrs 
 #include<Eigen/Core> // Forward declares SparseMatrixBase, etc...
+#include "config.hpp"
 
 // forward declare ------ 
 namespace Eigen{
@@ -21,26 +22,17 @@ class SparseCompressedBase;
 }
 
 namespace fornfdm{
-// forward declare ------ 
+// forward declare ------
+template<std::size_t N> class Coordinate; 
 class Mesh; 
+
+// aliases ------
 using SharedMesh = std::shared_ptr<Mesh>; 
 using SharedConstMesh = std::shared_ptr<const Mesh>; 
 using WeakMesh = std::weak_ptr<Mesh>; 
 using WeakConstMesh = std::weak_ptr<const Mesh>;
-template<std::size_t N> class Coordinate; 
-
-// helpful aliases ------
-#ifndef FORNFDM_CUSTOM_SCALAR
-using Scalar = double;
-#else
 using Scalar = FORNFDM_CUSTOM_SCALAR;
-#endif 
-
-#ifndef FORNFDM_CUSTOM_REAL
-using Real = typename Eigen::NumTraits<fornfdm::Scalar>::Real;  
-#else 
 using Real = FORNFDM_CUSTOM_REAL; 
-#endif
  
 using Vector = typename Eigen::Matrix<fornfdm::Scalar, Eigen::Dynamic, 1>; 
 using RealVector = typename Eigen::Matrix<fornfdm::Real, Eigen::Dynamic, 1>; 

@@ -391,4 +391,162 @@ TEST(LinopsSuite, EvalTimeMatchesSetTime2D){
   
 }
 
+TEST(LinopsSuite, MatrixFreeMatches1D){
+  linops::TimeDepCoeff c = [](fornfdm::Real t, fornfdm::Scalar x){ return t + x*x; };
+  auto xpr = c * linops::NthPartialDeriv<1,0>{} + linops::NthPartialDeriv<2,0>{}; 
+  linops::MatrixFree storing(xpr); 
+  auto test_lam = [&](int nrows, fornfdm::Real t)
+  {
+    auto mesh = make_Mesh(fornfdm::linspaced(nrows, 0.0, nrows-1),1);
+    xpr.setMesh(mesh); 
+    xpr.setTime(t); 
+    fornfdm::CSRMatrix set_stencil = xpr; 
+
+    storing.setMesh(mesh);
+    storing.setTime(t);
+    fornfdm::CSRMatrix eval_stencil = storing; 
+
+    for(int i=0; i<nrows; ++i)
+    {
+      for(int j=0; j<nrows; ++j)
+      {
+        ASSERT_EQ(eval_stencil.coeff(i,j), set_stencil.coeff(i,j));
+      }
+    }
+  };
+  test_lam(20, 0.0); 
+  test_lam(20, 1.0); 
+  test_lam(20, 4.0);
+  test_lam(100, 0.0); 
+  test_lam(100, 1.0); 
+  test_lam(100, 4.0);
+}
+
+TEST(LinopsSuite, MatrixFreeMatches2D_prt1){
+  linops::TimeDepCoeff c = [](fornfdm::Real t, fornfdm::Scalar x){ return t + x*x; };
+  auto xpr = c * linops::NthPartialDeriv<1,1>{} + linops::NthPartialDeriv<2,1>{}; 
+  auto storing = linops::MatrixFree(xpr); 
+  auto test_lam = [&](int nrows, int mrows, fornfdm::Real t)
+  {
+    auto mesh = make_Mesh(fornfdm::linspaced(nrows, 0.0, nrows-1),fornfdm::linspaced(mrows, 0.0,mrows-1));
+    xpr.setMesh(mesh); 
+    xpr.setTime(t); 
+    fornfdm::CSRMatrix set_stencil = xpr;
+    xpr.setTime(t); 
+    fornfdm::CSRMatrix set_stencil_warm = xpr; 
+
+    storing.setMesh(mesh);
+    storing.setTime(t);
+    fornfdm::CSRMatrix eval_stencil = storing; 
+
+    for(int i=0; i<eval_stencil.rows(); ++i)
+    {
+      for(int j=0; j<eval_stencil.cols(); ++j)
+      {
+        fornfdm::Scalar check = set_stencil_warm.coeff(i,j);
+        ASSERT_EQ(set_stencil.coeff(i,j), check);
+        ASSERT_EQ(eval_stencil.coeff(i,j), check);
+      }
+    }
+  };
+  test_lam(11, 11, 0.0); 
+  test_lam(11, 21, 1.0); 
+  test_lam(6, 6, 4.0);
+  test_lam(17, 10, 9.0); 
+  test_lam(31, 5, 1.0); 
+}
+
+TEST(LinopsSuite, MatrixFreeMatches2D_prt2){
+
+  linops::AutonomousCoeff a = [](fornfdm::Scalar x, fornfdm::Scalar y){ return x * y + y;}; 
+  auto dir_00 = a * linops::NthPartialDeriv<2,0>{};
+
+  linops::TimeDepCoeff c = [](fornfdm::Real t, fornfdm::Scalar x){ return t + x*x; };
+  auto dir_01 = c * linops::NthPartialDeriv<1,1>{} + linops::NthPartialDeriv<2,1>{}; 
+
+  auto test_lam = [&](int n, int m, fornfdm::Real t)
+  {
+    auto mesh = make_Mesh(fornfdm::linspaced(n, 0.0, n-1),fornfdm::linspaced(m, 0.0, m-1));
+  
+    auto xpr = dir_01 - dir_00;    
+    xpr.setMesh(mesh); 
+    xpr.setTime(t); 
+    fornfdm::CSRMatrix set_stencil = xpr; 
+    xpr.setTime(t); 
+    fornfdm::CSRMatrix set_stencil_warm = xpr; 
+
+    auto storing_lhs = linops::MatrixFree(xpr.lhs());
+    auto storing_rhs = linops::MatrixFree(xpr.rhs());
+    auto storing = storing_lhs - storing_rhs;   
+    storing.setMesh(mesh);
+    storing.setTime(t);
+    fornfdm::CSRMatrix eval_stencil = storing; 
+
+    for(int i=0; i<eval_stencil.rows(); ++i)
+    {
+      for(int j=0; j<eval_stencil.cols(); ++j)
+      {
+        fornfdm::Scalar check = set_stencil_warm.coeff(i,j);
+        ASSERT_EQ(set_stencil.coeff(i,j), check);
+        ASSERT_EQ(eval_stencil.coeff(i,j), check);
+      }
+    }
+  };
+  test_lam(5, 5, 0.0);
+  test_lam(11, 11, 1.0);
+  test_lam(11, 11, 4.0); 
+
+  test_lam(5, 7, 0.0);
+  test_lam(11, 21, 3.0);
+  test_lam(11, 21, 7.0); 
+
+  test_lam(7, 5, 9.0);
+  test_lam(21, 21, 14.0);
+  test_lam(21, 21, 4.0); 
+  
+}
+
+TEST(LinopsSuite, MatrixFreeCopyAndMove){
+
+  linops::AutonomousCoeff a = [](fornfdm::Scalar x, fornfdm::Scalar y){ return x * y + y;}; 
+  auto xpr = a * linops::NthPartialDeriv<2,0>{};
+
+  auto test_lam = [&](int n, int m, fornfdm::Real t)
+  {
+    auto mesh = make_Mesh(fornfdm::linspaced(n, 0.0, n-1),fornfdm::linspaced(m, 0.0, m-1));
+  
+    linops::MatrixFree storing(xpr);   
+    storing.setMesh(mesh);
+    storing.setTime(t);
+    fornfdm::CSRMatrix check_stencil = storing;
+    
+    linops::MatrixFree cloned(storing);
+    fornfdm::CSRMatrix cloned_stencil = cloned;
+
+    linops::MatrixFree stolen = std::move(storing);
+    fornfdm::CSRMatrix stolen_stencil = stolen;
+
+    for(int i=0; i < check_stencil.rows(); ++i)
+    {
+      for(int j=0; j < check_stencil.cols(); ++j)
+      {
+        fornfdm::Scalar check = check_stencil.coeff(i,j);
+        ASSERT_EQ(cloned_stencil.coeff(i,j), check);
+        ASSERT_EQ(stolen_stencil.coeff(i,j), check);
+      }
+    }
+  };
+  test_lam(5, 5, 0.0);
+  test_lam(11, 11, 1.0);
+  test_lam(11, 11, 4.0); 
+
+  test_lam(5, 7, 0.0);
+  test_lam(11, 21, 3.0);
+  test_lam(11, 21, 7.0); 
+
+  test_lam(7, 5, 9.0);
+  test_lam(21, 21, 14.0);
+  test_lam(21, 21, 4.0); 
+}
+
 // TODO higher dimension tests

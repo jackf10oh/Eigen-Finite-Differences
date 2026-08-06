@@ -94,7 +94,7 @@ struct traits_impl< Eigen::CwiseUnaryOp<Op, T> >
 }; 
 
 template<class T>
-using traits = traits_impl<std::remove_reference_t<std::remove_cv_t<T>>>; 
+using traits = traits_impl<std::remove_cv_t<std::remove_reference_t<T>>>; 
 
 // Determine what type to use to nest any partial deriv 
 template<class T, typename = void>
@@ -217,15 +217,15 @@ struct TimeDepLeftKroneckerTag : LeftKroneckerTag{}; // same tag but for time de
 // if the operator uses zero callable args, it can be evaluated by double kronecker
 struct DoubleKroneckerTag{};
 struct TimeDepDoubleKroneckerTag : DoubleKroneckerTag{}; // same tag but for time dependent case
-// if the operator uses uses max arg called >= 1 (>= 2 when direction 0), we can use a weight caching evaluator
-struct StoredWeightsTag{};
-struct TimeDepStoredWeightsTag : StoredWeightsTag{}; // same tag but for time dependent case
 
 } // end namespace internal
 
 // Forward Declarations ----------
 template<class Derived, typename TagType = typename internal::map_to_base_tag<Derived>::type>
 class PartialDerivBase;
+
+template<class XprType_, class = void>
+class MatrixFree;
 
 template<class ArgType, class = void>
 class TimeEvaluation;
