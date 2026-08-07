@@ -5,12 +5,14 @@
 <h3 align="center">Fornberg-Finite-Differences</h3>
 
 <p align="center">
+    C++ finite difference library for arbitrary grid domains and time steps.
+ </p>
+ 
+<p align="center">
  <img src="wave.png">
 </p>
     
-<p align="center">
-    C++ fdm library for arbitrary grid domains and time steps.
- </p>
+
 </div>
 
 <!-- ABOUT THE PROJECT -->
