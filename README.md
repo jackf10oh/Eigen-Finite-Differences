@@ -1,38 +1,17 @@
-<!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 <a id="readme-top"></a>
-<!--
-*** Thanks for checking out the Best-README-Template. If you have a suggestion
-*** that would make this better, please fork the repo and create a pull request
-*** or simply open an issue with the tag "enhancement".
-*** Don't forget to give the project a star!
-*** Thanks again! Now go create something AMAZING! :D
-
-<!-- PROJECT SHIELDS -->
-<!--
-*** I'm using markdown "reference style" links for readability.
-*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
-*** See the bottom of this document for the declaration of the reference variables
-*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
-*** https://www.markdownguide.org/basic-syntax/#reference-style-links
-![Contributors](https://img.shields.io/github/contributors/jackf10oh/Fornberg-Finite-Differences.svg?style=for-the-badge)
-![Forks](https://img.shields.io/github/forks/jackf10oh/Fornberg-Finite-Differences.svg?style=for-the-badge)
-![Stargazers](https://img.shields.io/github/stars/jackf10oh/Fornberg-Finite-Differences.svg?style=for-the-badge)
-![Issues](https://img.shields.io/github/issues/jackf10oh/Fornberg-Finite-Differences.svg?style=for-the-badge)
-![project_license](https://img.shields.io/github/license/jackf10oh/Fornberg-Finite-Differences.svg?style=for-the-badge)
-![LinkedIn](https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555)
-
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
 <h3 align="center">Fornberg-Finite-Differences</h3>
-<p align="center">
-    C++ fdm library for arbitrary grid domains and time steps.
- </p>
-</div>
 
 <p align="center">
  <img src="wave.png">
 </p>
+    
+<p align="center">
+    C++ fdm library for arbitrary grid domains and time steps.
+ </p>
+</div>
 
 <!-- ABOUT THE PROJECT -->
 <h3>About The Project</h3>
