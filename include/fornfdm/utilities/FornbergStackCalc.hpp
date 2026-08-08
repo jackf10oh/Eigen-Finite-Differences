@@ -61,7 +61,7 @@ class FornbergStackCalc
       auto d = std::distance(start,end); 
       assert((d <= numNodesMax) && "FornbergStackCalc error: distance(start,end) > numNodesMax");  
       m_nodes_used = d; 
-      fornfdm::utils::fornberg(start,end,x_bar,order,m_arr.begin()); 
+      fornfdm::utils::fornberg(start,end,x_bar,order,m_arr.data()); 
     }
 };
 

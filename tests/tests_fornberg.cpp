@@ -26,22 +26,22 @@ TEST(FornbergSuite, BasicNodes){
   };
 
   // forward stencil. 2 nodes 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+2, nodes[0], 1, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+2, nodes[0], 1, result.data()); 
   fornfdm::Scalar forward_first[4] = {1.0, 0.0, -1.0, 1.0}; 
   validate_weights(forward_first, 4); 
 
   // backward stencil. 2 nodes 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+2, nodes[1], 1, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+2, nodes[1], 1, result.data()); 
   fornfdm::Scalar backward_first[4] = {0.0, 1.0, -1.0, 1.0}; 
   validate_weights(backward_first, 4); 
 
   // centered. 3 nodes. 2nd order 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+3, nodes[1], 2, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+3, nodes[1], 2, result.data()); 
   fornfdm::Scalar centered_second[9] = {0.0, 1.0, 0.0, -0.5, 0.0, 0.5, 1, -2, 1}; 
   validate_weights(centered_second, 9); 
 
   // centered. 5 nodes. 2nd order 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+5, nodes[2], 2, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+5, nodes[2], 2, result.data()); 
   fornfdm::Scalar centered_second_05[15] = {
     0, 0, 1, 0, 0,
     1.0/12, -2.0/3, 0, 2.0/3, -1.0/12, 
@@ -50,7 +50,7 @@ TEST(FornbergSuite, BasicNodes){
   validate_weights(centered_second_05, 15); 
 
   // forward. 4 nodes. 2nd order 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+4, nodes[0], 2, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+4, nodes[0], 2, result.data()); 
   fornfdm::Scalar forward_second[12] = {
     1, 0, 0, 0,
     -11.0/6, 3, -3.0/2, 1.0/3, 
@@ -59,7 +59,7 @@ TEST(FornbergSuite, BasicNodes){
   validate_weights(forward_second, 12); 
 
   // forward. 9 nodes. 3rd order -> 45 entries
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+9, nodes[0], 3, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+9, nodes[0], 3, result.data()); 
   fornfdm::Scalar forward_third_09[36] = {
     1, 0, 0, 0, 0, 0, 0, 0, 0,
     -761.0/280, 8, -14, 56.0/3, -35.0/2, 56.0/5, -14.0/3, 8.0/7, -1.0/8, 
@@ -84,22 +84,22 @@ TEST(FornbergSuite, ShiftedNodes01){
   };
 
   // forward stencil. 2 nodes 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+2, nodes[0], 1, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+2, nodes[0], 1, result.data()); 
   fornfdm::Scalar forward_first[4] = {1.0, 0.0, -1.0, 1.0}; 
   validate_weights(forward_first, 4); 
 
   // backward stencil. 2 nodes 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+2, nodes[1], 1, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+2, nodes[1], 1, result.data()); 
   fornfdm::Scalar backward_first[4] = {0.0, 1.0, -1.0, 1.0}; 
   validate_weights(backward_first, 4); 
 
   // centered. 3 nodes. 2nd order 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+3, nodes[1], 2, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+3, nodes[1], 2, result.data()); 
   fornfdm::Scalar centered_second[9] = {0.0, 1.0, 0.0, -0.5, 0.0, 0.5, 1, -2, 1}; 
   validate_weights(centered_second, 9); 
 
   // centered. 5 nodes. 2nd order 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+5, nodes[2], 2, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+5, nodes[2], 2, result.data()); 
   fornfdm::Scalar centered_second_05[15] = {
     0, 0, 1, 0, 0,
     1.0/12, -2.0/3, 0, 2.0/3, -1.0/12, 
@@ -108,7 +108,7 @@ TEST(FornbergSuite, ShiftedNodes01){
   validate_weights(centered_second_05, 15); 
 
   // forward. 4 nodes. 2nd order 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+4, nodes[0], 2, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+4, nodes[0], 2, result.data()); 
   fornfdm::Scalar forward_second[12] = {
     1, 0, 0, 0,
     -11.0/6, 3, -3.0/2, 1.0/3, 
@@ -117,7 +117,7 @@ TEST(FornbergSuite, ShiftedNodes01){
   validate_weights(forward_second, 12); 
 
   // forward. 9 nodes. 3rd order -> 45 entries
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+9, nodes[0], 3, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+9, nodes[0], 3, result.data()); 
   fornfdm::Scalar forward_third_09[36] = {
     1, 0, 0, 0, 0, 0, 0, 0, 0,
     -761.0/280, 8, -14, 56.0/3, -35.0/2, 56.0/5, -14.0/3, 8.0/7, -1.0/8, 
@@ -142,22 +142,22 @@ TEST(FornbergSuite, ShiftedNodes02){
   };
 
   // forward stencil. 2 nodes 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+2, nodes[0], 1, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+2, nodes[0], 1, result.data()); 
   fornfdm::Scalar forward_first[4] = {1.0, 0.0, -1.0, 1.0}; 
   validate_weights(forward_first, 4); 
 
   // backward stencil. 2 nodes 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+2, nodes[1], 1, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+2, nodes[1], 1, result.data()); 
   fornfdm::Scalar backward_first[4] = {0.0, 1.0, -1.0, 1.0}; 
   validate_weights(backward_first, 4); 
 
   // centered. 3 nodes. 2nd order 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+3, nodes[1], 2, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+3, nodes[1], 2, result.data()); 
   fornfdm::Scalar centered_second[9] = {0.0, 1.0, 0.0, -0.5, 0.0, 0.5, 1, -2, 1}; 
   validate_weights(centered_second, 9); 
 
   // centered. 5 nodes. 2nd order 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+5, nodes[2], 2, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+5, nodes[2], 2, result.data()); 
   fornfdm::Scalar centered_second_05[15] = {
     0, 0, 1, 0, 0,
     1.0/12, -2.0/3, 0, 2.0/3, -1.0/12, 
@@ -166,7 +166,7 @@ TEST(FornbergSuite, ShiftedNodes02){
   validate_weights(centered_second_05, 15); 
 
   // forward. 4 nodes. 2nd order 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+4, nodes[0], 2, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+4, nodes[0], 2, result.data()); 
   fornfdm::Scalar forward_second[12] = {
     1, 0, 0, 0,
     -11.0/6, 3, -3.0/2, 1.0/3, 
@@ -175,7 +175,7 @@ TEST(FornbergSuite, ShiftedNodes02){
   validate_weights(forward_second, 12); 
 
   // forward. 9 nodes. 3rd order -> 45 entries
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+9, nodes[0], 3, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+9, nodes[0], 3, result.data()); 
   fornfdm::Scalar forward_third_09[36] = {
     1, 0, 0, 0, 0, 0, 0, 0, 0,
     -761.0/280, 8, -14, 56.0/3, -35.0/2, 56.0/5, -14.0/3, 8.0/7, -1.0/8, 
@@ -205,22 +205,22 @@ TEST(FornbergSuite, ScaledNodes01){
   };
 
   // forward stencil. 2 nodes 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+2, nodes[0], 1, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+2, nodes[0], 1, result.data()); 
   fornfdm::Scalar forward_first[4] = {1.0, 0.0, -1.0, 1.0}; 
   validate_weights(forward_first, 2, 1, 10.0); 
 
   // backward stencil. 2 nodes 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+2, nodes[1], 1, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+2, nodes[1], 1, result.data()); 
   fornfdm::Scalar backward_first[4] = {0.0, 1.0, -1.0, 1.0}; 
   validate_weights(backward_first, 2, 1, 10.0); 
 
   // centered. 3 nodes. 2nd order 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+3, nodes[1], 2, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+3, nodes[1], 2, result.data()); 
   fornfdm::Scalar centered_second[9] = {0.0, 1.0, 0.0, -0.5, 0.0, 0.5, 1, -2, 1}; 
   validate_weights(centered_second, 3, 2, 10.0); 
 
   // centered. 5 nodes. 2nd order 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+5, nodes[2], 2, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+5, nodes[2], 2, result.data()); 
   fornfdm::Scalar centered_second_05[15] = {
     0, 0, 1, 0, 0,
     1.0/12, -2.0/3, 0, 2.0/3, -1.0/12, 
@@ -229,7 +229,7 @@ TEST(FornbergSuite, ScaledNodes01){
   validate_weights(centered_second_05, 5, 2, 10.0); 
 
   // forward. 4 nodes. 2nd order 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+4, nodes[0], 2, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+4, nodes[0], 2, result.data()); 
   fornfdm::Scalar forward_second[12] = {
     1, 0, 0, 0,
     -11.0/6, 3, -3.0/2, 1.0/3, 
@@ -238,7 +238,7 @@ TEST(FornbergSuite, ScaledNodes01){
   validate_weights(forward_second, 4, 2, 10.0); 
 
   // forward. 9 nodes. 3rd order -> 36 entries
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+9, nodes[0], 3, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+9, nodes[0], 3, result.data()); 
   fornfdm::Scalar forward_third_09[36] = {
     1, 0, 0, 0, 0, 0, 0, 0, 0,
     -761.0/280, 8, -14, 56.0/3, -35.0/2, 56.0/5, -14.0/3, 8.0/7, -1.0/8, 
@@ -268,22 +268,22 @@ TEST(FornbergSuite, ScaledNodes02){
   };
 
   // forward stencil. 2 nodes 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+2, nodes[0], 1, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+2, nodes[0], 1, result.data()); 
   fornfdm::Scalar forward_first[4] = {1.0, 0.0, -1.0, 1.0}; 
   validate_weights(forward_first, 2, 1, 0.1); 
 
   // backward stencil. 2 nodes 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+2, nodes[1], 1, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+2, nodes[1], 1, result.data()); 
   fornfdm::Scalar backward_first[4] = {0.0, 1.0, -1.0, 1.0}; 
   validate_weights(backward_first, 2, 1, 0.1); 
 
   // centered. 3 nodes. 2nd order 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+3, nodes[1], 2, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+3, nodes[1], 2, result.data()); 
   fornfdm::Scalar centered_second[9] = {0.0, 1.0, 0.0, -0.5, 0.0, 0.5, 1, -2, 1}; 
   validate_weights(centered_second, 3, 2, 0.1); 
 
   // centered. 5 nodes. 2nd order 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+5, nodes[2], 2, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+5, nodes[2], 2, result.data()); 
   fornfdm::Scalar centered_second_05[15] = {
     0, 0, 1, 0, 0,
     1.0/12, -2.0/3, 0, 2.0/3, -1.0/12, 
@@ -292,7 +292,7 @@ TEST(FornbergSuite, ScaledNodes02){
   validate_weights(centered_second_05, 5, 2, 0.1); 
 
   // forward. 4 nodes. 2nd order 
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+4, nodes[0], 2, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+4, nodes[0], 2, result.data()); 
   fornfdm::Scalar forward_second[12] = {
     1, 0, 0, 0,
     -11.0/6, 3, -3.0/2, 1.0/3, 
@@ -301,7 +301,7 @@ TEST(FornbergSuite, ScaledNodes02){
   validate_weights(forward_second, 4, 2, 0.1); 
 
   // forward. 9 nodes. 3rd order -> 36 entries
-  fornfdm::utils::fornberg(nodes.cbegin(), nodes.cbegin()+9, nodes[0], 3, result.begin()); 
+  fornfdm::utils::fornberg(nodes.data(), nodes.data()+9, nodes[0], 3, result.data()); 
   fornfdm::Scalar forward_third_09[36] = {
     1, 0, 0, 0, 0, 0, 0, 0, 0,
     -761.0/280, 8, -14, 56.0/3, -35.0/2, 56.0/5, -14.0/3, 8.0/7, -1.0/8, 
@@ -309,4 +309,26 @@ TEST(FornbergSuite, ScaledNodes02){
     -801.0/80, 349.0/6, -18353.0/120, 2391.0/10, -1457.0/6, 4891.0/30, -561.0/8, 527.0/30, -469.0/240
   }; 
   validate_weights(forward_third_09, 9, 3, 0.1); 
+};
+
+TEST(FornbergSuite, OnePastTheEnd){
+  std::array<fornfdm::Scalar, 20> nodes = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19};
+  std::array<fornfdm::Scalar, 120> dest;
+  auto test_lam = [&](std::size_t ord, std::size_t num)
+  {
+    auto it = fornfdm::utils::fornberg(
+      nodes.data(), std::next(nodes.data(), num),
+      0.0,
+      ord,
+      dest.data()
+    );
+    std::size_t dist = std::distance(dest.data(), it);
+    ASSERT_EQ(num*(ord+1), dist);
+  }; 
+
+  for(auto ord = 0; ord<6; ++ord){
+    for(auto num=ord+1; num<20; ++num){
+      test_lam(ord,num);
+    }
+  }
 };
